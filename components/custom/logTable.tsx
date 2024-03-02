@@ -24,20 +24,25 @@ export default function LogTable({
 	type: LogType[]
 	caption: string
 }) {
+	async function updateLog() {
+		const { content } = await getLog(auth)
+		if (content === null) {
+			window.localStorage.removeItem("key")
+			return
+		}
+		setData([...data, ...content])
+	}
+	
 	const [data, setData] = useState<Log[]>([])
 	useEffect(() => {
-		login(auth)
-		const id = setInterval(async () => {
-			const { content } = await getLog(auth)
-			if (content === null) {
-				window.localStorage.removeItem("key")
-				return
-			}
-			setData([...data, ...content])
-			console.log(data, content)
+		const id = setInterval(() => {
+			updateLog()
 		}, 2000)
 		return () => clearInterval(id)
 	}, [])
+	useEffect(() => {
+		console.log(data)
+	}, [data])
 
 	return <DataTable columns={columns} data={data} />
 }
