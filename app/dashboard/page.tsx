@@ -14,7 +14,7 @@ export default function DashboardPage() {
 	}
 	useEffect(() => {
 		redirect()
-		setPassword(window.localStorage.getItem("key") ?? '')
+		setPassword(window.localStorage.getItem("key") ?? "")
 	}, [])
 	return <>{password ? <Dashboard auth={password} /> : <></>}</>
 }

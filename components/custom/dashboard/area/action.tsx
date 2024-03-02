@@ -1,6 +1,6 @@
 "use client"
 import { Button } from "../../../ui/button"
-import { closeBot } from "@/lib/api/web"
+import { postAction } from "@/lib/api/web"
 import Area from "../../area"
 import {
 	Dialog,
@@ -39,13 +39,13 @@ export default function ActionTab({
 								<DialogClose className="w-full">
 									<Button
 										className="bg-red-500 hover:bg-red-800 w-full"
-										onClick={() => closeBot(auth)}
+										onClick={() => postAction(auth, { action: "exit" })}
 									>
 										Confirm
 									</Button>
 								</DialogClose>
 								<DialogClose className="w-full">
-									<Button className="w-full">Close</Button>
+									<Button className="w-full">Cancel</Button>
 								</DialogClose>
 							</div>
 						</DialogFooter>

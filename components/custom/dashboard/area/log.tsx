@@ -6,6 +6,7 @@ import {
 } from "@/components/ui/accordion"
 import Area from "../../area"
 import LogTable from "../../logTable"
+import { useEffect } from "react"
 
 export default function LogTab({auth}: {auth: string}) {
 	return (
@@ -14,7 +15,7 @@ export default function LogTab({auth}: {auth: string}) {
 				<AccordionItem value="discordLogs">
 					<AccordionTrigger>Discord Bot Logs</AccordionTrigger>
 					<AccordionContent>
-						<LogTable auth={auth} type={"discord"} />
+						<LogTable auth={auth} type={['dcblog', 'dcbmsg']} caption="Discord Log" />
 					</AccordionContent>
 				</AccordionItem>
 				<AccordionItem value="expressLogs">

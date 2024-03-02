@@ -22,7 +22,7 @@ export default function Dashboard({ auth }: { auth: string }) {
 	}
 	return (
 		<div className="flex h-full w-full items-center justify-center">
-			<div className="min-w-[50%] min-h-[30%] bg-white p-12 rounded-xl space-y-8">
+			<div className="min-w-[50%] min-h-[30%] bg-white p-8 rounded-xl space-y-8">
 				<div className="flex items-center gap-2">
 					<TooltipProvider>
 						<Tooltip>
@@ -51,11 +51,13 @@ export default function Dashboard({ auth }: { auth: string }) {
 						</Tooltip>
 					</TooltipProvider>
 				</div>
-				<Tabs defaultValue="admin">
-					<TabsList className="mb-4">
-						<TabsTrigger value="admin">Administration</TabsTrigger>
-						<TabsTrigger value="song">Logs</TabsTrigger>
-					</TabsList>
+				<Tabs defaultValue="admin" className="flex flex-col">
+					<div className="flex justify-center">
+						<TabsList className="mb-4">
+							<TabsTrigger value="admin">Administration</TabsTrigger>
+							<TabsTrigger value="song">Logs</TabsTrigger>
+						</TabsList>
+					</div>
 					<div className="bg-slate-50 p-8 rounded-xl">
 						<TabsContent value="admin">
 							<ActionTab clickHandler={clickHandler} auth={auth} />
