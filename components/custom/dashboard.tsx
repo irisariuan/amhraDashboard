@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import ActionTab from "./dashboard/area/action"
 import LogTab from "./dashboard/area/log"
+import SongTab from "./dashboard/area/song"
 
 export default function Dashboard({ auth }: { auth: string }) {
 	const router = useRouter()
@@ -22,7 +23,7 @@ export default function Dashboard({ auth }: { auth: string }) {
 	}
 	return (
 		<div className="flex h-full w-full items-center justify-center">
-			<div className="min-w-[50%] min-h-[30%] bg-white p-8 rounded-xl space-y-8">
+			<div className="min-w-[50%] min-h-[50%] max-w-[90%] max-h-[90%] bg-white p-8 rounded-xl space-y-8 overflow-auto shadow-2xl">
 				<div className="flex items-center gap-2">
 					<TooltipProvider>
 						<Tooltip>
@@ -55,15 +56,19 @@ export default function Dashboard({ auth }: { auth: string }) {
 					<div className="flex justify-center">
 						<TabsList className="mb-4">
 							<TabsTrigger value="admin">Administration</TabsTrigger>
-							<TabsTrigger value="song">Logs</TabsTrigger>
+							<TabsTrigger value="log">Logs</TabsTrigger>
+							<TabsTrigger value="song">Song</TabsTrigger>
 						</TabsList>
 					</div>
 					<div className="bg-slate-50 p-8 rounded-xl">
 						<TabsContent value="admin">
 							<ActionTab clickHandler={clickHandler} auth={auth} />
 						</TabsContent>
-						<TabsContent value="song">
+						<TabsContent value="log">
 							<LogTab auth={auth} />
+						</TabsContent>
+						<TabsContent value="song">
+							<SongTab auth={auth} />
 						</TabsContent>
 					</div>
 				</Tabs>

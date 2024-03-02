@@ -1,19 +1,11 @@
-"use client"
-import {
-	Table,
-	TableBody,
-	TableCaption,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from "@/components/ui/table"
-import { Log, LogType, columns } from "@/lib/api/log"
-import { getLog, login } from "@/lib/api/web"
-import { useEffect, useState } from "react"
-import LogCell from "../logCell"
-import { ColumnDef } from "@tanstack/react-table"
+import { Log, LogFormatted, LogType, columns } from "@/lib/api/log"
 import { DataTable } from "./dataTable"
+import moment from 'moment'
+import useSwr from 'swr'
+import { Skeleton } from "@/components/ui/skeleton"
+import { useLog } from "@/lib/useLog"
+import { useEffect } from "react"
+import { redirect } from "next/navigation"
 
 export default function LogTable({
 	auth,
@@ -24,25 +16,24 @@ export default function LogTable({
 	type: LogType[]
 	caption: string
 }) {
-	async function updateLog() {
-		const { content } = await getLog(auth)
-		if (content === null) {
-			window.localStorage.removeItem("key")
-			return
+	const { data, isLoading, error } = useLog(auth)
+	useEffect(() => {
+		if (error && !isLoading) {
+			console.log(error)
+			window.localStorage.removeItem('key')
+			redirect('/login')
 		}
-		setData([...data, ...content])
-	}
-	
-	const [data, setData] = useState<Log[]>([])
-	useEffect(() => {
-		const id = setInterval(() => {
-			updateLog()
-		}, 2000)
-		return () => clearInterval(id)
-	}, [])
-	useEffect(() => {
-		console.log(data)
-	}, [data])
+	}, [error, isLoading])
 
-	return <DataTable columns={columns} data={data} />
+	return <>
+		{isLoading ?
+			<Skeleton className="w-[100px] h-[20px] rounded-full" />
+			: <DataTable columns={columns} data={data.content.filter(v => type.includes(v.type)).map(v => {
+				return {
+					message: v.message,
+					time: moment(v.time).format('lll'),
+					type: LogFormatted[v.type]
+				} as Log
+			})} />}
+	</>
 }

@@ -12,6 +12,7 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/dialog"
+import { redirect } from "next/navigation"
 
 export default function ActionTab({
 	clickHandler,
@@ -39,7 +40,10 @@ export default function ActionTab({
 								<DialogClose className="w-full">
 									<Button
 										className="bg-red-500 hover:bg-red-800 w-full"
-										onClick={() => postAction(auth, { action: "exit" })}
+										onClick={() => {
+											postAction(auth, { action: "exit" })
+											redirect('/login')
+										}}
 									>
 										Confirm
 									</Button>
