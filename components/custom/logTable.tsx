@@ -1,7 +1,6 @@
 import { Log, LogFormatted, LogType, columns } from "@/lib/api/log"
 import { DataTable } from "./dataTable"
 import moment from 'moment'
-import useSwr from 'swr'
 import { Skeleton } from "@/components/ui/skeleton"
 import { useLog } from "@/lib/useLog"
 import { useEffect } from "react"
