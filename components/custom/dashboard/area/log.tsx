@@ -14,13 +14,19 @@ export default function LogTab({auth}: {auth: string}) {
 				<AccordionItem value="discordLogs">
 					<AccordionTrigger>Discord Bot Logs</AccordionTrigger>
 					<AccordionContent>
-						<LogTable auth={auth} type={['dcblog', 'dcbmsg']} caption="Discord Log" />
+						<LogTable auth={auth} type={['dcblog']} caption="Discord Log" />
 					</AccordionContent>
 				</AccordionItem>
 				<AccordionItem value="expressLogs">
 					<AccordionTrigger>Express Logs</AccordionTrigger>
 					<AccordionContent>
 						<LogTable auth={auth} type={['experr', 'explog']} caption="Express Log" />
+					</AccordionContent>
+				</AccordionItem>
+				<AccordionItem value="messageLogs">
+					<AccordionTrigger>Message Logs</AccordionTrigger>
+					<AccordionContent>
+						<LogTable auth={auth} type={['dcbmsg']} caption="Message Log" />
 					</AccordionContent>
 				</AccordionItem>
 			</Accordion>

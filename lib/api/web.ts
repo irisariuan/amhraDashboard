@@ -1,4 +1,5 @@
 import { Log } from "./log"
+import { SongEditType } from "./song"
 
 export async function login(auth: string): Promise<boolean> {
     const req = await fetch('/api/new', {
@@ -11,7 +12,6 @@ export async function logout(auth: string): Promise<boolean> {
     const req = await fetch('/api/logout', {
         headers: { Authorization: `Basic ${auth}` }
     })
-    console.log(auth, req.status)
     return req.ok
 }
 
@@ -20,7 +20,6 @@ interface ActionData {
 }
 
 export function postAction(auth: string, data: ActionData) {
-    console.log(JSON.stringify(data))
     return fetch('/api/action', {
         headers: { Authorization: `Basic ${auth}`, 'Content-Type': 'application/json' },
         method: 'POST',
@@ -36,4 +35,60 @@ export async function getLog(auth: string): Promise<{ content: Log[] | null }> {
         return { content: null }
     }
     return await req.json()
+}
+
+export async function editAction(auth: string, action: SongEditType.SetTime, guildId: string, time: number): Promise<boolean>
+export async function editAction(auth: string, action: SongEditType.AddSong, guildId: string, url: string): Promise<boolean>
+export async function editAction(auth: string, action: SongEditType, guildId: string): Promise<boolean>
+export async function editAction(auth: string, action: SongEditType, guildId: string, data?: number | string): Promise<boolean> {
+    switch (action) {
+        case SongEditType.AddSong: {
+            const req = await fetch('/api/song/edit', {
+                method: 'POST',
+                headers: {
+                    Authorization: `Basic ${auth}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    action,
+                    guildId,
+                    detail: {
+                        url: data
+                    }
+                })
+            })
+            return req.ok
+        }
+        case SongEditType.SetTime: {
+            const req = await fetch('/api/song/edit', {
+                method: 'POST',
+                headers: {
+                    Authorization: `Basic ${auth}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    action,
+                    guildId,
+                    detail: {
+                        sec: data
+                    }
+                })
+            })
+            return req.ok
+        }
+        default: {
+            const req = await fetch('/api/song/edit', {
+                method: 'POST',
+                headers: {
+                    Authorization: `Basic ${auth}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    action,
+                    guildId
+                })
+            })
+            return req.ok
+        }
+    }
 }

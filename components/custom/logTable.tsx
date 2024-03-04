@@ -18,7 +18,6 @@ export default function LogTable({
 	const { data, isLoading, error } = useLog(auth)
 	useEffect(() => {
 		if (error && !isLoading) {
-			console.log(error)
 			window.localStorage.removeItem('key')
 			redirect('/login')
 		}

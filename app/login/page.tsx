@@ -44,7 +44,6 @@ export default function LoginPage() {
 	})
 
 	async function onSubmit(values: z.infer<typeof formSchema>) {
-		console.log(values)
 		if (await login(values.password)) {
 			window.localStorage.setItem("key", values.password)
 			router.push("/dashboard")
