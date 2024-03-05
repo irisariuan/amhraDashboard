@@ -1,6 +1,6 @@
 "use client"
 import { Skeleton } from "@/components/ui/skeleton"
-import useSWR from "swr"
+import useSWR, { mutate } from "swr"
 import {
 	Select,
 	SelectContent,
@@ -10,6 +10,8 @@ import {
 } from "@/components/ui/select"
 import { useEffect, useState } from "react"
 import { SongDashboard } from "../songDashboard"
+import { Button } from "@/components/ui/button"
+import { ReloadIcon } from "@radix-ui/react-icons"
 
 export default function SongTab({ auth }: { auth: string }) {
 	const {
@@ -44,21 +46,37 @@ export default function SongTab({ auth }: { auth: string }) {
 				<Skeleton />
 			) : (
 				<div className="">
-					<Select
-						onValueChange={onSelectValueChange}
-						disabled={!(data?.ids && data?.ids?.length > 0)}
-					>
-						<SelectTrigger className="">
-							<SelectValue placeholder="Guilds" />
-						</SelectTrigger>
-						<SelectContent>
-							{data?.ids.map(v => (
-								<SelectItem value={v} key={v}>
-									{v}
-								</SelectItem>
-							))}
-						</SelectContent>
-					</Select>
+					<div className="flex gap-2 items-center">
+						<Select
+							onValueChange={onSelectValueChange}
+							disabled={!(data?.ids && data?.ids?.length > 0)}
+						>
+							<SelectTrigger className="">
+								<SelectValue placeholder="Guilds" />
+							</SelectTrigger>
+							<SelectContent>
+								{data?.ids.map(v => (
+									<SelectItem value={v} key={v}>
+										{v}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+						{value ? (
+							<Button
+								variant="outline"
+								size="icon"
+								onClick={() => {
+									mutate("/api/song/get/" + value)
+									mutate("/api/guildIds")
+								}}
+							>
+								<ReloadIcon className="" />
+							</Button>
+						) : (
+							<></>
+						)}
+					</div>
 					{value ? <SongDashboard auth={auth} guildId={value} /> : <></>}
 				</div>
 			)}

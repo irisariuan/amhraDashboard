@@ -92,3 +92,16 @@ export async function editAction(auth: string, action: SongEditType, guildId: st
         }
     }
 }
+
+export async function queryYoutube(auth: string, query: string): Promise<{ url: string, title: string, durationInSec: number }> {
+    return await (await fetch('/api/search', {
+        method: 'POST',
+        headers: {
+            Authorization: `Basic ${auth}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            query
+        })
+    })).json()
+}

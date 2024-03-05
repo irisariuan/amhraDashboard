@@ -39,17 +39,20 @@ export default function ActionTab({
 							<div className="flex w-full gap-2 mt-8">
 								<DialogClose className="w-full">
 									<Button
-										className="bg-red-500 hover:bg-red-800 w-full"
+										className="w-full"
+										variant="destructive"
 										onClick={() => {
 											postAction(auth, { action: "exit" })
-											redirect('/login')
+											redirect("/login")
 										}}
 									>
 										Confirm
 									</Button>
 								</DialogClose>
 								<DialogClose className="w-full">
-									<Button className="w-full">Cancel</Button>
+									<Button className="w-full" variant="outline">
+										Cancel
+									</Button>
 								</DialogClose>
 							</div>
 						</DialogFooter>

@@ -9,10 +9,14 @@ import {
 } from "@/components/ui/tooltip"
 import { motion } from "framer-motion"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ReloadIcon } from "@radix-ui/react-icons"
 
 import ActionTab from "./dashboard/area/action"
 import LogTab from "./dashboard/area/log"
 import SongTab from "./dashboard/area/song"
+import { Button } from "../ui/button"
+import { mutate } from "swr"
+import { toast } from "sonner"
 
 export default function Dashboard({ auth }: { auth: string }) {
 	const router = useRouter()

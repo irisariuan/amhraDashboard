@@ -7,7 +7,8 @@ export interface SongReply {
         thumbnails: string[]
     },
     queue: string[],
-    volume: number
+    volume: number,
+    isPlaying: boolean
 }
 
 export enum SongEditType {
@@ -18,3 +19,5 @@ export enum SongEditType {
     AddSong = 'addSong',
     SetTime = 'setTime'
 }
+
+export const YoutubeVideoRegex = /http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-\_]*)(&(amp;)?‌​[\w\?‌​=]*)?/
