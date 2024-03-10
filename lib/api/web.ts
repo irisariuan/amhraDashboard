@@ -34,7 +34,16 @@ export async function getLog(auth: string): Promise<{ content: Log[] | null }> {
     if (!req.ok) {
         return { content: null }
     }
-    return await req.json()
+    let { content }: { content: Log[] } = await req.json()
+    content = content.map(log => {
+        const v = log.message.match(/\[[A-Z].*\]/)
+        if (v?.[0]) {
+            log.message = log.message.replace(v[0], '').trim()
+            log.extraType = v[0].slice(1, -1).toLowerCase() as 'voice' | 'delete' | 'edit'
+        }
+        return log
+    })
+    return { content }
 }
 
 export async function editAction(auth: string, action: SongEditType.SetTime, guildId: string, time: number): Promise<boolean>

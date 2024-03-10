@@ -1,11 +1,10 @@
 import useSWR from 'swr'
 import { Log } from './api/log'
+import { getLog } from './api/web'
 
 export function useLog(auth: string) {
-    const { data, isLoading, error }: { data: { content: Log[] }, isLoading: boolean, error: any } = useSWR('/api/log', async (url) => {
-        return await (await fetch(url, {
-            headers: { Authorization: `Basic ${auth}` }
-        })).json()
+    const { data, isLoading, error }: { data: { content: Log[] | null } | undefined, isLoading: boolean, error: any } = useSWR('/api/log', async () => {
+        return await getLog(auth)
     }, {
         refreshInterval: 3000
     })
