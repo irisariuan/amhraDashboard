@@ -17,18 +17,18 @@ export default function SongTab({ auth }: { auth: string }) {
 	const {
 		data,
 		isLoading,
-	}: { data: { ids: string[] } | undefined; isLoading: boolean } = useSWR(
-		"/api/guildIds",
-		async url => {
-			return await (
-				await fetch(url, {
-					headers: {
-						Authorization: `Basic ${auth}`,
-					},
-				})
-			).json()
-		}
-	)
+	}: {
+		data: { content: { id: string; name: string }[] } | undefined
+		isLoading: boolean
+	} = useSWR("/api/playingGuildIds", async url => {
+		return await (
+			await fetch(url, {
+				headers: {
+					Authorization: `Basic ${auth}`,
+				},
+			})
+		).json()
+	})
 
 	const [value, setValue] = useState<null | string>()
 
@@ -36,9 +36,9 @@ export default function SongTab({ auth }: { auth: string }) {
 		setValue(v)
 	}
 	useEffect(() => {
-		if (data?.ids && data?.ids.length > 0) return
+		if (data?.content && data?.content.length > 0) return
 		setValue(null)
-	}, [data?.ids])
+	}, [data?.content])
 
 	return (
 		<>
@@ -49,15 +49,15 @@ export default function SongTab({ auth }: { auth: string }) {
 					<div className="flex gap-2 items-center">
 						<Select
 							onValueChange={onSelectValueChange}
-							disabled={!(data?.ids && data?.ids?.length > 0)}
+							disabled={!(data?.content && data?.content?.length > 0)}
 						>
 							<SelectTrigger className="">
 								<SelectValue placeholder="Guilds" />
 							</SelectTrigger>
 							<SelectContent>
-								{data?.ids.map(v => (
-									<SelectItem value={v} key={v}>
-										{v}
+								{data?.content.map(v => (
+									<SelectItem value={v.id} key={v.id}>
+										{v.name} (ID: {v.id})
 									</SelectItem>
 								))}
 							</SelectContent>
@@ -68,7 +68,7 @@ export default function SongTab({ auth }: { auth: string }) {
 								size="icon"
 								onClick={() => {
 									mutate("/api/song/get/" + value)
-									mutate("/api/guildIds")
+									mutate("/api/playingGuildIds")
 								}}
 							>
 								<ReloadIcon className="" />
@@ -77,7 +77,7 @@ export default function SongTab({ auth }: { auth: string }) {
 							<></>
 						)}
 					</div>
-					{value ? <SongDashboard auth={auth} guildId={value} /> : <></>}
+					{value && <SongDashboard auth={auth} guildId={value} />}
 				</div>
 			)}
 		</>

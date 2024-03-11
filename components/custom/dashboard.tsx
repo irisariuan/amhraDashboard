@@ -17,6 +17,7 @@ import SongTab from "./dashboard/area/song"
 import { Button } from "../ui/button"
 import { mutate } from "swr"
 import { toast } from "sonner"
+import MessageTab from "./dashboard/area/message"
 
 export default function Dashboard({ auth }: { auth: string }) {
 	const router = useRouter()
@@ -62,6 +63,7 @@ export default function Dashboard({ auth }: { auth: string }) {
 							<TabsTrigger value="admin">Administration</TabsTrigger>
 							<TabsTrigger value="log">Logs</TabsTrigger>
 							<TabsTrigger value="song">Song</TabsTrigger>
+							<TabsTrigger value="message">Message</TabsTrigger>
 						</TabsList>
 					</div>
 					<div className="bg-slate-50 p-8 rounded-xl">
@@ -73,6 +75,9 @@ export default function Dashboard({ auth }: { auth: string }) {
 						</TabsContent>
 						<TabsContent value="song">
 							<SongTab auth={auth} />
+						</TabsContent>
+						<TabsContent value="message">
+							<MessageTab auth={auth} />
 						</TabsContent>
 					</div>
 				</Tabs>

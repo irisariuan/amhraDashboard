@@ -36,3 +36,31 @@ export const LogFormatted: Record<LogType | ExtraType | 'null', string> = {
     edit: 'Edit',
     null: ''
 } as const
+
+export interface Message {
+    message: {
+        content: string,
+        id: string
+    },
+    author: {
+        id: string,
+        tag: string
+    },
+    timestamp: {
+        createdAt: number,
+        editedAt?: number
+    }
+}
+
+export interface Channel {
+    channel: {
+        id: string,
+        name: string
+    },
+    messages: Message[]
+}
+
+export interface Guild {
+    id: string,
+    name: string
+}

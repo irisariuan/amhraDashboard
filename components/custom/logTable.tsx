@@ -2,7 +2,7 @@ import { Log, LogFormatted, LogType, columns } from "@/lib/api/log"
 import { DataTable } from "./dataTable"
 import moment from "moment"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useLog } from "@/lib/useLog"
+import { useLog } from "@/lib/customSwr"
 import { useEffect } from "react"
 import { redirect } from "next/navigation"
 

@@ -43,6 +43,7 @@ export default function ActionTab({
 										variant="destructive"
 										onClick={() => {
 											postAction(auth, { action: "exit" })
+											window.localStorage.removeItem("key")
 											redirect("/login")
 										}}
 									>

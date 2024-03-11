@@ -1,4 +1,4 @@
-import { Log } from "./log"
+import { Channel, Guild, Log } from "./log"
 import { SongEditType } from "./song"
 
 export async function login(auth: string): Promise<boolean> {
@@ -27,12 +27,12 @@ export function postAction(auth: string, data: ActionData) {
     })
 }
 
-export async function getLog(auth: string): Promise<{ content: Log[] | null }> {
+export async function getLog(auth: string): Promise<{ content: Log[] }> {
     const req = await fetch('/api/log', {
         headers: { Authorization: `Basic ${auth}`, 'Content-Type': 'application/json' }
     })
     if (!req.ok) {
-        return { content: null }
+        return { content: [] }
     }
     let { content }: { content: Log[] } = await req.json()
     content = content.map(log => {
@@ -113,4 +113,17 @@ export async function queryYoutube(auth: string, query: string): Promise<{ url: 
             query
         })
     })).json()
+}
+
+export async function getMessages(auth: string, guildId: string) {
+    const { content }: { content: Channel[] } = await (await fetch('/api/messages/' + guildId, {
+        headers: { Authorization: `Basic ${auth}` }
+    })).json() ?? { content: [] }
+    return content
+}
+
+export async function getAllGuilds(auth: string): Promise<Guild[]> {
+    return (await (await fetch('/api/guildIds', {
+        headers: { Authorization: `Basic ${auth}` }
+    })).json()).content ?? []
 }
