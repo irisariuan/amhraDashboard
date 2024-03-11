@@ -1,10 +1,13 @@
+import { readFileSync } from 'fs'
+import path from 'path';
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     async rewrites() {
         return [
             {
                 source: '/api/:path*',
-                destination: 'http://localhost:5000/api/:path*'
+                destination: JSON.parse(readFileSync(path.join(process.cwd(), 'settings.json'))).apiUrl + '/:path*'
             }
         ]
     }
