@@ -45,7 +45,7 @@ export default function MessageTab({ auth }: { auth: string }) {
 	return (
 		<>
 			{isLoading ? (
-				<Skeleton />
+				<Skeleton className="w-full h-4" />
 			) : (
 				<div>
 					<Select

@@ -43,7 +43,7 @@ export default function SongTab({ auth }: { auth: string }) {
 	return (
 		<>
 			{isLoading ? (
-				<Skeleton />
+				<Skeleton className="w-[100px] h-[20px] rounded-full" />
 			) : (
 				<div className="">
 					<div className="flex gap-2 items-center">

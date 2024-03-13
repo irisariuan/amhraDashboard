@@ -33,7 +33,7 @@ export default function MessageComponent({
 	return (
 		<>
 			{isLoading ? (
-				<Skeleton />
+				<Skeleton className="h-4 w-8" />
 			) : (
 				channels?.map((v, i) => {
 					return (
@@ -53,7 +53,7 @@ export default function MessageComponent({
 							</div>
 							<div className="">
 								{v.messages.length > 0 ? (
-									<ScrollArea className="h-64 p-4 bg-slate-100 rounded-xl">
+									<ScrollArea className="h-64 px-2 py-4 bg-slate-100 rounded-xl">
 										<ul className="gap-4 flex flex-col">
 											{v.messages.map((v, i) => {
 												return (

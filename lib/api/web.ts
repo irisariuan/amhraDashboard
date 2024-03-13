@@ -46,6 +46,8 @@ export async function getLog(auth: string): Promise<{ content: Log[] }> {
     return { content }
 }
 
+export async function editAction(auth: string, action: SongEditType.SetVolume, guildId: string, volume: number): Promise<boolean>
+export async function editAction(auth: string, action: SongEditType.RemoveSong, guildId: string, index: number): Promise<boolean>
 export async function editAction(auth: string, action: SongEditType.SetTime, guildId: string, time: number): Promise<boolean>
 export async function editAction(auth: string, action: SongEditType.AddSong, guildId: string, url: string): Promise<boolean>
 export async function editAction(auth: string, action: SongEditType, guildId: string): Promise<boolean>
@@ -80,6 +82,40 @@ export async function editAction(auth: string, action: SongEditType, guildId: st
                     guildId,
                     detail: {
                         sec: data
+                    }
+                })
+            })
+            return req.ok
+        }
+        case SongEditType.RemoveSong: {
+            const req = await fetch('/api/song/edit', {
+                method: 'POST',
+                headers: {
+                    Authorization: `Basic ${auth}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    action,
+                    guildId,
+                    detail: {
+                        index: data
+                    }
+                })
+            })
+            return req.ok
+        }
+        case SongEditType.SetVolume: {
+            const req = await fetch('/api/song/edit', {
+                method: 'POST',
+                headers: {
+                    Authorization: `Basic ${auth}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    action,
+                    guildId,
+                    detail: {
+                        volume: data
                     }
                 })
             })
