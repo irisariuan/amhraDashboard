@@ -62,7 +62,6 @@ export function SongDashboard({
 		mutate("/api/song/get/" + guildId)
 	}
 	async function onSubmit(values: z.infer<typeof formSchema>) {
-		console.log(values)
 		let url = values.url
 		if (!YoutubeVideoRegex.test(values.url)) {
 			const query = await queryYoutube(auth, values.url)
@@ -97,7 +96,7 @@ export function SongDashboard({
 			) : (
 				<div className="mt-10 gap-4 flex flex-col">
 					<div className="flex flex-col gap-4">
-						<Label className="text-2xl font-semibold">Song Action</Label>
+						<Label className="text-3xl font-semibold">Song Action</Label>
 						<div className="">
 							<Form {...form}>
 								<form onSubmit={form.handleSubmit(onSubmit)}>
@@ -131,7 +130,7 @@ export function SongDashboard({
 							</Form>
 						</div>
 						<div className="flex flex-col gap-2">
-							<div className="flex gap-2 items-center">
+							<div className="flex gap-2 items-center max-w-full flex-wrap">
 								<Button
 									onClick={() => {
 										handleClick(SongEditType.Pause)
@@ -228,10 +227,10 @@ export function SongDashboard({
 								</Label>
 							</div>
 						) : (
-							<Label>Not playing song</Label>
+							<Label className="text-slate-500 italic">Not playing song</Label>
 						)}
 					</Area>
-					<Area title="Queue items">
+					<Area title="Queue">
 						{data.queue.length > 0 ? (
 							<ul className="max-w-full overflow-auto w-full">
 								{data?.queue?.map((v, i) => (

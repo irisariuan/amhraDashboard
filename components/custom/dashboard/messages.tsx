@@ -33,7 +33,7 @@ export default function MessageComponent({
 	return (
 		<>
 			{isLoading ? (
-				<Skeleton className="h-4 w-8" />
+				<Skeleton className="h-10 w-10" />
 			) : (
 				channels?.map((v, i) => {
 					return (

@@ -41,7 +41,6 @@ export default function MessageTab({ auth }: { auth: string }) {
 		}
 	}, [data, value])
 
-	console.log(data)
 	return (
 		<>
 			{isLoading ? (

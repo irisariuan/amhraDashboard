@@ -28,8 +28,8 @@ export default function Dashboard({ auth }: { auth: string }) {
 	}
 	return (
 		<div className="flex h-full w-full items-center justify-center">
-			<div className="min-w-[50%] min-h-[50%] max-w-[90%] max-h-[90%] bg-white p-8 rounded-xl space-y-8 overflow-auto shadow-2xl">
-				<div className="flex items-center gap-2">
+			<div className="min-w-[50%] min-h-[50%] max-w-[90%] max-h-[90%] bg-white p-6 lg:p-8 rounded-xl space-y-8 overflow-auto shadow-2xl">
+				<div className="flex items-center gap-2 sm:justify-center">
 					<TooltipProvider>
 						<Tooltip>
 							<h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight">
@@ -66,7 +66,7 @@ export default function Dashboard({ auth }: { auth: string }) {
 							<TabsTrigger value="message">Message</TabsTrigger>
 						</TabsList>
 					</div>
-					<div className="bg-slate-50 p-8 rounded-xl">
+					<div className="bg-slate-50 p-8 md:p-4 rounded-xl">
 						<TabsContent value="admin">
 							<ActionTab clickHandler={clickHandler} auth={auth} />
 						</TabsContent>
