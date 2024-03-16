@@ -46,12 +46,13 @@ export async function getLog(auth: string): Promise<{ content: Log[] }> {
     return { content }
 }
 
+export async function editAction(auth: string, action: SongEditType.SetQueue, guildId: string, queue: string[]): Promise<boolean>
 export async function editAction(auth: string, action: SongEditType.SetVolume, guildId: string, volume: number): Promise<boolean>
 export async function editAction(auth: string, action: SongEditType.RemoveSong, guildId: string, index: number): Promise<boolean>
 export async function editAction(auth: string, action: SongEditType.SetTime, guildId: string, time: number): Promise<boolean>
 export async function editAction(auth: string, action: SongEditType.AddSong, guildId: string, url: string): Promise<boolean>
 export async function editAction(auth: string, action: SongEditType, guildId: string): Promise<boolean>
-export async function editAction(auth: string, action: SongEditType, guildId: string, data?: number | string): Promise<boolean> {
+export async function editAction(auth: string, action: SongEditType, guildId: string, data?: number | string | string[]): Promise<boolean> {
     switch (action) {
         case SongEditType.AddSong: {
             const req = await fetch('/api/song/edit', {
@@ -116,6 +117,23 @@ export async function editAction(auth: string, action: SongEditType, guildId: st
                     guildId,
                     detail: {
                         volume: data
+                    }
+                })
+            })
+            return req.ok
+        }
+        case SongEditType.SetQueue: {
+            const req = await fetch('/api/song/edit', {
+                method: 'POST',
+                headers: {
+                    Authorization: `Basic ${auth}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    action,
+                    guildId,
+                    detail: {
+                        queue: data
                     }
                 })
             })

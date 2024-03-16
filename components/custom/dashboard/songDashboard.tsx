@@ -1,6 +1,11 @@
 "use client"
 import { Label } from "@/components/ui/label"
-import { FormatSongEditType, SongEditType, SongReply, YoutubeVideoRegex } from "@/lib/api/song"
+import {
+	FormatSongEditType,
+	SongEditType,
+	SongReply,
+	YoutubeVideoRegex,
+} from "@/lib/api/song"
 import useSWR, { mutate } from "swr"
 import Area from "../area"
 import { Button } from "@/components/ui/button"
@@ -29,6 +34,7 @@ import {
 import { TrashIcon } from "@radix-ui/react-icons"
 import { Slider } from "@/components/ui/slider"
 import { useEffect, useState } from "react"
+import Queue from "./queue"
 
 const formSchema = z.object({
 	url: z.string().min(1),
@@ -232,42 +238,7 @@ export function SongDashboard({
 					</Area>
 					<Area title="Queue">
 						{data.queue.length > 0 ? (
-							<ul className="max-w-full overflow-auto w-full">
-								{data?.queue?.map((v, i) => (
-									<li key={i} className="flex w-full items-center my-2">
-										<div className="flex-1">
-											<Label className="mr-2 font-bold text-base">
-												{i + 1}.
-											</Label>
-											<a href={v}>
-												<Label className="underline text-blue-500 text-base hover:cursor-pointer">
-													{v}
-												</Label>
-											</a>
-										</div>
-										<Button
-											variant="outline"
-											onClick={async () => {
-												if (
-													await editAction(
-														auth,
-														SongEditType.RemoveSong,
-														guildId,
-														i
-													)
-												) {
-													toast("Removed song from queue")
-												} else {
-													toast("Failed to remove song from queue")
-												}
-												mutate("/api/song/get/" + guildId)
-											}}
-										>
-											<TrashIcon />
-										</Button>
-									</li>
-								))}
-							</ul>
+							<Queue initQueue={data.queue} auth={auth} guildId={guildId} />
 						) : (
 							<Label className="text-slate-500 italic">No song in queue</Label>
 						)}
