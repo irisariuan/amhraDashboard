@@ -1,10 +1,11 @@
 "use client"
 import { login } from "@/lib/api/web"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 
 export default function Home() {
-    const router = useRouter()
+	const router = useRouter()
 	const redirect = async () => {
 		const item = window.localStorage.getItem("key")
 		if (item) {
@@ -17,5 +18,11 @@ export default function Home() {
 	useEffect(() => {
 		redirect()
 	}, [])
-	return <div></div>
+	return (
+		<div className="w-full h-full flex flex-col items-center justify-center">
+			<Link href="/login" className="text-white underline">
+				Click here to redirect to login page
+			</Link>
+		</div>
+	)
 }
