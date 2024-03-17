@@ -35,6 +35,7 @@ import { TrashIcon } from "@radix-ui/react-icons"
 import { Slider } from "@/components/ui/slider"
 import { useEffect, useState } from "react"
 import Queue from "./queue"
+import { useSongReply } from "./useSongReply"
 
 const formSchema = z.object({
 	url: z.string().min(1),
@@ -48,16 +49,7 @@ export function SongDashboard({
 	guildId: string
 }) {
 	const [volume, setVolume] = useState(0)
-	const { data, isLoading }: { data: SongReply | null; isLoading: boolean } =
-		useSWR("/api/song/get/" + guildId, async url => {
-			return await (
-				await fetch(url, {
-					headers: {
-						Authorization: `Basic ${auth}`,
-					},
-				})
-			).json()
-		})
+	const { data, isLoading } = useSongReply({ guildId, auth })
 
 	async function handleClick(action: SongEditType) {
 		if (await editAction(auth, action, guildId)) {
