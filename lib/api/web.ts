@@ -15,8 +15,9 @@ export async function logout(auth: string): Promise<boolean> {
     return req.ok
 }
 
-interface ActionData {
-    action: 'exit'
+export interface ActionData {
+    action: 'exit' | 'addAuth'
+    guildId?: string
 }
 
 export function postAction(auth: string, data: ActionData) {
@@ -180,4 +181,13 @@ export async function getAllGuilds(auth: string): Promise<Guild[]> {
     return (await (await fetch('/api/guildIds', {
         headers: { Authorization: `Basic ${auth}` }
     })).json()).content ?? []
+}
+
+export async function verifyVisitorWeb(auth: string, guildId: string): Promise<boolean> {
+    return (await fetch('/api/live', {
+        headers: { Authorization: `${auth}` },
+        body: JSON.stringify({
+            guildId
+        })
+    })).ok
 }

@@ -3,10 +3,9 @@ import { Label } from "@/components/ui/label"
 import {
 	FormatSongEditType,
 	SongEditType,
-	SongReply,
 	YoutubeVideoRegex,
 } from "@/lib/api/song"
-import useSWR, { mutate } from "swr"
+import { mutate } from "swr"
 import Area from "../area"
 import { Button } from "@/components/ui/button"
 import { editAction, queryYoutube } from "@/lib/api/web"
@@ -31,7 +30,6 @@ import {
 	HoverCardContent,
 	HoverCardTrigger,
 } from "@/components/ui/hover-card"
-import { TrashIcon } from "@radix-ui/react-icons"
 import { Slider } from "@/components/ui/slider"
 import { useEffect, useState } from "react"
 import Queue from "./queue"
