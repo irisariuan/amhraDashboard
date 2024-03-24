@@ -48,7 +48,7 @@ export default function VisitorPage({ params }: { params: { data: string } }) {
 			</div>
 		)
 	} catch {
-		router.push('/')
+		setOk(Loading.Error)
 		return <></>
 	}
 }
