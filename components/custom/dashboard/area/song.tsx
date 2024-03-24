@@ -30,14 +30,14 @@ export default function SongTab({ auth }: { auth: string }) {
 		).json()
 	})
 
-	const [value, setValue] = useState<null | string>()
+	const [guildId, setGuildId] = useState<null | string>()
 
 	function onSelectValueChange(v: string) {
-		setValue(v)
+		setGuildId(v)
 	}
 	useEffect(() => {
 		if (data?.content && data?.content.length > 0) return
-		setValue(null)
+		setGuildId(null)
 	}, [data?.content])
 
 	return (
@@ -62,12 +62,12 @@ export default function SongTab({ auth }: { auth: string }) {
 								))}
 							</SelectContent>
 						</Select>
-						{value ? (
+						{guildId ? (
 							<Button
 								variant="outline"
 								size="icon"
 								onClick={() => {
-									mutate("/api/song/get/" + value)
+									mutate("/api/song/get/" + guildId)
 									mutate("/api/playingGuildIds")
 								}}
 							>
@@ -77,7 +77,7 @@ export default function SongTab({ auth }: { auth: string }) {
 							<></>
 						)}
 					</div>
-					{value && <SongDashboard auth={auth} guildId={value} visitor={false} />}
+					{guildId && <SongDashboard auth={auth} guildId={guildId} visitor={false} />}
 				</div>
 			)}
 		</>

@@ -85,8 +85,7 @@ export function SongDashboard({
 		} else {
 			setVolume(-1)
 		}
-		console.log(data?.queue)
-	}, [data?.volume, data])
+	}, [data])
 
 	return (
 		<>
