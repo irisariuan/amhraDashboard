@@ -9,12 +9,14 @@ export default function Queue({
 	initQueue,
 	auth,
 	guildId,
+	visitor
 }: {
 	initQueue: string[]
 	auth: string
-	guildId: string
+	guildId: string,
+	visitor: boolean
 }) {
-	const { data } = useSongReply({ guildId, auth })
+	const { data } = useSongReply({ guildId, auth, visitor })
 
 	const [queue, setQueue] = useState<string[]>(initQueue)
 	useEffect(() => {
@@ -29,12 +31,12 @@ export default function Queue({
 			values={initQueue}
 			onReorder={setQueue}
 			onMouseUp={() => {
-				editAction(auth, SongEditType.SetQueue, guildId, queue)
+				editAction(auth, SongEditType.SetQueue, guildId, visitor, queue)
 			}}
 			className="flex flex-col w-full justify-center items-center"
 		>
 			{queue.map((v, i) => (
-				<QueueItem auth={auth} guildId={guildId} index={i} value={v} key={v} />
+				<QueueItem auth={auth} guildId={guildId} index={i} value={v} key={v} visitor={visitor} />
 			))}
 		</Reorder.Group>
 	)

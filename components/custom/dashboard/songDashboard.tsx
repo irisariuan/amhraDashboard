@@ -1,19 +1,19 @@
-"use client"
-import { Label } from "@/components/ui/label"
+'use client'
+import { Label } from '@/components/ui/label'
 import {
 	FormatSongEditType,
 	SongEditType,
 	YoutubeVideoRegex,
-} from "@/lib/api/song"
-import { mutate } from "swr"
-import Area from "../area"
-import { Button } from "@/components/ui/button"
-import { editAction, queryYoutube } from "@/lib/api/web"
-import { Input } from "@/components/ui/input"
-import { useForm } from "react-hook-form"
-import { z } from "zod"
-import { toast } from "sonner"
-import moment from "moment"
+} from '@/lib/api/song'
+import { mutate } from 'swr'
+import Area from '../area'
+import { Button } from '@/components/ui/button'
+import { editAction, queryYoutube } from '@/lib/api/web'
+import { Input } from '@/components/ui/input'
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
+import { toast } from 'sonner'
+import moment from 'moment'
 import {
 	FormField,
 	FormItem,
@@ -22,18 +22,18 @@ import {
 	FormDescription,
 	FormMessage,
 	Form,
-} from "@/components/ui/form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { Skeleton } from "@/components/ui/skeleton"
+} from '@/components/ui/form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
 	HoverCard,
 	HoverCardContent,
 	HoverCardTrigger,
-} from "@/components/ui/hover-card"
-import { Slider } from "@/components/ui/slider"
-import { useEffect, useState } from "react"
-import Queue from "./queue"
-import { useSongReply } from "./useSongReply"
+} from '@/components/ui/hover-card'
+import { Slider } from '@/components/ui/slider'
+import { useEffect, useState } from 'react'
+import Queue from './queue'
+import { useSongReply } from './useSongReply'
 
 const formSchema = z.object({
 	url: z.string().min(1),
@@ -42,39 +42,41 @@ const formSchema = z.object({
 export function SongDashboard({
 	auth,
 	guildId,
+	visitor = false,
 }: {
 	auth: string
 	guildId: string
+	visitor: boolean
 }) {
 	const [volume, setVolume] = useState(0)
-	const { data, isLoading } = useSongReply({ guildId, auth })
+	const { data, isLoading } = useSongReply({ guildId, auth, visitor })
 
 	async function handleClick(action: SongEditType) {
-		if (await editAction(auth, action, guildId)) {
+		if (await editAction(auth, action, guildId, visitor)) {
 			toast(FormatSongEditType[action])
 		} else {
-			toast("Failed to run")
+			toast('Failed to run')
 		}
-		mutate("/api/song/get/" + guildId)
+		mutate('/api/song/get/' + guildId)
 	}
 	async function onSubmit(values: z.infer<typeof formSchema>) {
 		let url = values.url
 		if (!YoutubeVideoRegex.test(values.url)) {
-			const query = await queryYoutube(auth, values.url)
+			const query = await queryYoutube(auth, values.url, visitor)
 			url = query.url
-			toast("Found song " + query.title)
+			toast('Found song ' + query.title)
 		}
-		if (await editAction(auth, SongEditType.AddSong, guildId, url)) {
-			return toast("Added song to queue")
+		if (await editAction(auth, SongEditType.AddSong, guildId, visitor, url)) {
+			return toast('Added song to queue')
 		}
-		mutate("/api/song/get/" + guildId)
-		return toast("Failed to add to queue")
+		mutate('/api/song/get/' + guildId)
+		return toast('Failed to add to queue')
 	}
 
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
-			url: "",
+			url: '',
 		},
 	})
 	useEffect(() => {
@@ -83,6 +85,7 @@ export function SongDashboard({
 		} else {
 			setVolume(-1)
 		}
+		console.log(data?.queue)
 	}, [data?.volume, data])
 
 	return (
@@ -169,10 +172,11 @@ export function SongDashboard({
 													auth,
 													SongEditType.SetVolume,
 													guildId,
+													visitor,
 													(v[0] ?? 0) / 100
 												))
 											) {
-												toast("Failed to set volume")
+												toast('Failed to set volume')
 											}
 										}}
 										onValueChange={v => {
@@ -190,7 +194,7 @@ export function SongDashboard({
 								<HoverCard>
 									<HoverCardTrigger>
 										<Label className="text-lg underline-offset-2 underline hover:cursor-pointer">
-											{data?.song?.title ?? "null"}
+											{data?.song?.title ?? 'null'}
 										</Label>
 										<HoverCardContent className="flex overflow-hidden w-auto flex-col gap-2">
 											<div className="flex gap-2 items-center">
@@ -216,10 +220,10 @@ export function SongDashboard({
 									{moment
 										.utc(
 											moment
-												.duration(data?.song?.duration ?? 0, "seconds")
-												.as("milliseconds")
+												.duration(data?.song?.duration ?? 0, 'seconds')
+												.as('milliseconds')
 										)
-										.format("HH:mm:ss")}
+										.format('HH:mm:ss')}
 								</Label>
 							</div>
 						) : (
@@ -227,8 +231,10 @@ export function SongDashboard({
 						)}
 					</Area>
 					<Area title="Queue">
-						{data.queue.length > 0 ? (
-							<Queue initQueue={data.queue} auth={auth} guildId={guildId} />
+						{!data.queue ? (
+							<Label className="text-red-500 italic">An error occurred</Label>
+						) : data.queue?.length > 0 ? (
+							<Queue initQueue={data.queue} auth={auth} guildId={guildId} visitor={visitor} />
 						) : (
 							<Label className="text-slate-500 italic">No song in queue</Label>
 						)}

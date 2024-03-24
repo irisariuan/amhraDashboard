@@ -77,7 +77,7 @@ export default function SongTab({ auth }: { auth: string }) {
 							<></>
 						)}
 					</div>
-					{value && <SongDashboard auth={auth} guildId={value} />}
+					{value && <SongDashboard auth={auth} guildId={value} visitor={false} />}
 				</div>
 			)}
 		</>

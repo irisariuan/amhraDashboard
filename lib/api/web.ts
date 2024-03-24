@@ -47,19 +47,20 @@ export async function getLog(auth: string): Promise<{ content: Log[] }> {
     return { content }
 }
 
-export async function editAction(auth: string, action: SongEditType.SetQueue, guildId: string, queue: string[]): Promise<boolean>
-export async function editAction(auth: string, action: SongEditType.SetVolume, guildId: string, volume: number): Promise<boolean>
-export async function editAction(auth: string, action: SongEditType.RemoveSong, guildId: string, index: number): Promise<boolean>
-export async function editAction(auth: string, action: SongEditType.SetTime, guildId: string, time: number): Promise<boolean>
-export async function editAction(auth: string, action: SongEditType.AddSong, guildId: string, url: string): Promise<boolean>
-export async function editAction(auth: string, action: SongEditType, guildId: string): Promise<boolean>
-export async function editAction(auth: string, action: SongEditType, guildId: string, data?: number | string | string[]): Promise<boolean> {
+export async function editAction(auth: string, action: SongEditType.SetQueue, guildId: string, visitor: boolean, queue: string[]): Promise<boolean>
+export async function editAction(auth: string, action: SongEditType.SetVolume, guildId: string, visitor: boolean, volume: number): Promise<boolean>
+export async function editAction(auth: string, action: SongEditType.RemoveSong, guildId: string, visitor: boolean, index: number): Promise<boolean>
+export async function editAction(auth: string, action: SongEditType.SetTime, guildId: string, visitor: boolean, time: number): Promise<boolean>
+export async function editAction(auth: string, action: SongEditType.AddSong, guildId: string, visitor: boolean, url: string): Promise<boolean>
+export async function editAction(auth: string, action: SongEditType, guildId: string, visitor: boolean): Promise<boolean>
+export async function editAction(auth: string, action: SongEditType, guildId: string, visitor: boolean, data?: number | string | string[]): Promise<boolean> {
+    const headerAuth = visitor ? auth : `Basic ${auth}`
     switch (action) {
         case SongEditType.AddSong: {
             const req = await fetch('/api/song/edit', {
                 method: 'POST',
                 headers: {
-                    Authorization: `Basic ${auth}`,
+                    Authorization: headerAuth,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
@@ -76,7 +77,7 @@ export async function editAction(auth: string, action: SongEditType, guildId: st
             const req = await fetch('/api/song/edit', {
                 method: 'POST',
                 headers: {
-                    Authorization: `Basic ${auth}`,
+                    Authorization: headerAuth,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
@@ -93,7 +94,7 @@ export async function editAction(auth: string, action: SongEditType, guildId: st
             const req = await fetch('/api/song/edit', {
                 method: 'POST',
                 headers: {
-                    Authorization: `Basic ${auth}`,
+                    Authorization: headerAuth,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
@@ -110,7 +111,7 @@ export async function editAction(auth: string, action: SongEditType, guildId: st
             const req = await fetch('/api/song/edit', {
                 method: 'POST',
                 headers: {
-                    Authorization: `Basic ${auth}`,
+                    Authorization: headerAuth,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
@@ -127,7 +128,7 @@ export async function editAction(auth: string, action: SongEditType, guildId: st
             const req = await fetch('/api/song/edit', {
                 method: 'POST',
                 headers: {
-                    Authorization: `Basic ${auth}`,
+                    Authorization: headerAuth,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
@@ -144,7 +145,7 @@ export async function editAction(auth: string, action: SongEditType, guildId: st
             const req = await fetch('/api/song/edit', {
                 method: 'POST',
                 headers: {
-                    Authorization: `Basic ${auth}`,
+                    Authorization: headerAuth,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
@@ -157,11 +158,11 @@ export async function editAction(auth: string, action: SongEditType, guildId: st
     }
 }
 
-export async function queryYoutube(auth: string, query: string): Promise<{ url: string, title: string, durationInSec: number }> {
+export async function queryYoutube(auth: string, query: string, visitor: boolean): Promise<{ url: string, title: string, durationInSec: number }> {
     return await (await fetch('/api/search', {
         method: 'POST',
         headers: {
-            Authorization: `Basic ${auth}`,
+            Authorization: visitor ? auth : `Basic ${auth}`,
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -184,10 +185,15 @@ export async function getAllGuilds(auth: string): Promise<Guild[]> {
 }
 
 export async function verifyVisitorWeb(auth: string, guildId: string): Promise<boolean> {
-    return (await fetch('/api/live', {
-        headers: { Authorization: `${auth}` },
+    const req = await fetch('/api/live', {
+        method: 'POST',
+        headers: { Authorization: `${auth}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
             guildId
         })
-    })).ok
+    })
+    console.log(await req.text(), req.status, JSON.stringify({
+        guildId
+    }))
+    return req.ok
 }

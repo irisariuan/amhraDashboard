@@ -12,11 +12,13 @@ export default function QueueItem({
 	guildId,
 	index,
 	value,
+	visitor
 }: {
 	auth: string
 	guildId: string
 	index: number
-	value: string
+	value: string,
+	visitor: boolean
 }) {
 	return (
 		<Reorder.Item
@@ -37,7 +39,7 @@ export default function QueueItem({
 					variant="outline"
 					onClick={async () => {
 						if (
-							await editAction(auth, SongEditType.RemoveSong, guildId, index)
+							await editAction(auth, SongEditType.RemoveSong, guildId, visitor, index)
 						) {
 							toast("Removed song from queue")
 						} else {
