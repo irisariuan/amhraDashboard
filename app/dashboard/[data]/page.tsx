@@ -50,7 +50,7 @@ export default function VisitorPage({ params }: { params: { data: string } }) {
 
 	return ok === Loading.Loaded && token && gid ? (
 		<motion.div className="flex justify-center items-center w-full h-full p-4 lg:p-0" animate={{opacity: [0, 1], scale: [0, 1]}}>
-			<div className="bg-white p-8 rounded-xl w-full h-full overflow-scroll lg:h-5/6 lg:w-5/6">
+			<div className="bg-white p-8 rounded-xl w-full h-full overflow-auto lg:h-5/6 lg:w-5/6">
 				<SongDashboard auth={token} guildId={gid} visitor={true} />
 			</div>
 		</motion.div>

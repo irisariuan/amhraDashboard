@@ -24,13 +24,13 @@ export default function QueueItem({
 		<Reorder.Item
 			value={value}
 			key={value}
-			className="flex w-full items-center justify-center my-2"
+			className="w-full overflow-auto"
 		>
-			<div className="w-full flex items-center hover:cursor-grab active:cursor-grabbing">
+			<div className="break-words w-full flex items-center hover:cursor-grab active:cursor-grabbing gap-2">
 				<div className="flex-1">
 					<Label className="mr-2 font-bold text-base">{index + 1}.</Label>
 					<a href={value}>
-						<Label className="underline text-blue-500 text-base hover:cursor-pointer">
+						<Label className="underline text-blue-500 text-base hover:cursor-pointer break-words">
 							{value}
 						</Label>
 					</a>
