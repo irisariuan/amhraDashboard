@@ -34,6 +34,8 @@ import { Slider } from '@/components/ui/slider'
 import { useEffect, useState } from 'react'
 import Queue from './queue'
 import { useSongReply } from './useSongReply'
+import { ReloadIcon } from '@radix-ui/react-icons'
+import { motion } from 'framer-motion'
 
 const formSchema = z.object({
 	url: z.string().min(1),
@@ -49,6 +51,7 @@ export function SongDashboard({
 	visitor: boolean
 }) {
 	const [volume, setVolume] = useState(0)
+	const [waited, setWaited] = useState(false)
 	const { data, isLoading } = useSongReply({ guildId, auth, visitor })
 
 	async function handleClick(action: SongEditType) {
@@ -87,10 +90,44 @@ export function SongDashboard({
 		}
 	}, [data])
 
+	useEffect(() => {
+		const id = setTimeout(() => {
+			console.log('Waiting too long!')
+			setWaited(true)
+		}, 2000)
+		return () => {
+			clearInterval(id)
+		}
+	}, [])
+
 	return (
 		<>
 			{!data || isLoading ? (
-				<Skeleton className="w-[100px] h-[20px] rounded-full" />
+				<div className="w-full h-full flex items-center justify-center flex-col gap-2">
+					<div className="flex items-center justify-center">
+						<p className="text-xl lg:text-3xl font-semibold">Loading...</p>
+						<motion.div
+							animate={{
+								rotate: [0, 360],
+							}}
+							transition={{
+								repeat: Infinity,
+								type: 'tween',
+								duration: 1,
+								repeatDelay: 0.5,
+							}}
+						>
+							<ReloadIcon className="h-8 w-8" />
+						</motion.div>
+					</div>
+					<>
+						{waited && (
+							<motion.div animate={{ opacity: [0, 1] }} className=''>
+								The music player may hasn&apos;t been initialized yet, please check if it is initialized
+							</motion.div>
+						)}
+					</>
+				</div>
 			) : (
 				<div className="mt-10 gap-4 flex flex-col">
 					<div className="flex flex-col gap-4">
@@ -233,7 +270,12 @@ export function SongDashboard({
 						{!data.queue ? (
 							<Label className="text-red-500 italic">An error occurred</Label>
 						) : data.queue?.length > 0 ? (
-							<Queue initQueue={data.queue} auth={auth} guildId={guildId} visitor={visitor} />
+							<Queue
+								initQueue={data.queue}
+								auth={auth}
+								guildId={guildId}
+								visitor={visitor}
+							/>
 						) : (
 							<Label className="text-slate-500 italic">No song in queue</Label>
 						)}

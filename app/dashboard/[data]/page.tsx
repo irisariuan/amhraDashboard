@@ -1,6 +1,7 @@
 'use client'
 import { SongDashboard } from '@/components/custom/dashboard/songDashboard'
 import { verifyVisitorWeb } from '@/lib/api/web'
+import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
@@ -48,11 +49,11 @@ export default function VisitorPage({ params }: { params: { data: string } }) {
 	}, [ok])
 
 	return ok === Loading.Loaded && token && gid ? (
-		<div className="flex justify-center items-center w-full h-full">
-			<div className="bg-white p-8 rounded-xl h-1/2 w-1/2">
+		<motion.div className="flex justify-center items-center w-full h-full p-4 lg:p-0" animate={{opacity: [0, 1], scale: [0, 1]}}>
+			<div className="bg-white p-8 rounded-xl w-full h-full overflow-scroll lg:h-5/6 lg:w-5/6">
 				<SongDashboard auth={token} guildId={gid} visitor={true} />
 			</div>
-		</div>
+		</motion.div>
 	) : ok === Loading.Loading ? (
 		<div className="flex justify-center items-center w-full h-full">
 			<p className="text-3xl text-white">Opening...</p>
