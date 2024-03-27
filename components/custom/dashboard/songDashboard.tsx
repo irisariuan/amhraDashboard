@@ -70,9 +70,9 @@ export function SongDashboard({
 			toast('Found song ' + query.title)
 		}
 		if (await editAction(auth, SongEditType.AddSong, guildId, visitor, url)) {
+			mutate('/api/song/get/' + guildId)
 			return toast('Added song to queue')
 		}
-		mutate('/api/song/get/' + guildId)
 		return toast('Failed to add to queue')
 	}
 
