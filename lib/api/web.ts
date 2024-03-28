@@ -20,6 +20,19 @@ export interface ActionData {
     guildId?: string
 }
 
+export interface YoutubeVideoData {
+    durationInSec: number,
+    channel: {
+        url: string,
+        id: string,
+        name: string
+    },
+    id: string,
+    title: string,
+    views: number,
+    url: string
+}
+
 export function postAction(auth: string, data: ActionData) {
     return fetch('/api/action', {
         headers: { Authorization: `Basic ${auth}`, 'Content-Type': 'application/json' },
@@ -157,8 +170,8 @@ export async function editAction(auth: string, action: SongEditType, guildId: st
         }
     }
 }
-
-export async function queryYoutube(auth: string, query: string, visitor: boolean): Promise<{ url: string, title: string, durationInSec: number }> {
+//{ url: string, title: string, durationInSec: number }
+export async function queryYoutube(auth: string, query: string, visitor: boolean): Promise<Pick<YoutubeVideoData, 'url' | 'title' | 'durationInSec'>> {
     return await (await fetch('/api/search', {
         method: 'POST',
         headers: {
@@ -168,6 +181,20 @@ export async function queryYoutube(auth: string, query: string, visitor: boolean
         body: JSON.stringify({
             query
         })
+    })).json()
+}
+
+export async function queryDetails(auth: string, url: string, visitor: boolean): Promise<YoutubeVideoData> {
+    return await (await fetch('/api/getVideoDetail', {
+        method: 'POST',
+        headers: {
+            Authorization: visitor ? auth : `Basic ${auth}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            url
+        }),
+        cache: 'force-cache'
     })).json()
 }
 

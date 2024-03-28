@@ -31,11 +31,12 @@ import {
 	HoverCardTrigger,
 } from '@/components/ui/hover-card'
 import { Slider } from '@/components/ui/slider'
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import Queue from './queue'
 import { useSongReply } from './useSongReply'
 import { ReloadIcon } from '@radix-ui/react-icons'
 import { motion } from 'framer-motion'
+import Query from './query'
 
 const formSchema = z.object({
 	url: z.string().min(1),
@@ -123,8 +124,13 @@ export function SongDashboard({
 					</div>
 					<>
 						{waited && (
-							<motion.p animate={{ opacity: [0, 1], y: [20, 0], scale: [0.6, 1] }} transition={{duration: 0.5, type: 'tween'}} className='text-center'>
-								The music player may not been initialized yet, please check if it is initialized
+							<motion.p
+								animate={{ opacity: [0, 1], y: [20, 0], scale: [0.6, 1] }}
+								transition={{ duration: 0.5, type: 'tween' }}
+								className="text-center"
+							>
+								The music player may not been initialized yet, please check if
+								it is initialized
 							</motion.p>
 						)}
 					</>
@@ -227,41 +233,10 @@ export function SongDashboard({
 					</div>
 					<Area title="Now Playing">
 						{data.song ? (
-							<div className="flex items-center gap-2">
-								<HoverCard>
-									<HoverCardTrigger>
-										<Label className="text-lg underline-offset-2 underline hover:cursor-pointer">
-											{data?.song?.title ?? 'null'}
-										</Label>
-										<HoverCardContent className="flex overflow-hidden w-auto flex-col gap-2">
-											<div className="flex gap-2 items-center">
-												<Label>Song Link</Label>
-												<a href={data?.song.link}>
-													<Label className="underline text-blue-500 hover:cursor-pointer">
-														{data?.song.link}
-													</Label>
-												</a>
-											</div>
-											<div className="flex gap-2 items-center">
-												<Label>Channel Link</Label>
-												<a href={data?.song.channel}>
-													<Label className="underline text-blue-500 hover:cursor-pointer">
-														{data?.song.channel}
-													</Label>
-												</a>
-											</div>
-										</HoverCardContent>
-									</HoverCardTrigger>
-								</HoverCard>
-								<Label className="bg-blue-500 text-white p-2 rounded-lg">
-									{moment
-										.utc(
-											moment
-												.duration(data?.song?.duration ?? 0, 'seconds')
-												.as('milliseconds')
-										)
-										.format('HH:mm:ss')}
-								</Label>
+							<div className="flex flex-col items-center gap-2">
+								<Suspense fallback={<Skeleton className="w-8 h-4" />}>
+									<Query url={data.song.link} visitor={visitor} auth={auth} />
+								</Suspense>
 							</div>
 						) : (
 							<Label className="text-slate-500 italic">Not playing song</Label>
