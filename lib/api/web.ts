@@ -219,8 +219,5 @@ export async function verifyVisitorWeb(auth: string, guildId: string): Promise<b
             guildId
         })
     })
-    console.log(await req.text(), req.status, JSON.stringify({
-        guildId
-    }))
     return req.ok
 }

@@ -234,9 +234,7 @@ export function SongDashboard({
 					<Area title="Now Playing">
 						{data.song ? (
 							<div className="flex flex-col items-center gap-2">
-								<Suspense fallback={<Skeleton className="w-8 h-4" />}>
-									<Query url={data.song.link} visitor={visitor} auth={auth} />
-								</Suspense>
+								<Query url={data.song.link} visitor={visitor} auth={auth} />
 							</div>
 						) : (
 							<Label className="text-slate-500 italic">Not playing song</Label>

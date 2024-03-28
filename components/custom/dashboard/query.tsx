@@ -1,11 +1,14 @@
+import { Skeleton } from '@/components/ui/skeleton'
 import { YoutubeVideoData, queryDetails } from '@/lib/api/web'
 import { EyeOpenIcon } from '@radix-ui/react-icons'
 import { ClockIcon } from 'lucide-react'
 import moment from 'moment'
+import { useEffect, useMemo, useState } from 'react'
+import useSWR from 'swr'
 
-const videoCache = new Map<string, YoutubeVideoData>()
+export const revalidate = 3600
 
-export default async function Query({
+export default function Query({
 	url,
 	visitor,
 	auth,
@@ -14,32 +17,38 @@ export default async function Query({
 	visitor: boolean
 	auth: string
 }) {
-	const { title, durationInSec, channel, views } = await queryDetails(
-		auth,
-		url,
-		visitor
-	)
+	const { data, isLoading } = useSWR(url, async () => {
+		return await queryDetails(auth, url, visitor)
+	})
 
-	return (
-		<div className='flex flex-col gap-2'>
-			<a href={url}>{title}</a>
-			<a href={channel.url} className="text-slate-500 underline">
-				{channel.name}
+	return !isLoading && data ? (
+		<div className="flex flex-col gap-2">
+			<a href={url}>{data.title}</a>
+			<a href={data.channel.url} className="text-slate-500 underline">
+				{data.channel.name}
 			</a>
 			<div className="flex gap-2">
 				<div className="flex bg-blue-500 rounded-lg px-2 items-center gap-2 text-blue-300">
-					<ClockIcon className='w-4'/>
+					<ClockIcon className="w-4" />
 					<p className=" text-white">
 						{moment
-							.utc(moment.duration(durationInSec, 'seconds').as('milliseconds'))
+							.utc(
+								moment
+									.duration(data.durationInSec, 'seconds')
+									.as('milliseconds')
+							)
 							.format('HH:mm:ss')}
 					</p>
 				</div>
 				<div className="flex items-center gap-2 bg-slate-200 px-2 rounded-lg text-slate-500">
 					<EyeOpenIcon />
-					<span>{views}</span>
+					<span>{data.views}</span>
 				</div>
 			</div>
 		</div>
+	) : (
+		<>
+			<Skeleton />
+		</>
 	)
 }

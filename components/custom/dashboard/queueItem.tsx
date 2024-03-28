@@ -40,10 +40,8 @@ export default function QueueItem({
 								</Label>
 							</a>
 						</HoverCardTrigger>
-						<HoverCardContent className='w-full'>
-							<Suspense>
-								<Query url={value} visitor={visitor} auth={auth} />
-							</Suspense>
+						<HoverCardContent className="w-full">
+							<Query url={value} visitor={visitor} auth={auth} />
 						</HoverCardContent>
 					</HoverCard>
 				</div>
