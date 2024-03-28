@@ -104,7 +104,7 @@ export function SongDashboard({
 		<>
 			{!data || isLoading ? (
 				<div className="w-full h-full flex items-center justify-center flex-col gap-2">
-					<div className="flex items-center justify-center">
+					<div className="flex items-center justify-center gap-1">
 						<p className="text-xl lg:text-3xl font-semibold">Loading...</p>
 						<motion.div
 							animate={{
@@ -112,19 +112,20 @@ export function SongDashboard({
 							}}
 							transition={{
 								repeat: Infinity,
-								type: 'tween',
+								type: 'spring',
+								bounce: 0.2,
 								duration: 1,
 								repeatDelay: 0.5,
 							}}
 						>
-							<ReloadIcon className="h-8 w-8" />
+							<ReloadIcon className="h-6 w-6 lg:h-8 lg:w-8" />
 						</motion.div>
 					</div>
 					<>
 						{waited && (
-							<motion.div animate={{ opacity: [0, 1] }} className=''>
-								The music player may hasn&apos;t been initialized yet, please check if it is initialized
-							</motion.div>
+							<motion.p animate={{ opacity: [0, 1], y: [20, 0], scale: [0.6, 1] }} transition={{duration: 0.5, type: 'tween'}} className='text-center'>
+								The music player may not been initialized yet, please check if it is initialized
+							</motion.p>
 						)}
 					</>
 				</div>
