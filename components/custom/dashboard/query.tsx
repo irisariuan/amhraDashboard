@@ -17,15 +17,14 @@ export default function Query({
 	visitor: boolean
 	auth: string
 }) {
-	const { data, isLoading } = useSWR(url, async () => {
+	const { data, isLoading, error } = useSWR(url, async () => {
 		return await queryDetails(auth, url, visitor)
 	})
-
-	return !isLoading && data ? (
+	return !isLoading && data && !error ? (
 		<div className="flex flex-col gap-2">
 			<a href={url}>{data.title}</a>
-			<a href={data.channel.url} className="text-slate-500 underline">
-				{data.channel.name}
+			<a href={data.channel?.url} className="text-slate-500 underline">
+				{data.channel?.name}
 			</a>
 			<div className="flex gap-2">
 				<div className="flex bg-blue-500 rounded-lg px-2 items-center gap-2 text-blue-300">
@@ -34,7 +33,7 @@ export default function Query({
 						{moment
 							.utc(
 								moment
-									.duration(data.durationInSec, 'seconds')
+									.duration(data.durationInSec ?? 0, 'seconds')
 									.as('milliseconds')
 							)
 							.format('HH:mm:ss')}
