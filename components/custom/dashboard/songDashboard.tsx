@@ -27,9 +27,10 @@ import { Slider } from '@/components/ui/slider'
 import { useEffect, useState } from 'react'
 import Queue from './queue'
 import { useSongReply } from './useSongReply'
-import { PauseIcon, ReloadIcon, ResumeIcon, StopIcon, TrackNextIcon } from '@radix-ui/react-icons'
+import { PauseIcon, PlusCircledIcon, ReloadIcon, ResumeIcon, StopIcon, TrackNextIcon } from '@radix-ui/react-icons'
 import { motion } from 'framer-motion'
 import Query from './query'
+import ReloadCircle from '../reloadCircle'
 
 const formSchema = z.object({
 	url: z.string().min(1),
@@ -101,20 +102,7 @@ export function SongDashboard({
 				<div className="w-full h-full flex items-center justify-center flex-col gap-2">
 					<div className="flex items-center justify-center gap-1">
 						<p className="text-xl lg:text-3xl font-semibold">Loading...</p>
-						<motion.div
-							animate={{
-								rotate: [0, 360],
-							}}
-							transition={{
-								repeat: Number.POSITIVE_INFINITY,
-								type: 'spring',
-								bounce: 0.2,
-								duration: 1,
-								repeatDelay: 0.5,
-							}}
-						>
-							<ReloadIcon className="h-6 w-6 lg:h-8 lg:w-8" />
-						</motion.div>
+						<ReloadCircle />
 					</div>
 					<>
 						{waited && (
@@ -157,8 +145,8 @@ export function SongDashboard({
 												)}
 											/>
 										</div>
-										<Button type="submit" className="">
-											Add
+										<Button type="submit">
+											<PlusCircledIcon />
 										</Button>
 									</div>
 								</form>

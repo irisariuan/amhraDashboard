@@ -1,10 +1,9 @@
-import { Skeleton } from '@/components/ui/skeleton'
-import { YoutubeVideoData, queryDetails } from '@/lib/api/web'
+import { queryDetails } from '@/lib/api/web'
 import { EyeOpenIcon } from '@radix-ui/react-icons'
 import { ClockIcon } from 'lucide-react'
 import moment from 'moment'
-import { useEffect, useMemo, useState } from 'react'
 import useSWR from 'swr'
+import ReloadCircle from '../reloadCircle'
 
 export const revalidate = 3600
 
@@ -47,7 +46,7 @@ export default function Query({
 		</div>
 	) : (
 		<>
-			<Skeleton />
+			<ReloadCircle />
 		</>
 	)
 }
