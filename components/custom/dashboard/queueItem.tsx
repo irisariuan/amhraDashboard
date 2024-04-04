@@ -34,7 +34,7 @@ export default function QueueItem({
 					<Label className="mr-2 font-bold text-base">{index + 1}.</Label>
 					<HoverCard>
 						<HoverCardTrigger>
-							<a href={value}>
+							<a href={value} rel="noreferrer" target='_blank'>
 								<Label className="underline text-blue-500 text-base hover:cursor-pointer break-words">
 									{value}
 								</Label>

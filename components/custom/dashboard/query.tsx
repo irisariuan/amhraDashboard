@@ -21,8 +21,8 @@ export default function Query({
 	})
 	return !isLoading && data && !error ? (
 		<div className="flex flex-col gap-2">
-			<a href={url}>{data.title}</a>
-			<a href={data.channel?.url} className="text-zinc-500 underline">
+			<a href={url} rel="noreferrer" target='_blank'>{data.title}</a>
+			<a href={data.channel?.url} rel="noreferrer" target='_blank' className="text-zinc-500 underline">
 				{data.channel?.name}
 			</a>
 			<div className="flex gap-2">
