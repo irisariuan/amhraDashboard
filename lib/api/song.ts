@@ -11,6 +11,8 @@ export interface SongReply {
     volume: number,
     isPlaying: boolean,
     paused: boolean
+    pausedInMs: number,
+    pausedTimestamp: number
 }
 
 export enum SongEditType {
