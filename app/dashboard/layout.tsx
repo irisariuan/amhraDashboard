@@ -5,12 +5,11 @@ import type React from "react"
 import { useEffect } from "react"
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-    const { theme, setTheme } = useTheme()
-    const deviceTheme = useThemeDetector()
-    useEffect(() => {
-        setTheme(deviceTheme ? 'dark' : 'light')
-        console.log(deviceTheme)
-    }, [deviceTheme, setTheme])
+    const { setTheme } = useTheme()
+	const theme = useThemeDetector()
+	useEffect(() => {
+		setTheme(theme ? "dark" : "light")
+	}, [theme, setTheme])
     return <>
         {children}
     </>

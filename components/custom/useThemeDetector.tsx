@@ -1,15 +1,18 @@
 'use client'
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect } from "react"
 
 export function useThemeDetector() {
     const [isDarkTheme, setIsDarkTheme] = useState(false)
-    const mqListener = useCallback((e: MediaQueryListEvent) => {
-        setIsDarkTheme(e.matches)
-    }, [])
     useEffect(() => {
+        const mqListener = (e: MediaQueryListEvent) => {
+            setIsDarkTheme(e.matches)
+        }
         const darkThemeMq = window.matchMedia("(prefers-color-scheme: dark)")
+        if (darkThemeMq.matches) {
+            setIsDarkTheme(true)
+        }
         darkThemeMq.addEventListener('change', mqListener)
         return () => darkThemeMq.removeEventListener('change', mqListener)
-    }, [mqListener])
+    }, [])
     return isDarkTheme
 }
