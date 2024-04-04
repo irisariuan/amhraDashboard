@@ -1,10 +1,11 @@
 export interface SongReply {
-    song: {
+    song?: {
         link: string,
         channel: string,
         duration: number,
         title: string,
-        thumbnails: string[]
+        thumbnails: string[],
+        startTime: number
     },
     queue: string[],
     volume: number,

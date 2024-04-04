@@ -31,6 +31,7 @@ import { PauseIcon, PlusCircledIcon, ReloadIcon, ResumeIcon, StopIcon, TrackNext
 import { motion } from 'framer-motion'
 import Query from './query'
 import ReloadCircle from '../reloadCircle'
+import Timeline from './timeline'
 
 const formSchema = z.object({
 	url: z.string().min(1),
@@ -48,7 +49,6 @@ export function SongDashboard({
 	const [volume, setVolume] = useState(0)
 	const [waited, setWaited] = useState(false)
 	const { data, isLoading } = useSongReply({ guildId, auth, visitor })
-	console.log(data)
 
 	async function handleClick(action: SongEditType) {
 		if (await editAction(auth, action, guildId, visitor)) {
@@ -81,6 +81,10 @@ export function SongDashboard({
 	useEffect(() => {
 		if (data) {
 			setVolume(Math.round(data.volume * 100))
+			if (data.song) {
+				console.log('setting time', (Date.now() - data.song.startTime) / 1000)
+				setTime((Date.now() - data.song.startTime) / 1000)
+			}
 		} else {
 			setVolume(-1)
 		}
@@ -92,9 +96,24 @@ export function SongDashboard({
 			setWaited(true)
 		}, 2000)
 		return () => {
-			clearInterval(id)
+			clearTimeout(id)
 		}
 	}, [])
+
+	useEffect(() => {
+		const intervalId = setInterval(() => {
+			if (data?.song) {
+				setTime((Date.now() - data.song.startTime) / 1000)
+			} else {
+				setTime(0)
+			}
+		}, 100)
+		return () => {
+			clearInterval(intervalId)
+		}
+	}, [data])
+
+	const [time, setTime] = useState(0)
 
 	return (
 		<>
@@ -222,8 +241,9 @@ export function SongDashboard({
 					</div>
 					<Area title="Now Playing">
 						{data.song ? (
-							<div className="flex flex-col items-center gap-2">
+							<div className="flex flex-col gap-2 w-full">
 								<Query url={data.song.link} visitor={visitor} auth={auth} />
+								<Timeline value={time} fullValue={data.song.duration} />
 							</div>
 						) : (
 							<Label className="text-slate-500 italic">Not playing song</Label>
