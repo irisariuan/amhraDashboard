@@ -27,7 +27,7 @@ import { Slider } from '@/components/ui/slider'
 import { useEffect, useState } from 'react'
 import Queue from './queue'
 import { useSongReply } from './useSongReply'
-import { ReloadIcon } from '@radix-ui/react-icons'
+import { PauseIcon, ReloadIcon, ResumeIcon, StopIcon, TrackNextIcon } from '@radix-ui/react-icons'
 import { motion } from 'framer-motion'
 import Query from './query'
 
@@ -47,6 +47,7 @@ export function SongDashboard({
 	const [volume, setVolume] = useState(0)
 	const [waited, setWaited] = useState(false)
 	const { data, isLoading } = useSongReply({ guildId, auth, visitor })
+	console.log(data)
 
 	async function handleClick(action: SongEditType) {
 		if (await editAction(auth, action, guildId, visitor)) {
@@ -54,17 +55,17 @@ export function SongDashboard({
 		} else {
 			toast('Failed to run')
 		}
-		mutate('/api/song/get/' + guildId)
+		mutate(`/api/song/get/${guildId}`)
 	}
 	async function onSubmit(values: z.infer<typeof formSchema>) {
 		let url = values.url
 		if (!YoutubeVideoRegex.test(values.url)) {
 			const query = await queryYoutube(auth, values.url, visitor)
 			url = query.url
-			toast('Found song ' + query.title)
+			toast(`Found song ${query.title}`)
 		}
 		if (await editAction(auth, SongEditType.AddSong, guildId, visitor, url)) {
-			mutate('/api/song/get/' + guildId)
+			mutate(`/api/song/get/${guildId}`)
 			return toast('Added song to queue')
 		}
 		return toast('Failed to add to queue')
@@ -105,7 +106,7 @@ export function SongDashboard({
 								rotate: [0, 360],
 							}}
 							transition={{
-								repeat: Infinity,
+								repeat: Number.POSITIVE_INFINITY,
 								type: 'spring',
 								bounce: 0.2,
 								duration: 1,
@@ -122,8 +123,7 @@ export function SongDashboard({
 								transition={{ duration: 0.5, type: 'tween' }}
 								className="text-center"
 							>
-								The music player may not been initialized yet, please check if
-								it is initialized
+								The music player may not been initialized yet, please check if it is initialized
 							</motion.p>
 						)}
 					</>
@@ -131,7 +131,7 @@ export function SongDashboard({
 			) : (
 				<div className="mt-10 gap-4 flex flex-col">
 					<div className="flex flex-col gap-4">
-						<Label className="text-3xl font-semibold">Song Action</Label>
+						<Label className="text-3xl font-semibold">Song Dashboard</Label>
 						<div className="">
 							<Form {...form}>
 								<form onSubmit={form.handleSubmit(onSubmit)}>
@@ -165,34 +165,42 @@ export function SongDashboard({
 							</Form>
 						</div>
 						<div className="flex flex-col gap-2">
-							<div className="flex gap-2 items-center max-w-full flex-wrap">
-								<Button
-									onClick={() => {
-										handleClick(SongEditType.Pause)
-									}}
-								>
-									Pause
-								</Button>
-								<Button
-									onClick={() => {
-										handleClick(SongEditType.Resume)
-									}}
-								>
-									Resume
-								</Button>
-								<Button
-									onClick={() => {
-										handleClick(SongEditType.Skip)
-									}}
-								>
-									Skip
-								</Button>
+							<div className="flex gap-2 items-center justify-center w-full [&>*]:w-full md:[&>*]:w-auto">
+								{data.song && <>
+									{
+										data.paused ? (
+											<Button
+												onClick={() => {
+													handleClick(SongEditType.Resume)
+												}}
+											>
+												<ResumeIcon />
+											</Button>
+
+										) : (
+											<Button
+												onClick={() => {
+													handleClick(SongEditType.Pause)
+												}}
+											>
+												<PauseIcon />
+											</Button>
+										)
+									}
+									<Button
+										onClick={() => {
+											handleClick(SongEditType.Skip)
+										}}
+									>
+										<TrackNextIcon />
+									</Button>
+								</>}
 								<Button
 									onClick={() => {
 										handleClick(SongEditType.Stop)
 									}}
 								>
-									Stop
+									<StopIcon />
 								</Button>
 							</div>
 							<div className="">

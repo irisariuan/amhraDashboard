@@ -8,7 +8,8 @@ export interface SongReply {
     },
     queue: string[],
     volume: number,
-    isPlaying: boolean
+    isPlaying: boolean,
+    paused: boolean
 }
 
 export enum SongEditType {
