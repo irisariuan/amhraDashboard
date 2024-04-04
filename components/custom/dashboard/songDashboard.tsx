@@ -108,7 +108,9 @@ export function SongDashboard({
 				}
 				return setTime(0)
 			}
-			setTime((data.pausedTimestamp - (data.song?.startTime ?? 0)) / 1000)
+			if (data.paused && data.song) {
+				setTime((data.pausedTimestamp - data.song.startTime) / 1000)
+			}
 		}, 100)
 		return () => {
 			clearInterval(intervalId)
