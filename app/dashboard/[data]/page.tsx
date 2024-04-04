@@ -6,9 +6,9 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 enum Loading {
-	Loading,
-	Loaded,
-	Error,
+	Loading = 0,
+	Loaded = 1,
+	Error = 2,
 }
 
 interface VisitorPageData {
@@ -46,11 +46,11 @@ export default function VisitorPage({ params }: { params: { data: string } }) {
 		if (ok === Loading.Error) {
 			router.push('/')
 		}
-	}, [ok])
+	}, [ok, params.data, router])
 
 	return ok === Loading.Loaded && token && gid ? (
 		<motion.div className="flex justify-center items-center w-full h-full p-4 lg:p-0" animate={{opacity: [0, 1], scale: [0, 1]}}>
-			<div className="bg-white p-8 rounded-xl w-full h-full overflow-auto lg:h-5/6 lg:w-5/6">
+			<div className="bg-white dark:bg-zinc-900 p-8 rounded-xl w-full h-full overflow-auto lg:h-5/6 lg:w-5/6">
 				<SongDashboard auth={token} guildId={gid} visitor={true} />
 			</div>
 		</motion.div>

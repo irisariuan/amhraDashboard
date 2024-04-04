@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import { Toaster } from "@/components/ui/sonner"
 import "./globals.css"
+import { ThemeProvider } from "next-themes"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -26,9 +27,16 @@ export default function RootLayout({
 				/>
 			</head>
 			<body
-				className={`${inter.className} bg-blue-500 h-screen w-screen p-0 m-0`}
+				className={`${inter.className} bg-blue-500 dark:bg-blue-950 h-screen w-screen p-0 m-0`}
 			>
-				<main className="h-full w-full">{children}</main>
+				<ThemeProvider
+					attribute="class"
+					defaultTheme="system"
+					enableSystem
+					disableTransitionOnChange
+				>
+					<main className="h-full w-full">{children}</main>
+				</ThemeProvider>
 				<Toaster />
 			</body>
 		</html>

@@ -28,7 +28,7 @@ export default function Dashboard({ auth }: { auth: string }) {
 	}
 	return (
 		<div className="flex h-full w-full items-center justify-center p-4 lg:p-0">
-			<div className="bg-white p-8 rounded-xl w-full h-full lg:h-5/6 lg:w-5/6 overflow-auto shadow-2xl">
+			<div className="dark:bg-zinc-900 bg-white p-8 rounded-xl w-full h-full lg:h-5/6 lg:w-5/6 overflow-auto shadow-2xl">
 				<div className="flex items-center gap-2 sm:justify-center">
 					<TooltipProvider>
 						<Tooltip>
@@ -39,7 +39,7 @@ export default function Dashboard({ auth }: { auth: string }) {
 								<motion.div
 									animate={{
 										transition: {
-											repeat: Infinity,
+											repeat: Number.POSITIVE_INFINITY,
 											repeatType: "reverse",
 											duration: 6,
 										},
@@ -49,7 +49,7 @@ export default function Dashboard({ auth }: { auth: string }) {
 										],
 									}}
 									className="w-4 h-4 rounded-full bg-green-400"
-								></motion.div>
+								/>
 							</TooltipTrigger>
 							<TooltipContent>
 								<p>Running</p>
@@ -57,7 +57,7 @@ export default function Dashboard({ auth }: { auth: string }) {
 						</Tooltip>
 					</TooltipProvider>
 				</div>
-				<Tabs defaultValue="admin" className="flex flex-col">
+				<Tabs defaultValue="admin" className="flex flex-col mt-2">
 					<div className="flex justify-center">
 						<TabsList className="mb-4">
 							<TabsTrigger value="admin">Administration</TabsTrigger>
@@ -66,7 +66,7 @@ export default function Dashboard({ auth }: { auth: string }) {
 							<TabsTrigger value="message">Message</TabsTrigger>
 						</TabsList>
 					</div>
-					<div className="bg-slate-50 lg:p-8 p-2 rounded-xl">
+					<div className="bg-zinc-50 dark:bg-zinc-950 lg:p-8 p-2 rounded-xl">
 						<TabsContent value="admin">
 							<ActionTab clickHandler={clickHandler} auth={auth} />
 						</TabsContent>

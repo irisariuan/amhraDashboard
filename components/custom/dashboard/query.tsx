@@ -22,7 +22,7 @@ export default function Query({
 	return !isLoading && data && !error ? (
 		<div className="flex flex-col gap-2">
 			<a href={url}>{data.title}</a>
-			<a href={data.channel?.url} className="text-slate-500 underline">
+			<a href={data.channel?.url} className="text-zinc-500 underline">
 				{data.channel?.name}
 			</a>
 			<div className="flex gap-2">
@@ -38,7 +38,7 @@ export default function Query({
 							.format('HH:mm:ss')}
 					</p>
 				</div>
-				<div className="flex items-center gap-2 bg-slate-200 px-2 rounded-lg text-slate-500">
+				<div className="flex items-center gap-2 bg-zinc-200 px-2 rounded-lg text-zinc-500">
 					<EyeOpenIcon />
 					<span>{data.views}</span>
 				</div>

@@ -1,4 +1,4 @@
-import { Log, LogFormatted, LogType, columns } from "@/lib/api/log"
+import { type Log, LogFormatted, type LogType, columns } from "@/lib/api/log"
 import { DataTable } from "./dataTable"
 import moment from "moment"
 import { Skeleton } from "@/components/ui/skeleton"

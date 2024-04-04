@@ -246,7 +246,7 @@ export function SongDashboard({
 								<Timeline value={time} fullValue={data.song.duration} />
 							</div>
 						) : (
-							<Label className="text-slate-500 italic">Not playing song</Label>
+							<Label className="text-zinc-500 italic">Not playing song</Label>
 						)}
 					</Area>
 					<Area title="Queue">
@@ -260,7 +260,7 @@ export function SongDashboard({
 								visitor={visitor}
 							/>
 						) : (
-							<Label className="text-slate-500 italic">No song in queue</Label>
+							<Label className="text-zinc-500 italic">No song in queue</Label>
 						)}
 					</Area>
 				</div>

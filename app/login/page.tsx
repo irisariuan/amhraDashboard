@@ -59,7 +59,7 @@ export default function LoginPage() {
 	}
 	return (
 		<div className="h-full w-full flex flex-col items-center justify-center">
-			<div className="bg-white h-max w-max p-10 rounded-xl flex flex-col justify-center items-center text-3xl">
+			<div className="bg-white dark:bg-zinc-900 h-max w-max p-10 rounded-xl flex flex-col justify-center items-center text-3xl">
 				<h1 className="font-extrabold mb-8">Amhra Dashboard</h1>
 				<Form {...form}>
 					<form onSubmit={form.handleSubmit(onSubmit)} className="">

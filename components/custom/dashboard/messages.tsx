@@ -1,6 +1,6 @@
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Channel } from "@/lib/api/log"
+import type { Channel } from "@/lib/api/log"
 import { getMessages } from "@/lib/api/web"
 import {
 	HoverCard,
@@ -26,7 +26,7 @@ export default function MessageComponent({
 	}: {
 		data: Channel[] | undefined
 		isLoading: boolean
-	} = useSWR("/api/messages/" + guildId, () => {
+	} = useSWR(`/api/messages/${guildId}`, () => {
 		return getMessages(auth, guildId)
 	})
 
@@ -37,7 +37,7 @@ export default function MessageComponent({
 			) : (
 				channels?.map((v, i) => {
 					return (
-						<div key={i} className="flex flex-col my-2">
+						<div key={v.channel.id} className="flex flex-col my-2">
 							<div className="flex">
 								<HoverCard>
 									<HoverCardTrigger className="">
@@ -53,15 +53,15 @@ export default function MessageComponent({
 							</div>
 							<div className="">
 								{v.messages.length > 0 ? (
-									<ScrollArea className="h-64 px-2 py-4 bg-slate-100 rounded-xl">
+									<ScrollArea className="h-64 px-2 py-4 bg-zinc-100 dark:bg-zinc-900 rounded-xl">
 										<ul className="gap-4 flex flex-col">
 											{v.messages.map((v, i) => {
 												return (
 													<>
-														<li key={i} className="flex gap-2">
+														<li key={v.message.id} className="flex gap-2">
 															<HoverCard>
 																<HoverCardTrigger>
-																	<p className="p-1 px-2 bg-slate-300 rounded text-slate-700 w-max">
+																	<p className="p-1 px-2 bg-zinc-300 dark:bg-zinc-800 dark:text-zinc-400 rounded text-zinc-700 w-max">
 																		{v.author.tag}
 																	</p>
 																</HoverCardTrigger>
@@ -101,7 +101,7 @@ export default function MessageComponent({
 										</ul>
 									</ScrollArea>
 								) : (
-									<p className="p-4 bg-slate-100 rounded-xl text-slate-500 italic">
+									<p className="p-4 bg-zinc-100 dark:bg-zinc-900 rounded-xl text-zinc-500 italic">
 										No message found
 									</p>
 								)}
