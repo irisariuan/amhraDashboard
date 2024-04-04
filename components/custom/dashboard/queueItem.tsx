@@ -28,14 +28,14 @@ export default function QueueItem({
 	visitor: boolean
 }) {
 	return (
-		<Reorder.Item value={value} key={value} className="w-full overflow-auto">
+		<Reorder.Item value={value} key={value} className="w-full">
 			<div className="break-words w-full flex items-center hover:cursor-grab active:cursor-grabbing gap-2">
-				<div className="flex-1">
+				<div className="flex-1 overflow-hidden">
 					<Label className="mr-2 font-bold text-base">{index + 1}.</Label>
 					<HoverCard>
 						<HoverCardTrigger>
-							<a href={value} rel="noreferrer" target='_blank'>
-								<Label className="underline text-blue-500 text-base hover:cursor-pointer break-words">
+							<a href={value} rel="noreferrer" target='_blank' className='w-4'>
+								<Label className="underline text-blue-500 text-base overflow-hidden hover:cursor-pointer text-ellipsis">
 									{value}
 								</Label>
 							</a>
