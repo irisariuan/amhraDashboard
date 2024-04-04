@@ -78,17 +78,6 @@ export function SongDashboard({
 			url: '',
 		},
 	})
-	useEffect(() => {
-		if (data) {
-			setVolume(Math.round(data.volume * 100))
-			if (data.song) {
-				console.log('setting time', (Date.now() - data.song.startTime) / 1000)
-				setTime((Date.now() - data.song.startTime) / 1000)
-			}
-		} else {
-			setVolume(-1)
-		}
-	}, [data])
 
 	useEffect(() => {
 		const id = setTimeout(() => {
@@ -101,9 +90,18 @@ export function SongDashboard({
 	}, [])
 
 	useEffect(() => {
+		if (!data) {
+			return setVolume(-1)
+		}
+		setVolume(Math.round(data.volume * 100))
+
+		if (data.song && !data.paused) {
+			setTime((Date.now() - data.song.startTime) / 1000)
+		}
+		
 		const intervalId = setInterval(() => {
-			if (!data?.paused) {
-				if (data?.song) {
+			if (!data.paused) {
+				if (data.song) {
 					return setTime((Date.now() - data.song.startTime - data.pausedInMs) / 1000)
 				}
 				return setTime(0)
