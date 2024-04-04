@@ -47,6 +47,7 @@ export function SongDashboard({
 	visitor: boolean
 }) {
 	const [volume, setVolume] = useState(0)
+	const [time, setTime] = useState<number | null>(null)
 	const [waited, setWaited] = useState(false)
 	const { data, isLoading } = useSongReply({ guildId, auth, visitor })
 
@@ -95,7 +96,7 @@ export function SongDashboard({
 		}
 		setVolume(Math.round(data.volume * 100))
 
-		if (data.song && !data.paused) {
+		if (data.song && (!data.paused || time === null)) {
 			setTime((Date.now() - data.song.startTime) / 1000)
 		}
 		
@@ -115,7 +116,6 @@ export function SongDashboard({
 		}
 	}, [data])
 
-	const [time, setTime] = useState(0)
 
 	return (
 		<>
@@ -245,7 +245,7 @@ export function SongDashboard({
 						{data.song ? (
 							<div className="flex flex-col gap-2 w-full">
 								<Query url={data.song.link} visitor={visitor} auth={auth} />
-								<Timeline value={time} fullValue={data.song.duration} />
+								<Timeline value={time ?? 0} fullValue={data.song.duration} />
 							</div>
 						) : (
 							<Label className="text-zinc-500 italic">Not playing song</Label>
