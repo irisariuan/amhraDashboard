@@ -103,8 +103,9 @@ export function SongDashboard({
 	useEffect(() => {
 		const intervalId = setInterval(() => {
 			if (data?.song && !data.paused) {
-				setTime((Date.now() - data.song.startTime) / 1000)
-			} else {
+				return setTime((Date.now() - data.song.startTime) / 1000)
+			}
+			if (!data?.paused) {
 				setTime(0)
 			}
 		}, 100)
