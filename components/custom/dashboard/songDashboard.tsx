@@ -48,6 +48,7 @@ export function SongDashboard({
 }) {
 	const [volume, setVolume] = useState(0)
 	const [pausedMs, setPausedMs] = useState(0)
+	const [cachePausedMs, setCachePausedMs] = useState(0)
 	const [waited, setWaited] = useState(false)
 	const { data, isLoading } = useSongReply({ guildId, auth, visitor })
 
@@ -115,6 +116,17 @@ export function SongDashboard({
 			clearInterval(intervalId)
 		}
 	}, [data, pausedMs])
+
+	useEffect(() => {
+		if (data?.paused) {
+			return setCachePausedMs(Date.now())
+		}
+		if (cachePausedMs > 0) {
+			setPausedMs(pausedMs + Date.now() - cachePausedMs)
+			setCachePausedMs(0)
+
+		}
+	}, [data?.paused, cachePausedMs, pausedMs])
 
 	const [time, setTime] = useState(0)
 
