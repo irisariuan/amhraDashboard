@@ -37,7 +37,7 @@ export default function Queue({
 					setOldQueue(queue)
 				}
 			}}
-			className="flex flex-col w-full justify-center items-center"
+			className="flex flex-col w-full justify-center items-center gap-2"
 		>
 			{queue.map((v, i) => (
 				<QueueItem

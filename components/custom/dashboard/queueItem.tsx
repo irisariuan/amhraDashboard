@@ -61,7 +61,7 @@ export default function QueueItem({
 						} else {
 							toast('Failed to remove song from queue')
 						}
-						mutate('/api/song/get/' + guildId)
+						mutate(`/api/song/get/${guildId}`)
 					}}
 				>
 					<TrashIcon />
