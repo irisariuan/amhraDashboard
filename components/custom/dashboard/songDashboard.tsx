@@ -47,6 +47,7 @@ export function SongDashboard({
 	visitor: boolean
 }) {
 	const [volume, setVolume] = useState(0)
+	const [pausedMs, setPausedMs] = useState(0)
 	const [waited, setWaited] = useState(false)
 	const { data, isLoading } = useSongReply({ guildId, auth, visitor })
 
@@ -103,16 +104,17 @@ export function SongDashboard({
 	useEffect(() => {
 		const intervalId = setInterval(() => {
 			if (data?.song && !data.paused) {
-				return setTime((Date.now() - data.song.startTime) / 1000)
+				return setTime((Date.now() - data.song.startTime) / 1000 - pausedMs / 1000)
 			}
 			if (!data?.paused) {
-				setTime(0)
+				return setTime(0)
 			}
+			setPausedMs(pausedMs + 100)
 		}, 100)
 		return () => {
 			clearInterval(intervalId)
 		}
-	}, [data])
+	}, [data, pausedMs])
 
 	const [time, setTime] = useState(0)
 
