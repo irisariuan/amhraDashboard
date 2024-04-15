@@ -108,7 +108,7 @@ export function SongDashboard({
 				return setTime(0)
 			}
 			if (data.paused && data.song) {
-				setTime((data.pausedTimestamp - data.song.startTime) / 1000)
+				setTime((data.pausedTimestamp - data.song.startTime - data.pausedInMs) / 1000)
 			}
 		}, 100)
 		return () => {

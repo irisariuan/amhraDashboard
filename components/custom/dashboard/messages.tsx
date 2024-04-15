@@ -57,7 +57,7 @@ export default function MessageComponent({
 										<ul className="gap-4 flex flex-col">
 											{v.messages.map((v, i) => {
 												return (
-													<>
+													<div key={v.message.id}>
 														<li key={v.message.id} className="flex gap-2">
 															<HoverCard>
 																<HoverCardTrigger>
@@ -95,7 +95,7 @@ export default function MessageComponent({
 															</p>
 														</li>
 														<Separator />
-													</>
+													</div>
 												)
 											})}
 										</ul>

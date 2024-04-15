@@ -45,8 +45,8 @@ export default function Query({
 			</div>
 		</div>
 	) : (
-		<>
+		<div className='w-min h-min overflow-hidden'>
 			<ReloadCircle />
-		</>
+		</div>
 	)
 }
