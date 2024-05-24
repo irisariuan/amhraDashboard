@@ -218,7 +218,7 @@ export function SongDashboard({
 									<Slider
 										defaultValue={[data.volume * 100]}
 										max={150}
-										step={1}
+										step={0.1}
 										onValueCommit={async v => {
 											if (
 												!(await editAction(
