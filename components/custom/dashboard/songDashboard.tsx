@@ -98,7 +98,7 @@ export function SongDashboard({
 		if (!data) {
 			return setVolume(-1)
 		}
-		setVolume(Math.round(data.volume * 100))
+		setVolume(data.volume * 100)
 
 		if (data.song && (!data.paused || time === null)) {
 			setTime((Date.now() - data.song.startTime) / 1000)
