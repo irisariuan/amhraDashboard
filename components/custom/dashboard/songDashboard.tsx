@@ -145,7 +145,7 @@ export function SongDashboard({
 				<div className="mt-10 gap-4 flex flex-col">
 					<div className="flex flex-col gap-4">
 						<Label className="text-3xl font-semibold">Song Dashboard</Label>
-						<div className="">
+						<div>
 							<Form {...form}>
 								<form onSubmit={form.handleSubmit(onSubmit)}>
 									<div className="flex w-full items-center gap-2">
