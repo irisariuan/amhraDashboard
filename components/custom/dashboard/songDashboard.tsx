@@ -32,6 +32,8 @@ import { motion } from 'framer-motion'
 import Query from './query'
 import ReloadCircle from '../reloadCircle'
 import Timeline from './timeline'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
+import HistoryItem from '../historyItem'
 
 const formSchema = z.object({
 	url: z.string().min(1),
@@ -80,6 +82,8 @@ export function SongDashboard({
 		},
 	})
 
+	console.log(data)
+
 	useEffect(() => {
 		const id = setTimeout(() => {
 			console.log('Waiting too long!')
@@ -99,7 +103,7 @@ export function SongDashboard({
 		if (data.song && (!data.paused || time === null)) {
 			setTime((Date.now() - data.song.startTime) / 1000)
 		}
-		
+
 		const intervalId = setInterval(() => {
 			if (!data.paused) {
 				if (data.song) {
@@ -251,20 +255,52 @@ export function SongDashboard({
 							<Label className="text-zinc-500 italic">Not playing song</Label>
 						)}
 					</Area>
-					<Area title="Queue">
-						{!data.queue ? (
-							<Label className="text-red-500 italic">An error occurred</Label>
-						) : data.queue?.length > 0 ? (
-							<Queue
-								initQueue={data.queue}
-								auth={auth}
-								guildId={guildId}
-								visitor={visitor}
-							/>
-						) : (
-							<Label className="text-zinc-500 italic">No song in queue</Label>
-						)}
-					</Area>
+					<div>
+						<Accordion type='single' collapsible>
+							<AccordionItem value='history'>
+								<AccordionTrigger>
+									<h2 className="scroll-m-20 text-3xl font-semibold tracking-tight first:mt-0">
+										History
+									</h2>
+								</AccordionTrigger>
+								<AccordionContent>
+									{!data.history ? (
+										<Label className="text-red-500 italic">An error occurred</Label>
+									) : data.history?.length > 0 ? (
+										<div className='flex flex-col gap-2'>
+											{Array.from(new Set(data.history)).map((v, i) => <div key={v}>
+												<HistoryItem link={v} auth={auth} guildId={guildId} visitor={visitor} />
+											</div>)}
+										</div>
+									) : (
+										<Label className="text-zinc-500 italic">No history</Label>
+									)}
+
+								</AccordionContent>
+							</AccordionItem>
+							<AccordionItem value='queue'>
+								<AccordionTrigger>
+									<h2 className="scroll-m-20 text-3xl font-semibold tracking-tight first:mt-0">
+										Queue
+									</h2>
+								</AccordionTrigger>
+								<AccordionContent>
+									{!data.queue ? (
+										<Label className="text-red-500 italic">An error occurred</Label>
+									) : data.queue?.length > 0 ? (
+										<Queue
+											initQueue={data.queue}
+											auth={auth}
+											guildId={guildId}
+											visitor={visitor}
+										/>
+									) : (
+										<Label className="text-zinc-500 italic">No song in queue</Label>
+									)}
+								</AccordionContent>
+							</AccordionItem>
+						</Accordion>
+					</div>
 				</div>
 			)}
 		</>

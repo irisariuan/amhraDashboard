@@ -4,6 +4,7 @@ import { ClockIcon } from 'lucide-react'
 import moment from 'moment'
 import useSWR from 'swr'
 import ReloadCircle from '../reloadCircle'
+import { useQuery } from './useQuery'
 
 export const revalidate = 3600
 
@@ -16,9 +17,8 @@ export default function Query({
 	visitor: boolean
 	auth: string
 }) {
-	const { data, isLoading, error } = useSWR(url, async () => {
-		return await queryDetails(auth, url, visitor)
-	})
+	const { data, isLoading, error } = useQuery({ url, auth, visitor })
+	
 	return !isLoading && data && !error ? (
 		<div className="flex flex-col gap-2">
 			<a href={url} rel="noreferrer" target='_blank'>{data.title}</a>

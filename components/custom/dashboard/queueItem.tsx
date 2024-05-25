@@ -11,8 +11,8 @@ import {
 	HoverCardContent,
 	HoverCardTrigger,
 } from '@/components/ui/hover-card'
-import { Suspense } from 'react'
 import Query from './query'
+import { useQuery } from './useQuery'
 
 export default function QueueItem({
 	auth,
@@ -27,6 +27,7 @@ export default function QueueItem({
 	value: string
 	visitor: boolean
 }) {
+	const { isLoading, data } = useQuery({ url: value, auth, visitor })
 	return (
 		<Reorder.Item value={value} key={value} className="w-full">
 			<div className="break-words w-full flex items-center hover:cursor-grab active:cursor-grabbing gap-2">
@@ -36,7 +37,7 @@ export default function QueueItem({
 						<HoverCardTrigger>
 							<a href={value} rel="noreferrer" target='_blank' className='w-4'>
 								<Label className="underline text-blue-500 text-base overflow-hidden hover:cursor-pointer text-ellipsis">
-									{value}
+									{isLoading ? value : data?.title ?? value}
 								</Label>
 							</a>
 						</HoverCardTrigger>
