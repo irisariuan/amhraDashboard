@@ -240,7 +240,7 @@ export function SongDashboard({
 											setVolume(v[0])
 										}}
 									/>
-									<Label>{volume}%</Label>
+									<Label>{volume.toFixed(1)}%</Label>
 								</div>
 							</div>
 						</div>
