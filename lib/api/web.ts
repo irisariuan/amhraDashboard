@@ -1,4 +1,4 @@
-import { Channel, Guild, Log } from "./log"
+import type { Channel, Guild, Log } from "./log"
 import { SongEditType } from "./song"
 
 export async function login(auth: string): Promise<boolean> {
@@ -199,7 +199,7 @@ export async function queryDetails(auth: string, url: string, visitor: boolean):
 }
 
 export async function getMessages(auth: string, guildId: string) {
-    const { content }: { content: Channel[] } = await (await fetch('/api/messages/' + guildId, {
+    const { content }: { content: Channel[] } = await (await fetch(`/api/messages/${guildId}`, {
         headers: { Authorization: `Basic ${auth}` }
     })).json() ?? { content: [] }
     return content

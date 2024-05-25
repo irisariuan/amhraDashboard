@@ -8,6 +8,7 @@ export interface SongReply {
         startTime: number
     },
     queue: string[],
+    history: string[],
     volume: number,
     isPlaying: boolean,
     paused: boolean

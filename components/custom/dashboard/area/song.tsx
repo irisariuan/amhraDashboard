@@ -35,6 +35,7 @@ export default function SongTab({ auth }: { auth: string }) {
 	function onSelectValueChange(v: string) {
 		setGuildId(v)
 	}
+
 	useEffect(() => {
 		if (data?.content && data?.content.length > 0) return
 		setGuildId(null)
@@ -45,13 +46,13 @@ export default function SongTab({ auth }: { auth: string }) {
 			{isLoading ? (
 				<Skeleton className="w-[100px] h-[20px] rounded-full" />
 			) : (
-				<div className="">
+				<div>
 					<div className="flex gap-2 items-center">
 						<Select
 							onValueChange={onSelectValueChange}
 							disabled={!(data?.content && data?.content?.length > 0)}
 						>
-							<SelectTrigger className="">
+							<SelectTrigger>
 								<SelectValue placeholder="Guilds" />
 							</SelectTrigger>
 							<SelectContent>
@@ -67,11 +68,11 @@ export default function SongTab({ auth }: { auth: string }) {
 								variant="outline"
 								size="icon"
 								onClick={() => {
-									mutate("/api/song/get/" + guildId)
+									mutate(`/api/song/get/${guildId}`)
 									mutate("/api/playingGuildIds")
 								}}
 							>
-								<ReloadIcon className="" />
+								<ReloadIcon />
 							</Button>
 						) : (
 							<></>
