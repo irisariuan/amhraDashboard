@@ -40,6 +40,20 @@ export default function VisitorPage({ params }: { params: { data: string } }) {
 				.catch(e => {
 					setOk(Loading.Error)
 				})
+			const interval = setInterval(() => {
+				verifyVisitorWeb(auth, guildId)
+					.then(v => {
+						setOk(v ? Loading.Loaded : Loading.Error)
+						setData({
+							gid: guildId,
+							token: auth,
+						})
+					})
+					.catch(() => {
+						setOk(Loading.Error)
+					})
+			}, 1000 * 5)
+			return () => clearInterval(interval)
 		} catch {
 			setOk(Loading.Error)
 		}
@@ -49,7 +63,7 @@ export default function VisitorPage({ params }: { params: { data: string } }) {
 	}, [ok, params.data, router])
 
 	return ok === Loading.Loaded && token && gid ? (
-		<motion.div className="flex justify-center items-center w-full h-full p-4 lg:p-0" animate={{opacity: [0, 1], scale: [0, 1]}}>
+		<motion.div className="flex justify-center items-center w-full h-full p-4 lg:p-0" animate={{ opacity: [0, 1], scale: [0, 1] }}>
 			<div className="bg-white dark:bg-zinc-900 p-8 rounded-xl w-full h-full overflow-auto lg:h-5/6 lg:w-5/6">
 				<SongDashboard auth={token} guildId={gid} visitor={true} />
 			</div>
