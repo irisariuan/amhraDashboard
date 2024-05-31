@@ -34,6 +34,7 @@ import ReloadCircle from '../reloadCircle'
 import Timeline from './timeline'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import HistoryItem from '../historyItem'
+import PlaybackControl from '../ui/playbackControl'
 
 const formSchema = z.object({
 	url: z.string().min(1),
@@ -81,8 +82,6 @@ export function SongDashboard({
 			url: '',
 		},
 	})
-
-	console.log(data)
 
 	useEffect(() => {
 		const id = setTimeout(() => {
@@ -249,7 +248,8 @@ export function SongDashboard({
 						{data.song ? (
 							<div className="flex flex-col gap-2 w-full">
 								<Query url={data.song.link} visitor={visitor} auth={auth} />
-								<Timeline value={time ?? 0} fullValue={data.song.duration} />
+								{/* <Timeline value={time ?? 0} fullValue={data.song.duration} /> */}
+								<PlaybackControl now={time ?? 0} totalTime={data.song.duration} />
 							</div>
 						) : (
 							<Label className="text-zinc-500 italic">Not playing song</Label>
@@ -275,7 +275,6 @@ export function SongDashboard({
 									) : (
 										<Label className="text-zinc-500 italic">No history</Label>
 									)}
-
 								</AccordionContent>
 							</AccordionItem>
 							<AccordionItem value='queue'>
