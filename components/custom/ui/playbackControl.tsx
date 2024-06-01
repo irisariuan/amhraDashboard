@@ -39,7 +39,7 @@ export default function PlaybackControl({
     }, [now, mouseDown, totalTime])
 
     return (
-        <div className="w-full bg-neutral-300 dark:bg-neutral-700 h-2 rounded-full group my-2"
+        <div className="w-full bg-neutral-300 dark:bg-neutral-700 h-4 rounded-full group my-2"
             ref={ref}
 
             onTouchStart={() => canBeDragged && setMouseDown(true)}
@@ -52,10 +52,10 @@ export default function PlaybackControl({
             onMouseUp={dragRelease}
         >
             {/* <div className="bg-neutral-500 h-2 rounded-full flex items-center justify-end relative" style={{ width: `${time * 100}%` }} ref={ref} /> */}
-            <div className="bg-blue-500 dark:bg-neutral-500 h-2 rounded-full flex items-center justify-end transform-gpu overflow-visible relative left-0" style={{ width: `${Math.min(time * 100, 100)}%` }}>
+            <div className="bg-blue-500 dark:bg-neutral-500 h-full rounded-full flex items-center justify-end transform-gpu overflow-visible relative left-0" style={{ width: `${Math.min(time * 100, 100)}%` }}>
                 {canBeDragged && (
-                    <div className="min-w-2 w-2 h-5 rounded-full bg-blue-600 dark:bg-neutral-100 relative left-1 hover:cursor-grab active:cursor-grabbing flex justify-center">
-                        <div className={`min-w-fit relative bottom-6 border border-neutral-500 bg-neutral-100 dark:bg-neutral-800 origin-center p-2 rounded justify-center items-center group-hover:flex ${mouseDown ? 'flex' : 'hidden'} transition-all`}>
+                    <div className="min-w-2 w-2 h-6 rounded-full bg-blue-600 dark:bg-neutral-100 relative left-1 hover:cursor-grab active:cursor-grabbing flex justify-center">
+                        <div className={`min-w-fit relative bottom-8 border border-neutral-500 bg-neutral-100 dark:bg-neutral-800 origin-center p-2 rounded justify-center items-center group-hover:flex ${mouseDown ? 'flex' : 'hidden'} transition-all`}>
                             <Label className="text-neutral-700 dark:text-white font-light select-none">
                                 {formatter(time * totalTime)}
                             </Label>
