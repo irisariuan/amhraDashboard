@@ -21,7 +21,7 @@ export default function PlaybackControl({
     function grabbing(mouseXPos: number) {
         if (!ref.current || !enabled) return
         const { left, right } = ref.current?.getBoundingClientRect() ?? { left: 0, right: 0 }
-        const time = (mouseXPos - left) / (right - left)
+        const time = Math.min(Math.max(mouseXPos, left) - left, right - left) / (right - left)
         setTime(time)
     }
 
@@ -33,9 +33,9 @@ export default function PlaybackControl({
     return (
         <div className="w-full bg-neutral-700 h-2 rounded-full" ref={ref}
             onTouchStart={() => enabled && setMouseDown(true)}
-            onTouchMove={(ev) => { enabled && mouseDown && grabbing(ev.touches[0].clientX)}}
+            onTouchMove={(ev) => { enabled && mouseDown && grabbing(ev.touches[0].clientX) }}
             onTouchEnd={() => { setMouseDown(false); onRelease(time * totalTime) }}
-        
+
             onMouseDown={() => enabled && setMouseDown(true)}
             onMouseMove={(ev) => { enabled && mouseDown && grabbing(ev.clientX) }}
             onMouseUp={() => { setMouseDown(false); onRelease(time * totalTime) }}
