@@ -27,14 +27,12 @@ import { Slider } from '@/components/ui/slider'
 import { useEffect, useState } from 'react'
 import Queue from './queue'
 import { useSongReply } from './useSongReply'
-import { PauseIcon, PlusCircledIcon, ReloadIcon, ResumeIcon, StopIcon, TrackNextIcon } from '@radix-ui/react-icons'
-import { motion } from 'framer-motion'
+import { PauseIcon, PlusCircledIcon, ResumeIcon, StopIcon, TrackNextIcon } from '@radix-ui/react-icons'
 import Query from './query'
-import ReloadCircle from '../reloadCircle'
-import Timeline from './timeline'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import HistoryItem from '../historyItem'
 import PlaybackControl from '../ui/playbackControl'
+import DashboardPlaceholder from './dashboardPlaceholder'
 
 const formSchema = z.object({
 	url: z.string().min(1),
@@ -100,46 +98,30 @@ export function SongDashboard({
 		setVolume(data.volume * 100)
 
 		if (data.song && (!data.paused || time === null)) {
-			setTime((Date.now() - data.song.startTime) / 1000)
+			setTime((Date.now() - data.song.startTime + data.song.startFrom) / 1000)
 		}
 
 		const intervalId = setInterval(() => {
 			if (!data.paused) {
 				if (data.song) {
-					return setTime((Date.now() - data.song.startTime - data.pausedInMs) / 1000)
+					return setTime((Date.now() - data.song.startTime - data.pausedInMs + data.song.startFrom) / 1000)
 				}
 				return setTime(0)
 			}
 			if (data.paused && data.song) {
-				setTime((data.pausedTimestamp - data.song.startTime - data.pausedInMs) / 1000)
+				setTime((data.pausedTimestamp - data.song.startTime - data.pausedInMs + data.song.startFrom) / 1000)
 			}
+			console.log(data.song?.startFrom)
 		}, 100)
 		return () => {
 			clearInterval(intervalId)
 		}
 	}, [data])
 
-
 	return (
 		<>
 			{!data || isLoading ? (
-				<div className="w-full h-full flex items-center justify-center flex-col gap-2">
-					<div className="flex items-center justify-center gap-1">
-						<p className="text-xl lg:text-3xl font-semibold">Loading...</p>
-						<ReloadCircle />
-					</div>
-					<>
-						{waited && (
-							<motion.p
-								animate={{ opacity: [0, 1], y: [20, 0], scale: [0.6, 1] }}
-								transition={{ duration: 0.5, type: 'tween' }}
-								className="text-center"
-							>
-								The music player may not been initialized yet, please check if it is initialized
-							</motion.p>
-						)}
-					</>
-				</div>
+				<DashboardPlaceholder showWaitedMessage={waited} />
 			) : (
 				<div className="mt-10 gap-4 flex flex-col">
 					<div className="flex flex-col gap-4">
@@ -249,7 +231,12 @@ export function SongDashboard({
 							<div className="flex flex-col gap-2 w-full">
 								<Query url={data.song.link} visitor={visitor} auth={auth} />
 								{/* <Timeline value={time ?? 0} fullValue={data.song.duration} /> */}
-								<PlaybackControl now={time ?? 0} totalTime={data.song.duration} />
+								<PlaybackControl now={time ?? 0} totalTime={data.song.duration} enabled onRelease={async releaseTime => {
+									if (!(await editAction(auth, SongEditType.SetTime, guildId, visitor, Math.round(releaseTime)))) {
+										return toast('Failed to seek')
+									}
+									mutate(`/api/song/get/${guildId}`)
+								}} />
 							</div>
 						) : (
 							<Label className="text-zinc-500 italic">Not playing song</Label>

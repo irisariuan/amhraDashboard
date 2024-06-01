@@ -5,7 +5,8 @@ export interface SongReply {
         duration: number,
         title: string,
         thumbnails: string[],
-        startTime: number
+        startTime: number,
+        startFrom: number
     },
     queue: string[],
     history: string[],
