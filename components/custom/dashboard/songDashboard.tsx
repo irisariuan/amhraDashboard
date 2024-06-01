@@ -23,7 +23,6 @@ import {
 	Form,
 } from '@/components/ui/form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Slider } from '@/components/ui/slider'
 import { useEffect, useState } from 'react'
 import Queue from './queue'
 import { useSongReply } from './useSongReply'
@@ -102,6 +101,7 @@ export function SongDashboard({
 		}
 
 		const intervalId = setInterval(() => {
+			if (!data) return
 			if (!data.paused) {
 				if (data.song) {
 					return setTime((Date.now() - data.song.startTime - data.pausedInMs + data.song.startFrom) / 1000)
@@ -111,11 +111,11 @@ export function SongDashboard({
 			if (data.paused && data.song) {
 				setTime((data.pausedTimestamp - data.song.startTime - data.pausedInMs + data.song.startFrom) / 1000)
 			}
-			console.log(data.song?.startFrom)
 		}, 100)
 		return () => {
 			clearInterval(intervalId)
 		}
+
 	}, [data])
 
 	return (
@@ -199,28 +199,21 @@ export function SongDashboard({
 							</div>
 							<div className="">
 								<Label>Volume</Label>
-								<div className="flex gap-2">
-									<Slider
-										defaultValue={[data.volume * 100]}
-										max={150}
-										step={0.1}
-										onValueCommit={async v => {
-											if (
-												!(await editAction(
-													auth,
-													SongEditType.SetVolume,
-													guildId,
-													visitor,
-													(v[0] ?? 0) / 100
-												))
-											) {
-												toast('Failed to set volume')
-											}
-										}}
-										onValueChange={v => {
-											setVolume(v[0])
-										}}
-									/>
+								<div className="flex gap-2 items-center">
+									<PlaybackControl now={data.volume} totalTime={1} onRelease={async v => {
+										if (
+											!(await editAction(
+												auth,
+												SongEditType.SetVolume,
+												guildId,
+												visitor,
+												Number.parseFloat(v.toFixed(2))
+											))
+										) {
+											return toast('Failed to set volume')
+										}
+										mutate(`/api/song/get/${guildId}`)
+									}} enabled formatter={v => `${(v * 100).toFixed(1)}%`} />
 									<Label>{volume.toFixed(1)}%</Label>
 								</div>
 							</div>
@@ -230,13 +223,17 @@ export function SongDashboard({
 						{data.song ? (
 							<div className="flex flex-col gap-2 w-full">
 								<Query url={data.song.link} visitor={visitor} auth={auth} />
-								{/* <Timeline value={time ?? 0} fullValue={data.song.duration} /> */}
-								<PlaybackControl now={time ?? 0} totalTime={data.song.duration} enabled onRelease={async releaseTime => {
-									if (!(await editAction(auth, SongEditType.SetTime, guildId, visitor, Math.round(releaseTime)))) {
-										return toast('Failed to seek')
-									}
-									mutate(`/api/song/get/${guildId}`)
-								}} />
+								<div className="flex items-center gap-2">
+									<PlaybackControl now={time ?? 0} totalTime={data.song.duration} enabled onRelease={async releaseTime => {
+										if (!(await editAction(auth, SongEditType.SetTime, guildId, visitor, Math.round(releaseTime)))) {
+											return toast('Failed to seek')
+										}
+										mutate(`/api/song/get/${guildId}`)
+									}} />
+									<Label className="text-neutral-700 dark:text-white">
+										{`${Math.floor((time ?? 0) / 60)}:${Math.floor((time ?? 0) % 60).toString().padStart(2, '0')}`}
+									</Label>
+								</div>
 							</div>
 						) : (
 							<Label className="text-zinc-500 italic">Not playing song</Label>
