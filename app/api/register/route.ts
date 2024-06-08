@@ -15,10 +15,11 @@ export async function GET(req: Request) {
         body: JSON.stringify({ code })
     })
     if (!res.ok) {
+        console.log(await res.text(), `${process.env.API_URL}/register`)
         return NextResponse.error()
     }
     const { token } = await res.json()
-    const redirectUrl = new URL('/dashboard', req.url)
+    const redirectUrl = new URL('/dashboard', process.env.NEXT_PUBLIC_URL)
     redirectUrl.hash = token
     return NextResponse.redirect(redirectUrl)
 }
