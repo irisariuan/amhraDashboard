@@ -27,7 +27,7 @@ const formSchema = z.object({
 
 export default function LoginPage() {
 	const router = useRouter()
-	const buttonRef = useRef<null | any>(null)
+	const buttonRef = useRef<null | HTMLButtonElement>(null)
 	useEffect(() => {
 		; (async () => {
 			const item = window.localStorage.getItem("key")

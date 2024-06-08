@@ -1,5 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton"
-import { Guild } from "@/lib/api/log"
+import type { Guild } from "@/lib/api/log"
 import { getAllGuilds } from "@/lib/api/web"
 import {
 	Select,
