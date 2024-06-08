@@ -1,5 +1,5 @@
-import { readFileSync } from 'fs'
-import path from 'path';
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -7,7 +7,7 @@ const nextConfig = {
         return [
             {
                 source: '/api/:path*',
-                destination: JSON.parse(readFileSync(path.join(process.cwd(), 'settings.json'))).apiUrl + '/:path*'
+                destination: `${JSON.parse(readFileSync(path.join(process.cwd(), 'settings.json'))).apiUrl}/:path*`
             }
         ]
     }
