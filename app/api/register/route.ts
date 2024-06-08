@@ -21,6 +21,8 @@ export async function GET(req: Request) {
     if (!res.ok) {
         return NextResponse.error()
     }
-    console.log('ok')
-    return NextResponse.redirect(new URL('/dashboard', req.url))
+    const { token } = await res.json()
+    const redirectUrl = new URL('/dashboard', req.url)
+    redirectUrl.hash = token
+    return NextResponse.redirect(redirectUrl)
 }

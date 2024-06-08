@@ -1,22 +1,18 @@
 import { Reorder } from 'framer-motion'
 import { SongEditType } from '@/lib/api/song'
-import { editAction } from '@/lib/api/web'
+import { type AuthData, editAction } from '@/lib/api/web'
 import { useEffect, useState } from 'react'
 import QueueItem from './queueItem'
 import { useSongReply } from './useSongReply'
 
 export default function Queue({
 	initQueue,
-	auth,
-	guildId,
-	visitor,
+	authData,
 }: {
 	initQueue: string[]
-	auth: string
-	guildId: string
-	visitor: boolean
+	authData: AuthData
 }) {
-	const { data } = useSongReply({ guildId, auth, visitor })
+	const { data } = useSongReply(authData)
 
 	const [oldQueue, setOldQueue] = useState<string[]>(initQueue)
 	const [queue, setQueue] = useState<string[]>(initQueue)
@@ -33,7 +29,7 @@ export default function Queue({
 			onReorder={setQueue}
 			onMouseUp={() => {
 				if (oldQueue !== queue) {
-					editAction(auth, SongEditType.SetQueue, guildId, visitor, queue)
+					editAction(SongEditType.SetQueue, authData, queue)
 					setOldQueue(queue)
 				}
 			}}
@@ -41,12 +37,10 @@ export default function Queue({
 		>
 			{queue.map((v, i) => (
 				<QueueItem
-					auth={auth}
-					guildId={guildId}
+					authData={authData}
 					index={i}
 					value={v}
 					key={v}
-					visitor={visitor}
 				/>
 			))}
 		</Reorder.Group>

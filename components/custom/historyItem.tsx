@@ -1,5 +1,5 @@
 import { SongEditType } from "@/lib/api/song"
-import { editAction } from "@/lib/api/web"
+import { type AuthData, editAction } from "@/lib/api/web"
 import { PlusIcon } from "@radix-ui/react-icons"
 import { toast } from "sonner"
 import { mutate } from "swr"
@@ -8,28 +8,22 @@ import LinkCard from "./dashboard/link"
 
 export default function HistoryItem({
     link,
-    auth,
-    guildId,
-    visitor,
+    authData,
 }: {
     link: string
-    auth: string
-    guildId: string
-    visitor: boolean
+    authData: AuthData
 }) {
     return <div className="break-words w-full flex items-center hover:cursor-pointer gap-2">
         <div className="flex-1 overflow-hidden">
-            <LinkCard value={link} auth={auth} visitor={visitor} />
+            <LinkCard value={link} authData={authData} />
         </div>
         <Button
             variant="outline"
             onClick={async () => {
                 if (
                     await editAction(
-                        auth,
                         SongEditType.AddSong,
-                        guildId,
-                        visitor,
+                        authData,
                         link
                     )
                 ) {
@@ -37,7 +31,7 @@ export default function HistoryItem({
                 } else {
                     toast('Failed to add song to queue')
                 }
-                mutate(`/api/song/get/${guildId}`)
+                mutate(`/api/song/get/${authData.guildId}`)
             }}
         >
             <PlusIcon />

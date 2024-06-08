@@ -15,7 +15,7 @@ import LogTab from "./dashboard/area/log"
 import SongTab from "./dashboard/area/song"
 import MessageTab from "./dashboard/area/message"
 
-export default function Dashboard({ auth }: { auth: string }) {
+export default function Dashboard({ auth, bearer = false }: { auth: string, bearer?: boolean }) {
 	const router = useRouter()
 	async function clickHandler() {
 		logout(auth)
@@ -53,13 +53,13 @@ export default function Dashboard({ auth }: { auth: string }) {
 						</Tooltip>
 					</TooltipProvider>
 				</div>
-				<Tabs defaultValue="admin" className="flex flex-col mt-2">
+				<Tabs defaultValue={bearer ? 'song' : "admin"} className="flex flex-col mt-2">
 					<div className="flex justify-center">
 						<TabsList className="mb-4">
-							<TabsTrigger value="admin">Administration</TabsTrigger>
-							<TabsTrigger value="log">Logs</TabsTrigger>
+							<TabsTrigger value="admin" disabled={bearer}>Administration</TabsTrigger>
+							<TabsTrigger value="log" disabled={bearer}>Logs</TabsTrigger>
 							<TabsTrigger value="song">Song</TabsTrigger>
-							<TabsTrigger value="message">Message</TabsTrigger>
+							<TabsTrigger value="message" disabled={bearer}>Message</TabsTrigger>
 						</TabsList>
 					</div>
 					<div className="bg-zinc-50 dark:bg-zinc-950 lg:p-8 p-2 rounded-xl">
@@ -70,7 +70,7 @@ export default function Dashboard({ auth }: { auth: string }) {
 							<LogTab auth={auth} />
 						</TabsContent>
 						<TabsContent value="song">
-							<SongTab auth={auth} />
+							<SongTab auth={auth} bearer={bearer} />
 						</TabsContent>
 						<TabsContent value="message">
 							<MessageTab auth={auth} />

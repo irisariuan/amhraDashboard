@@ -41,18 +41,20 @@ export function SongDashboard({
 	auth,
 	guildId,
 	visitor = false,
+	bearer = false
 }: {
 	auth: string
 	guildId: string
 	visitor: boolean
+	bearer?: boolean
 }) {
 	const [volume, setVolume] = useState(0)
 	const [time, setTime] = useState<number | null>(null)
 	const [waited, setWaited] = useState(false)
-	const { data, isLoading } = useSongReply({ guildId, auth, visitor })
-
+	const { data, isLoading } = useSongReply({ guildId, auth, visitor, bearer })
+	const authData = { auth, bearer, guildId, visitor }
 	async function handleClick(action: SongEditType) {
-		if (await editAction(auth, action, guildId, visitor)) {
+		if (await editAction(action, authData)) {
 			toast(FormatSongEditType[action])
 		} else {
 			toast('Failed to run')
@@ -62,11 +64,11 @@ export function SongDashboard({
 	async function onSubmit(values: z.infer<typeof formSchema>) {
 		let url = values.url
 		if (!YoutubeVideoRegex.test(values.url)) {
-			const query = await queryYoutube(auth, values.url, visitor)
+			const query = await queryYoutube(values.url, authData)
 			url = query.url
 			toast(`Found song ${query.title}`)
 		}
-		if (await editAction(auth, SongEditType.AddSong, guildId, visitor, url)) {
+		if (await editAction(SongEditType.AddSong, authData, url)) {
 			mutate(`/api/song/get/${guildId}`)
 			return toast('Added song to queue')
 		}
@@ -203,10 +205,8 @@ export function SongDashboard({
 									<PlaybackControl now={data.volume} totalTime={1} onRelease={async v => {
 										if (
 											!(await editAction(
-												auth,
 												SongEditType.SetVolume,
-												guildId,
-												visitor,
+												authData,
 												Number.parseFloat(v.toFixed(2))
 											))
 										) {
@@ -222,10 +222,10 @@ export function SongDashboard({
 					<Area title="Now Playing">
 						{data.song ? (
 							<div className="flex flex-col gap-2 w-full">
-								<Query url={data.song.link} visitor={visitor} auth={auth} />
+								<Query url={data.song.link} authData={authData} />
 								<div className="flex items-center gap-2">
 									<PlaybackControl now={time ?? 0} totalTime={data.song.duration} enabled onRelease={async releaseTime => {
-										if (!(await editAction(auth, SongEditType.SetTime, guildId, visitor, Math.round(releaseTime)))) {
+										if (!(await editAction(SongEditType.SetTime, authData, Math.round(releaseTime)))) {
 											return toast('Failed to seek')
 										}
 										mutate(`/api/song/get/${guildId}`)
@@ -253,7 +253,7 @@ export function SongDashboard({
 									) : data.history?.length > 0 ? (
 										<div className='flex flex-col gap-2'>
 											{Array.from(new Set(data.history)).map((v, i) => <div key={v}>
-												<HistoryItem link={v} auth={auth} guildId={guildId} visitor={visitor} />
+												<HistoryItem link={v} authData={authData}/>
 											</div>)}
 										</div>
 									) : (
@@ -273,9 +273,7 @@ export function SongDashboard({
 									) : data.queue?.length > 0 ? (
 										<Queue
 											initQueue={data.queue}
-											auth={auth}
-											guildId={guildId}
-											visitor={visitor}
+											authData={authData}
 										/>
 									) : (
 										<Label className="text-zinc-500 italic">No song in queue</Label>

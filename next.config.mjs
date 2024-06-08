@@ -10,7 +10,8 @@ const nextConfig = {
                 destination: `${JSON.parse(readFileSync(path.join(process.cwd(), 'settings.json'))).apiUrl}/:path*`
             }
         ]
-    }
+    },
+    
 };
 
 export default nextConfig;

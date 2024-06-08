@@ -1,7 +1,7 @@
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { Channel } from "@/lib/api/log"
-import { getMessages } from "@/lib/api/web"
+import { type AuthData, getMessages } from "@/lib/api/web"
 import {
 	HoverCard,
 	HoverCardContent,
@@ -14,11 +14,9 @@ import useSWR from "swr"
 import moment from "moment"
 
 export default function MessageComponent({
-	guildId,
-	auth,
+	authData,
 }: {
-	guildId: string
-	auth: string
+	authData: Pick<AuthData, 'guildId' | 'auth'>
 }) {
 	const {
 		data: channels,
@@ -26,8 +24,8 @@ export default function MessageComponent({
 	}: {
 		data: Channel[] | undefined
 		isLoading: boolean
-	} = useSWR(`/api/messages/${guildId}`, () => {
-		return getMessages(auth, guildId)
+	} = useSWR(`/api/messages/${authData.guildId}`, () => {
+		return getMessages(authData)
 	})
 
 	return (

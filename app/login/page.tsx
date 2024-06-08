@@ -1,12 +1,13 @@
 "use client"
 import { login } from "@/lib/api/web"
-import { redirect, useRouter } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { useEffect, useRef } from "react"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faDiscord } from '@fortawesome/free-brands-svg-icons'
 import { useForm } from "react-hook-form"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Button, ButtonProps } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import {
 	Form,
 	FormControl,
@@ -18,6 +19,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
+import Link from "next/link"
 
 const formSchema = z.object({
 	password: z.string().min(1),
@@ -29,11 +31,20 @@ export default function LoginPage() {
 	useEffect(() => {
 		; (async () => {
 			const item = window.localStorage.getItem("key")
+			const bearer = window.localStorage.getItem("bearer")
 			if (item) {
 				if (await login(item)) {
+					if (bearer) {
+						window.localStorage.removeItem("bearer")
+					}
 					return router.push("/dashboard")
 				}
 			}
+			// if (bearer) {
+			// 	if (await login(bearer, { bearer: true })) {
+			// 		return router.push("/dashboard")
+			// 	}
+			// }
 		})()
 	}, [router])
 	const form = useForm<z.infer<typeof formSchema>>({
@@ -46,6 +57,7 @@ export default function LoginPage() {
 	async function onSubmit(values: z.infer<typeof formSchema>) {
 		if (await login(values.password)) {
 			window.localStorage.setItem("key", values.password)
+			window.localStorage.removeItem("bearer")
 			router.push("/dashboard")
 			if (!buttonRef.current) return
 			buttonRef.current.disabled = true
@@ -59,10 +71,10 @@ export default function LoginPage() {
 	}
 	return (
 		<div className="h-full w-full flex flex-col items-center justify-center">
-			<div className="bg-white dark:bg-zinc-900 h-max w-max p-10 rounded-xl flex flex-col justify-center items-center text-3xl">
-				<h1 className="font-extrabold mb-8">Amhra Dashboard</h1>
+			<div className="bg-white dark:bg-zinc-900 h-max w-max p-10 rounded-xl flex flex-col justify-center items-center text-3xl gap-2">
+				<h1 className="font-extrabold mb-6">Amhra Dashboard</h1>
 				<Form {...form}>
-					<form onSubmit={form.handleSubmit(onSubmit)} className="">
+					<form onSubmit={form.handleSubmit(onSubmit)} className="w-full">
 						<FormField
 							control={form.control}
 							name="password"
@@ -84,11 +96,15 @@ export default function LoginPage() {
 								</FormItem>
 							)}
 						/>
-						<Button ref={buttonRef} type="submit" className="text-xl px-8 mt-4">
+						<Button ref={buttonRef} type="submit" className="text-xl w-full">
 							Login
 						</Button>
 					</form>
 				</Form>
+				<Link className="w-full bg-discord hover:bg-discord-dark font-bold text-white flex justify-center items-center gap-2 rounded-md p-2 text-lg" href="/discord">
+					<FontAwesomeIcon icon={faDiscord} />
+					Login With Discord
+				</Link>
 			</div>
 		</div>
 	)

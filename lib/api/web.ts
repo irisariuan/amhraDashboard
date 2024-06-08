@@ -1,11 +1,14 @@
 import type { Channel, Guild, Log } from "./log"
 import { SongEditType } from "./song"
 
-export async function login(auth: string): Promise<boolean> {
-    const req = await fetch('/api/new', {
-        headers: { Authorization: `Basic ${auth}` }
-    })
+interface LoginOptions {
+    bearer?: boolean
+}
 
+export async function login(auth: string, settings?: LoginOptions): Promise<boolean> {
+    const req = await fetch('/api/new', {
+        headers: { Authorization: `${settings?.bearer ? 'Bearer' : 'Basic'} ${auth}` }
+    })
     return req.ok
 }
 export async function logout(auth: string): Promise<boolean> {
@@ -31,6 +34,13 @@ export interface YoutubeVideoData {
     title: string,
     views: number,
     url: string
+}
+
+export interface AuthData {
+    guildId: string,
+    visitor: boolean,
+    bearer: boolean,
+    auth: string
 }
 
 export function postAction(auth: string, data: ActionData) {
@@ -60,14 +70,14 @@ export async function getLog(auth: string): Promise<{ content: Log[] }> {
     return { content }
 }
 
-export async function editAction(auth: string, action: SongEditType.SetQueue, guildId: string, visitor: boolean, queue: string[]): Promise<boolean>
-export async function editAction(auth: string, action: SongEditType.SetVolume, guildId: string, visitor: boolean, volume: number): Promise<boolean>
-export async function editAction(auth: string, action: SongEditType.RemoveSong, guildId: string, visitor: boolean, index: number): Promise<boolean>
-export async function editAction(auth: string, action: SongEditType.SetTime, guildId: string, visitor: boolean, time: number): Promise<boolean>
-export async function editAction(auth: string, action: SongEditType.AddSong, guildId: string, visitor: boolean, url: string): Promise<boolean>
-export async function editAction(auth: string, action: SongEditType, guildId: string, visitor: boolean): Promise<boolean>
-export async function editAction(auth: string, action: SongEditType, guildId: string, visitor: boolean, data?: number | string | string[]): Promise<boolean> {
-    const headerAuth = visitor ? auth : `Basic ${auth}`
+export async function editAction(action: SongEditType.SetQueue, authData: AuthData, queue: string[]): Promise<boolean>
+export async function editAction(action: SongEditType.SetVolume, authData: AuthData, volume: number): Promise<boolean>
+export async function editAction(action: SongEditType.RemoveSong, authData: AuthData, index: number): Promise<boolean>
+export async function editAction(action: SongEditType.SetTime, authData: AuthData, time: number): Promise<boolean>
+export async function editAction(action: SongEditType.AddSong, authData: AuthData, url: string): Promise<boolean>
+export async function editAction(action: SongEditType, authData: AuthData): Promise<boolean>
+export async function editAction(action: SongEditType, authData: AuthData, data?: number | string | string[]): Promise<boolean> {
+    const headerAuth = authData.visitor ? authData.auth : `${authData.bearer ? 'Bearer' : 'Basic'} ${authData.auth}`
     switch (action) {
         case SongEditType.AddSong: {
             const req = await fetch('/api/song/edit', {
@@ -78,7 +88,7 @@ export async function editAction(auth: string, action: SongEditType, guildId: st
                 },
                 body: JSON.stringify({
                     action,
-                    guildId,
+                    guildId: authData.guildId,
                     detail: {
                         url: data
                     }
@@ -95,7 +105,7 @@ export async function editAction(auth: string, action: SongEditType, guildId: st
                 },
                 body: JSON.stringify({
                     action,
-                    guildId,
+                    guildId: authData.guildId,
                     detail: {
                         sec: data
                     }
@@ -112,7 +122,7 @@ export async function editAction(auth: string, action: SongEditType, guildId: st
                 },
                 body: JSON.stringify({
                     action,
-                    guildId,
+                    guildId: authData.guildId,
                     detail: {
                         index: data
                     }
@@ -129,7 +139,7 @@ export async function editAction(auth: string, action: SongEditType, guildId: st
                 },
                 body: JSON.stringify({
                     action,
-                    guildId,
+                    guildId: authData.guildId,
                     detail: {
                         volume: data
                     }
@@ -146,7 +156,7 @@ export async function editAction(auth: string, action: SongEditType, guildId: st
                 },
                 body: JSON.stringify({
                     action,
-                    guildId,
+                    guildId: authData.guildId,
                     detail: {
                         queue: data
                     }
@@ -163,7 +173,7 @@ export async function editAction(auth: string, action: SongEditType, guildId: st
                 },
                 body: JSON.stringify({
                     action,
-                    guildId
+                    guildId: authData.guildId,
                 })
             })
             return req.ok
@@ -171,11 +181,11 @@ export async function editAction(auth: string, action: SongEditType, guildId: st
     }
 }
 //{ url: string, title: string, durationInSec: number }
-export async function queryYoutube(auth: string, query: string, visitor: boolean): Promise<Pick<YoutubeVideoData, 'url' | 'title' | 'durationInSec'>> {
+export async function queryYoutube(query: string, authData: Omit<AuthData, 'guildId'>): Promise<Pick<YoutubeVideoData, 'url' | 'title' | 'durationInSec'>> {
     return await (await fetch('/api/search', {
         method: 'POST',
         headers: {
-            Authorization: visitor ? auth : `Basic ${auth}`,
+            Authorization: authData.visitor ? authData.auth : `${authData.bearer ? 'Bearer' : 'Basic'} ${authData.auth}`,
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -184,11 +194,11 @@ export async function queryYoutube(auth: string, query: string, visitor: boolean
     })).json()
 }
 
-export async function queryDetails(auth: string, url: string, visitor: boolean): Promise<YoutubeVideoData> {
+export async function queryDetails(url: string, authData: Omit<AuthData, 'guildId'>): Promise<YoutubeVideoData> {
     return await (await fetch('/api/getVideoDetail', {
         method: 'POST',
         headers: {
-            Authorization: visitor ? auth : `Basic ${auth}`,
+            Authorization: authData.visitor ? authData.auth : `${authData.bearer ? 'Bearer' : 'Basic'} ${authData.auth}`,
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -198,9 +208,9 @@ export async function queryDetails(auth: string, url: string, visitor: boolean):
     })).json()
 }
 
-export async function getMessages(auth: string, guildId: string) {
-    const { content }: { content: Channel[] } = await (await fetch(`/api/messages/${guildId}`, {
-        headers: { Authorization: `Basic ${auth}` }
+export async function getMessages(authData: Pick<AuthData, 'auth' | 'guildId'>) {
+    const { content }: { content: Channel[] } = await (await fetch(`/api/messages/${authData.guildId}`, {
+        headers: { Authorization: `Basic ${authData.auth}` }
     })).json() ?? { content: [] }
     return content
 }
@@ -211,12 +221,12 @@ export async function getAllGuilds(auth: string): Promise<Guild[]> {
     })).json()).content ?? []
 }
 
-export async function verifyVisitorWeb(auth: string, guildId: string): Promise<boolean> {
+export async function verifyVisitorWeb(authData: Pick<AuthData, 'auth' | 'guildId'>): Promise<boolean> {
     const req = await fetch('/api/live', {
         method: 'POST',
-        headers: { Authorization: `${auth}`, 'Content-Type': 'application/json' },
+        headers: { Authorization: `${authData.auth}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-            guildId
+            guildId: authData.guildId
         })
     })
     return req.ok

@@ -1,8 +1,7 @@
-import { queryDetails } from '@/lib/api/web'
+import type { AuthData } from '@/lib/api/web'
 import { EyeOpenIcon } from '@radix-ui/react-icons'
 import { ClockIcon } from 'lucide-react'
 import moment from 'moment'
-import useSWR from 'swr'
 import ReloadCircle from '../reloadCircle'
 import { useQuery } from './useQuery'
 
@@ -10,14 +9,12 @@ export const revalidate = 3600
 
 export default function Query({
 	url,
-	visitor,
-	auth,
+	authData
 }: {
 	url: string
-	visitor: boolean
-	auth: string
+	authData: AuthData
 }) {
-	const { data, isLoading, error } = useQuery({ url, auth, visitor })
+	const { data, isLoading, error } = useQuery({ url, authData })
 	
 	return !isLoading && data && !error ? (
 		<div className="flex flex-col gap-2">

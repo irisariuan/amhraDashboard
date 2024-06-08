@@ -13,7 +13,7 @@ import { SongDashboard } from "../songDashboard"
 import { Button } from "@/components/ui/button"
 import { ReloadIcon } from "@radix-ui/react-icons"
 
-export default function SongTab({ auth }: { auth: string }) {
+export default function SongTab({ auth, bearer = false }: { auth: string, bearer?: boolean }) {
 	const {
 		data,
 		isLoading,
@@ -24,7 +24,7 @@ export default function SongTab({ auth }: { auth: string }) {
 		return await (
 			await fetch(url, {
 				headers: {
-					Authorization: `Basic ${auth}`,
+					Authorization: `${bearer ? 'Bearer' : 'Basic'} ${auth}`,
 				},
 			})
 		).json()
@@ -78,7 +78,7 @@ export default function SongTab({ auth }: { auth: string }) {
 							<></>
 						)}
 					</div>
-					{guildId && <SongDashboard auth={auth} guildId={guildId} visitor={false} />}
+					{guildId && <SongDashboard auth={auth} guildId={guildId} visitor={false} bearer={bearer} />}
 				</div>
 			)}
 		</>

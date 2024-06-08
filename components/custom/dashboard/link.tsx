@@ -6,9 +6,10 @@ import {
 } from '@/components/ui/hover-card'
 import Query from './query'
 import { useQuery } from './useQuery'
+import type { AuthData } from '@/lib/api/web'
 
-export default function LinkCard({ value, auth, visitor }: { value: string, auth: string, visitor: boolean }) {
-	const { isLoading, data } = useQuery({ url: value, auth, visitor })
+export default function LinkCard({ value, authData }: { value: string, authData: AuthData }) {
+	const { isLoading, data } = useQuery({ url: value, authData })
     return (
         <HoverCard>
             <HoverCardTrigger>
@@ -19,7 +20,7 @@ export default function LinkCard({ value, auth, visitor }: { value: string, auth
                 </a>
             </HoverCardTrigger>
             <HoverCardContent className="w-full">
-                <Query url={value} visitor={visitor} auth={auth} />
+                <Query url={value} authData={authData} />
             </HoverCardContent>
         </HoverCard>
     )

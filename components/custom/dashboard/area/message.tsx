@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/select"
 import { useState, useEffect } from "react"
 import useSWR from "swr"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import MessageComponent from "../messages"
 
 export default function MessageTab({ auth }: { auth: string }) {
@@ -55,8 +54,7 @@ export default function MessageTab({ auth }: { auth: string }) {
 							<SelectValue placeholder="Guilds" />
 						</SelectTrigger>
 						<SelectContent>
-							{data &&
-								data?.map(v => (
+							{data?.map(v => (
 									<SelectItem value={v.id} key={v.id}>
 										{v.name} (ID: {v.id})
 									</SelectItem>
@@ -65,7 +63,7 @@ export default function MessageTab({ auth }: { auth: string }) {
 					</Select>
 					{value && (
 						<div className="mt-6">
-							<MessageComponent guildId={value} auth={auth} />
+							<MessageComponent authData={{auth, guildId: value}} />
 						</div>
 					)}
 				</div>

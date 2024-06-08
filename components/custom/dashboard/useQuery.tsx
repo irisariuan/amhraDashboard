@@ -1,9 +1,9 @@
-import { queryDetails } from "@/lib/api/web"
+import { type AuthData, queryDetails } from "@/lib/api/web"
 import useSWR from "swr"
 
-export function useQuery({ url, auth, visitor} : { url: string, auth: string, visitor: boolean}) {
+export function useQuery({ url, authData} : { url: string, authData: AuthData}) {
     const { data, isLoading, error } = useSWR(url, async () => {
-        return await queryDetails(auth, url, visitor)
+        return await queryDetails(url, authData)
     })
     return {data, isLoading, error}
 }
