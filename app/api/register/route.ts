@@ -1,8 +1,4 @@
-import { readFileSync } from "node:fs"
 import { NextResponse } from "next/server"
-import path from "node:path"
-
-const settings = JSON.parse(readFileSync(path.join(process.cwd(), 'settings.json'), 'utf8'))
 
 export const dynamic = 'force-dynamic'
 export async function GET(req: Request) {
@@ -11,7 +7,7 @@ export async function GET(req: Request) {
     if (!code) {
         return NextResponse.error()
     }
-    const res = await fetch(`${settings.apiUrl}/register`, {
+    const res = await fetch(`${process.env.API_URL}/register`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
