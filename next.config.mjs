@@ -7,7 +7,7 @@ const nextConfig = {
         return [
             {
                 source: '/api/:path*',
-                destination: `${JSON.parse(readFileSync(path.join(process.cwd(), 'settings.json'))).apiUrl}/:path*`
+                destination: `${process.env.API_URL}/:path*`
             }
         ]
     },

@@ -25,28 +25,28 @@ export default function VisitorPage({ params }: { params: { data: string } }) {
 	const router = useRouter()
 	useEffect(() => {
 		try {
-			const { guildId, auth }: { guildId: string; auth: string } = JSON.parse(
+			const authData: { guildId: string; auth: string } = JSON.parse(
 				atob(decodeURI(params.data))
 			)
 
-			verifyVisitorWeb(auth, guildId)
+			verifyVisitorWeb(authData)
 				.then(v => {
 					setOk(v ? Loading.Loaded : Loading.Error)
 					setData({
-						gid: guildId,
-						token: auth,
+						gid: authData.guildId,
+						token: authData.auth,
 					})
 				})
 				.catch(e => {
 					setOk(Loading.Error)
 				})
 			const interval = setInterval(() => {
-				verifyVisitorWeb(auth, guildId)
+				verifyVisitorWeb(authData)
 					.then(v => {
 						setOk(v ? Loading.Loaded : Loading.Error)
 						setData({
-							gid: guildId,
-							token: auth,
+							gid: authData.guildId,
+							token: authData.auth,
 						})
 					})
 					.catch(() => {
