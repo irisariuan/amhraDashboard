@@ -1,6 +1,6 @@
 "use client"
 import { useRouter } from "next/navigation"
-import { logout } from "@/lib/api/web"
+import { AuthData, logout } from "@/lib/api/web"
 import {
 	Tooltip,
 	TooltipContent,
@@ -20,6 +20,7 @@ export default function Dashboard({ auth, bearer = false }: { auth: string, bear
 	async function clickHandler() {
 		logout(auth)
 		window?.localStorage?.removeItem("key")
+		window?.localStorage?.removeItem("bearer")
 		router.push("/login")
 	}
 	return (
@@ -56,7 +57,7 @@ export default function Dashboard({ auth, bearer = false }: { auth: string, bear
 				<Tabs defaultValue={bearer ? 'song' : "admin"} className="flex flex-col mt-2">
 					<div className="flex justify-center">
 						<TabsList className="mb-4">
-							<TabsTrigger value="admin" disabled={bearer}>Administration</TabsTrigger>
+							<TabsTrigger value="admin">Administration</TabsTrigger>
 							<TabsTrigger value="log" disabled={bearer}>Logs</TabsTrigger>
 							<TabsTrigger value="song">Song</TabsTrigger>
 							<TabsTrigger value="message" disabled={bearer}>Message</TabsTrigger>
@@ -64,7 +65,7 @@ export default function Dashboard({ auth, bearer = false }: { auth: string, bear
 					</div>
 					<div className="bg-zinc-50 dark:bg-zinc-950 lg:p-8 p-2 rounded-xl">
 						<TabsContent value="admin">
-							<ActionTab clickHandler={clickHandler} auth={auth} />
+							<ActionTab clickHandler={clickHandler} authData={{auth, bearer}} />
 						</TabsContent>
 						<TabsContent value="log">
 							<LogTab auth={auth} />
