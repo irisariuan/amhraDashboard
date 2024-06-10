@@ -66,7 +66,7 @@ export async function getLog(auth: string): Promise<{ content: Log[] }> {
             log.extraType = v[0].slice(1, -1).toLowerCase() as 'voice' | 'delete' | 'edit'
         }
         return log
-    })
+    }).reverse()
     return { content }
 }
 
