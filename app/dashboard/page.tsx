@@ -19,14 +19,18 @@ export default function DashboardPage() {
 				return router.replace("/dashboard")
 			}
 		}
-		if (window.localStorage.getItem("bearer") && await login(window.localStorage.getItem("bearer") ?? "", { bearer: true })) {
+		if (window.localStorage.getItem("bearer")) {
+			if (!await login(window.localStorage.getItem("bearer") ?? "", { bearer: true })) {
+				window.localStorage.removeItem("bearer")
+				return router.push("/login")
+			}
 			setIsBearer(true)
 			setPassword(window.localStorage.getItem("bearer") ?? "")
 			console.log('using bearer')
 			return
 		}
 		const item = window.localStorage.getItem("key")
-		if (item && (await login(item))) {
+		if (item && await login(item)) {
 			setPassword(window.localStorage.getItem("key") ?? "")
 			return
 		}
