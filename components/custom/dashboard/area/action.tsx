@@ -25,7 +25,7 @@ export default function ActionTab({
 		<Area title="Action">
 			<Button onClick={clickHandler}>Logout</Button>
 			{
-				authData.bearer &&
+				!authData.bearer &&
 				<Dialog>
 					<DialogTrigger>
 						<Button>Terminate</Button>
