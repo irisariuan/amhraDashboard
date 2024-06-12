@@ -231,7 +231,7 @@ export function SongDashboard({
 										mutate(`/api/song/get/${guildId}`)
 									}} />
 									<Label className="text-neutral-700 dark:text-white">
-										{`${Math.floor((time ?? 0) / 60)}:${Math.floor((time ?? 0) % 60).toString().padStart(2, '0')}`}
+										{`${Math.floor((time ?? 0) / 60).toString().padStart(2, '0')}:${Math.floor((time ?? 0) % 60).toString().padStart(2, '0')}`}/{Math.floor(data.song.duration / 60).toString().padStart(2, '0')}:{(data.song.duration % 60).toString().padStart(2, '0')}
 									</Label>
 								</div>
 							</div>

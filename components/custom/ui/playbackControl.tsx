@@ -9,7 +9,7 @@ export default function PlaybackControl({
     totalTime,
     onRelease = () => { },
     enabled = false,
-    formatter = (time: number) => `${Math.floor(time / 60)}:${Math.floor(time % 60).toString().padStart(2, '0')}`
+    formatter = (time: number) => `${Math.floor(time / 60).toString().padStart(2, '0')}:${Math.floor(time % 60).toString().padStart(2, '0')}`
 }: {
     now: number
     totalTime: number
