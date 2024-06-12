@@ -202,12 +202,12 @@ export function SongDashboard({
 							<div className="">
 								<Label>Volume</Label>
 								<div className="flex gap-2 items-center">
-									<PlaybackControl now={data.volume / 100} totalTime={1} onRelease={async v => {
+									<PlaybackControl now={data.volume} totalTime={1} onRelease={async v => {
 										if (
 											!(await editAction(
 												SongEditType.SetVolume,
 												authData,
-												Number.parseFloat(v.toFixed(2))
+												Number.parseFloat(v.toFixed(3))
 											))
 										) {
 											return toast('Failed to set volume')
