@@ -32,6 +32,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import HistoryItem from '../historyItem'
 import PlaybackControl from '../ui/playbackControl'
 import DashboardPlaceholder from './dashboardPlaceholder'
+import Controllable from '../ui/controllableBar'
 
 const formSchema = z.object({
 	url: z.string().min(1),
@@ -59,7 +60,7 @@ export function SongDashboard({
 		} else {
 			toast('Failed to run')
 		}
-		mutate(`/api/song/get/${guildId}`)
+		await mutate(`/api/song/get/${guildId}`)
 	}
 	async function onSubmit(values: z.infer<typeof formSchema>) {
 		let url = values.url
@@ -112,6 +113,9 @@ export function SongDashboard({
 			}
 			if (data.paused && data.song) {
 				setTime((data.pausedTimestamp - data.song.startTime - data.pausedInMs + data.song.startFrom) / 1000)
+			}
+			if ((time ?? 0) < 0) {
+				setTime(0)
 			}
 		}, 100)
 		return () => {
@@ -202,7 +206,7 @@ export function SongDashboard({
 							<div className="">
 								<Label>Volume</Label>
 								<div className="flex gap-2 items-center">
-									<PlaybackControl now={data.volume} totalTime={1} onRelease={async v => {
+									<Controllable now={data.volume} totalValue={1} onRelease={async v => {
 										if (
 											!(await editAction(
 												SongEditType.SetVolume,
@@ -223,13 +227,15 @@ export function SongDashboard({
 						{data.song ? (
 							<div className="flex flex-col gap-2 w-full">
 								<Query url={data.song.link} authData={authData} />
-								<div className="flex items-center gap-2">
-									<PlaybackControl now={time ?? 0} totalTime={data.song.duration} enabled onRelease={async releaseTime => {
-										if (!(await editAction(SongEditType.SetTime, authData, Math.round(releaseTime)))) {
-											return toast('Failed to seek')
-										}
-										mutate(`/api/song/get/${guildId}`)
-									}} />
+								<div className="flex flex-col">
+									<div className="w-full">
+										<PlaybackControl now={time ?? 0} totalTime={data.song.duration} enabled onRelease={async releaseTime => {
+											if (!(await editAction(SongEditType.SetTime, authData, Math.round(releaseTime)))) {
+												return toast('Failed to seek')
+											}
+											mutate(`/api/song/get/${guildId}`)
+										}} />
+									</div>
 									<Label className="text-neutral-700 dark:text-white">
 										{`${Math.floor((time ?? 0) / 60).toString().padStart(2, '0')}:${Math.floor((time ?? 0) % 60).toString().padStart(2, '0')}`}/{Math.floor(data.song.duration / 60).toString().padStart(2, '0')}:{(data.song.duration % 60).toString().padStart(2, '0')}
 									</Label>
@@ -253,7 +259,7 @@ export function SongDashboard({
 									) : data.history?.length > 0 ? (
 										<div className='flex flex-col gap-2'>
 											{Array.from(new Set(data.history)).map((v, i) => <div key={v}>
-												<HistoryItem link={v} authData={authData}/>
+												<HistoryItem link={v} authData={authData} />
 											</div>)}
 										</div>
 									) : (
