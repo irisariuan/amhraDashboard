@@ -229,7 +229,7 @@ export function SongDashboard({
 								<Query url={data.song.link} authData={authData} />
 								<div className="flex flex-col">
 									<div className="w-full">
-										<PlaybackControl now={time ?? 0} totalTime={data.song.duration} enabled onRelease={async releaseTime => {
+										<PlaybackControl now={time ?? 0} totalTime={data.song.duration} enabled={!data.useYoutubeDl} onRelease={async releaseTime => {
 											if (!(await editAction(SongEditType.SetTime, authData, Math.round(releaseTime)))) {
 												return toast('Failed to seek')
 											}

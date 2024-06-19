@@ -1,18 +1,19 @@
 export interface SongReply {
-    song?: {
+    song: {
         link: string,
-        channel: string,
+        channel?: string,
         duration: number,
-        title: string,
+        title?: string,
         thumbnails: string[],
-        startTime: number,
-        startFrom: number
-    },
+        startFrom: number,
+        startTime: number
+    } | null,
     queue: string[],
-    history: string[],
     volume: number,
     isPlaying: boolean,
-    paused: boolean
+    history: string[],
+    useYoutubeDl: boolean,
+    paused: boolean,
     pausedInMs: number,
     pausedTimestamp: number
 }

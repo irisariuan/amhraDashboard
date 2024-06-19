@@ -1,6 +1,4 @@
 'use client'
-import { Label } from "@/components/ui/label"
-import { useEffect, useRef, useState } from "react"
 import Controllable, { type Presentable } from "./controllableBar"
 
 export default function PlaybackControl({
