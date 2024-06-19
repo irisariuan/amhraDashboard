@@ -37,6 +37,7 @@ export default function Controllable({
     }
     function dragRelease() {
         setMouseDown(false)
+        if (!enabled) return
         onRelease(value * totalValue)
     }
 
