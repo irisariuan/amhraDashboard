@@ -15,7 +15,8 @@ export interface SongReply {
     useYoutubeDl: boolean,
     paused: boolean,
     pausedInMs: number,
-    pausedTimestamp: number
+    pausedTimestamp: number,
+    canSeek: boolean
 }
 
 export enum SongEditType {
