@@ -22,17 +22,20 @@ export default function Queue({
 		}
 	}, [data])
 
+	function editQueue() {
+		if (oldQueue !== queue) {
+			editAction(SongEditType.SetQueue, authData, queue)
+			setOldQueue(queue)
+		}
+	}
+
 	return (
 		<Reorder.Group
 			axis="y"
 			values={initQueue}
 			onReorder={setQueue}
-			onMouseUp={() => {
-				if (oldQueue !== queue) {
-					editAction(SongEditType.SetQueue, authData, queue)
-					setOldQueue(queue)
-				}
-			}}
+			onMouseUp={editQueue}
+			onTouchEnd={editQueue}
 			className="flex flex-col w-full justify-center items-center gap-2"
 		>
 			{queue.map((v, i) => (
