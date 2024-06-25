@@ -13,7 +13,7 @@ export default function HistoryItem({
     link: string
     authData: AuthData
 }) {
-    return <div className="break-words w-full flex items-center hover:cursor-pointer gap-2">
+    return <div className="break-words w-full flex items-center hover:cursor-pointer gap-2 hover:dark:bg-neutral-900 hover:bg-neutral-200 p-2 rounded-xl">
         <div className="flex-1 overflow-hidden">
             <LinkCard value={link} authData={authData} />
         </div>

@@ -28,7 +28,8 @@ export enum SongEditType {
     SetTime = 'setTime',
     RemoveSong = 'removeSong',
     SetVolume = 'setVolume',
-    SetQueue = 'setQueue'
+    SetQueue = 'setQueue',
+    Quit = 'quit'
 }
 
 export const FormatSongEditType: Record<SongEditType, string> = {
@@ -40,7 +41,8 @@ export const FormatSongEditType: Record<SongEditType, string> = {
     [SongEditType.SetTime]: 'Set Time',
     [SongEditType.RemoveSong]: 'Removed Song',
     [SongEditType.SetVolume]: 'Set Volume',
-    [SongEditType.SetQueue]: 'Set Queue'
+    [SongEditType.SetQueue]: 'Set Queue',
+    [SongEditType.Quit]: 'Quit'
 } as const
 
 export const YoutubeVideoRegex = /http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-\_]*)(&(amp;)?[\w\?=]*)?/

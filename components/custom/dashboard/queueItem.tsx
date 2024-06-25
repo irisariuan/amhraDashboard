@@ -20,13 +20,13 @@ export default function QueueItem({
 }) {
 	return (
 		<Reorder.Item value={value} key={value} className="w-full">
-			<div className="break-words w-full flex items-center hover:cursor-grab active:cursor-grabbing gap-2">
+			<div className="break-words w-full flex items-center hover:cursor-grab active:cursor-grabbing gap-2 hover:dark:bg-neutral-800/50 hover:bg-neutral-200/50 p-2 rounded-xl">
 				<div className="flex-1 overflow-hidden">
 					<Label className="mr-2 font-bold text-base">{index + 1}.</Label>
 					<LinkCard value={value} authData={authData} />
 				</div>
 				<Button
-					variant="outline"
+					variant="destructive"
 					onClick={async () => {
 						if (
 							await editAction(

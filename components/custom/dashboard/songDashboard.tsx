@@ -26,7 +26,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect, useState } from 'react'
 import Queue from './queue'
 import { useSongReply } from './useSongReply'
-import { PauseIcon, PlusCircledIcon, ResumeIcon, StopIcon, TrackNextIcon } from '@radix-ui/react-icons'
+import { ExitIcon, PauseIcon, PlusCircledIcon, ResumeIcon, StopIcon, TrackNextIcon } from '@radix-ui/react-icons'
 import Query from './query'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import HistoryItem from '../historyItem'
@@ -201,6 +201,13 @@ export function SongDashboard({
 									}}
 								>
 									<StopIcon />
+								</Button>
+								<Button
+									onClick={() => {
+										handleClick(SongEditType.Quit)
+									}}
+								>
+									<ExitIcon />
 								</Button>
 							</div>
 							<div className="">
