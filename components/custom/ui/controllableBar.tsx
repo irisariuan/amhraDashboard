@@ -1,6 +1,7 @@
 'use client'
 import { Label } from "@/components/ui/label"
 import { useEffect, useRef, useState } from "react"
+import useMobile, { DeviceType } from "../useMobile"
 
 export type Presentable = number | string
 
@@ -18,6 +19,7 @@ export default function Controllable({
     formatter: (value: number) => Presentable
 }) {
     const ref = useRef<HTMLDivElement>(null)
+    const isMobile = useMobile()
     const previewRef = useRef<HTMLDivElement>(null)
     const [value, setValue] = useState(now / totalValue)
     const [mouseDown, setMouseDown] = useState(false)
@@ -70,19 +72,21 @@ export default function Controllable({
                     </div>
                 )}
             </div>
-            <div className="relative h-4 bottom-4 rounded-full items-center flex w-full" ref={previewRef} onMouseMove={v => enabled && !mouseDown && mouseMoving(v.clientX)}>
-                {enabled && !mouseDown && (
-                    <div className="w-full flex justify-end items-center z-50 h-4 rounded-full transform" style={{ width: `${Math.min(previewValue * 100, 100)}%` }}>
-                        <div className="min-w-2 w-2 h-6 rounded-full bg-neutral-400 dark:bg-neutral-600 relative hover:cursor-grab active:cursor-grabbing invisible group-hover:visible flex justify-center left-1">
-                            <div className="min-w-fit relative bottom-8 border border-neutral-500 bg-neutral-200 dark:bg-neutral-900 origin-center p-2 rounded justify-center items-center flex">
-                                <Label className="text-neutral-500 font-light select-none">
-                                    {formatter(previewValue * totalValue)}
-                                </Label>
+            {isMobile === DeviceType.Desktop &&
+                <div className="relative h-4 bottom-4 rounded-full items-center flex w-full" ref={previewRef} onMouseMove={v => enabled && !mouseDown && mouseMoving(v.clientX)}>
+                    {enabled && !mouseDown && (
+                        <div className="w-full flex justify-end items-center z-50 h-4 rounded-full transform" style={{ width: `${Math.min(previewValue * 100, 100)}%` }}>
+                            <div className="min-w-2 w-2 h-6 rounded-full bg-neutral-400 dark:bg-neutral-600 relative hover:cursor-grab active:cursor-grabbing invisible group-hover:visible flex justify-center left-1">
+                                <div className="min-w-fit relative bottom-8 border border-neutral-500 bg-neutral-200 dark:bg-neutral-900 origin-center p-2 rounded justify-center items-center flex">
+                                    <Label className="text-neutral-500 font-light select-none">
+                                        {formatter(previewValue * totalValue)}
+                                    </Label>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                )}
-            </div>
+                    )}
+                </div>
+            }
         </div>
     )
 }
