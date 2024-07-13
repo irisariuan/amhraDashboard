@@ -25,10 +25,9 @@ const formSchema = z.object({
 	password: z.string().min(1),
 })
 
-export default function LoginPage() {
+export default function LoginPage({searchParams} : {searchParams: {[key: string]: string | string[] | undefined}}) {
 	const router = useRouter()
 	const buttonRef = useRef<null | HTMLButtonElement>(null)
-	const searchParams = useSearchParams()
 	useEffect(() => {
 		; (async () => {
 			const item = window.localStorage.getItem("key")
@@ -72,11 +71,8 @@ export default function LoginPage() {
 		})
 	}
 
-	useEffect(() => {
-		setChecked(searchParams.get('tos') === 'true')
-	})
 
-	const [isChecked, setChecked] = useState(false)
+	const [isChecked, setChecked] = useState(searchParams?.checked === 'true')
 
 	return (
 		<div className="h-full w-full flex flex-col items-center justify-center">
