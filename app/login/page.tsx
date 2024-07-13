@@ -71,7 +71,10 @@ export default function LoginPage() {
 			description: 'Please try again'
 		})
 	}
-	const [isChecked, setChecked] = useState(searchParams.get('tos') === 'true')
+	useEffect(() => {
+		setChecked(searchParams.get('tos') === 'true')
+	}, [searchParams])
+	const [isChecked, setChecked] = useState(false)
 
 	return (
 		<div className="h-full w-full flex flex-col items-center justify-center">
