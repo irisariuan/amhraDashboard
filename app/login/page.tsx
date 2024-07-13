@@ -1,7 +1,7 @@
 "use client"
 import { login } from "@/lib/api/web"
-import { useRouter } from "next/navigation"
-import { useEffect, useRef } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { useEffect, useRef, useState } from "react"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -28,6 +28,7 @@ const formSchema = z.object({
 export default function LoginPage() {
 	const router = useRouter()
 	const buttonRef = useRef<null | HTMLButtonElement>(null)
+	const searchParams = useSearchParams()
 	useEffect(() => {
 		; (async () => {
 			const item = window.localStorage.getItem("key")
@@ -46,6 +47,7 @@ export default function LoginPage() {
 			// 	}
 			// }
 		})()
+		router.replace('/login')
 	}, [router])
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
@@ -69,42 +71,53 @@ export default function LoginPage() {
 			description: 'Please try again'
 		})
 	}
+	const [isChecked, setChecked] = useState(searchParams.get('tos') === 'true')
+
 	return (
 		<div className="h-full w-full flex flex-col items-center justify-center">
 			<div className="bg-white dark:bg-zinc-900 h-max w-max p-10 rounded-xl flex flex-col justify-center items-center text-3xl gap-2">
 				<h1 className="font-extrabold mb-6">Amhra Dashboard</h1>
-				<Form {...form}>
-					<form onSubmit={form.handleSubmit(onSubmit)} className="w-full">
-						<FormField
-							control={form.control}
-							name="password"
-							render={({ field }) => (
-								<FormItem className="">
-									<FormLabel className="text-xl">Password</FormLabel>
-									<FormControl className="">
-										<Input
-											placeholder="Password"
-											{...field}
-											type="password"
-											className="text-large font-light"
-										/>
-									</FormControl>
-									<FormDescription className="">
-										Login Dashboard
-									</FormDescription>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-						<Button ref={buttonRef} type="submit" className="text-xl w-full">
-							Login
-						</Button>
-					</form>
-				</Form>
-				<Link className="w-full bg-discord hover:bg-discord-dark font-bold text-white flex justify-center items-center gap-2 rounded-md p-2 text-lg" href="/discord">
-					<FontAwesomeIcon icon={faDiscord} />
-					Login With Discord
-				</Link>
+				<div className="flex gap-2 items-center">
+					<p className="text-base">I agree to <Link href='/terms' className="text-blue-400 underline">Terms of Service</Link></p>
+					<input type="checkbox" checked={isChecked} onChange={ev => { setChecked(ev.target.checked) }} />
+				</div>
+				{
+					isChecked &&
+					<>
+						<Form {...form}>
+							<form onSubmit={form.handleSubmit(onSubmit)} className="w-full">
+								<FormField
+									control={form.control}
+									name="password"
+									render={({ field }) => (
+										<FormItem className="">
+											<FormLabel className="text-xl">Password</FormLabel>
+											<FormControl className="">
+												<Input
+													placeholder="Password"
+													{...field}
+													type="password"
+													className="text-large font-light"
+												/>
+											</FormControl>
+											<FormDescription className="">
+												Login Dashboard
+											</FormDescription>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+								<Button ref={buttonRef} type="submit" className="text-xl w-full">
+									Login
+								</Button>
+							</form>
+						</Form>
+						<Link className="w-full bg-discord hover:bg-discord-dark font-bold text-white flex justify-center items-center gap-2 rounded-md p-2 text-lg" href="/discord">
+							<FontAwesomeIcon icon={faDiscord} />
+							Login With Discord
+						</Link>
+					</>
+				}
 			</div>
 		</div>
 	)
