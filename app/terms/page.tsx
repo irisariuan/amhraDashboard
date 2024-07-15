@@ -82,7 +82,7 @@ export default function TermPage() {
                         By using the Amhra Discord Music Bot, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.
                     </p>
                 </div>
-                <Link className='w-full bg-blue-500 p-4' href='/login?tos=true'>
+                <Link className='w-full bg-blue-500 p-4' href='/login?checked=true'>
                     <div className="flex items-center justify-center">
                         <span className='font-bold text-2xl'>Agree</span>
                         <IoIosArrowForward className='text-2xl text-white' />
