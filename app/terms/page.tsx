@@ -6,7 +6,7 @@ import { IoIosArrowForward } from "react-icons/io";
 export default function TermPage() {
     return (
         <div className='p-2 h-full flex items-center justify-center'>
-            <div className="lg:w-1/3 overflow-auto h-2/3 bg-neutral-900 rounded-xl flex flex-col">
+            <div className="lg:w-1/3 overflow-auto h-2/3 dark:bg-neutral-900 bg-white rounded-xl flex flex-col">
                 <div className="p-6">
                     <h1 className='text-3xl font-extrabold'>
                         Terms of Service for Amhra Discord Music Bot
@@ -84,7 +84,7 @@ export default function TermPage() {
                 </div>
                 <Link className='w-full bg-blue-500 p-4' href='/login?checked=true'>
                     <div className="flex items-center justify-center">
-                        <span className='font-bold text-2xl'>Agree</span>
+                        <span className='font-bold text-2xl text-white'>Agree</span>
                         <IoIosArrowForward className='text-2xl text-white' />
                     </div>
                 </Link>
