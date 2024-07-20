@@ -220,7 +220,13 @@ export function SongDashboard({
 								</Button>
 							</div>
 							<div className="">
-								<Label>Volume</Label>
+								<div className="flex gap-2 items-center">
+									<Label>Volume</Label>
+									{
+										data.isMuting &&
+										<SpeakerOffIcon />
+									}
+								</div>
 								<div className="flex gap-2 items-center">
 									<Controllable now={data.volume} totalValue={1} onRelease={async v => {
 										if (
