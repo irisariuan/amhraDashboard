@@ -25,7 +25,7 @@ export default function Dashboard({ auth, bearer = false }: { auth: string, bear
 	}
 	return (
 		<div className="flex h-full w-full items-center justify-center p-4 lg:p-0">
-			<div className="dark:bg-zinc-900 bg-white p-8 rounded-xl w-full h-full lg:h-5/6 lg:w-5/6 overflow-auto shadow-2xl">
+			<div className="dark:bg-zinc-900 bg-white p-8 rounded-xl w-full h-full lg:h-5/6 lg:w-5/6 overflow-auto shadow-2xl flex flex-col">
 				<div className="flex items-center gap-2 sm:justify-center">
 					<TooltipProvider>
 						<Tooltip>
@@ -54,7 +54,7 @@ export default function Dashboard({ auth, bearer = false }: { auth: string, bear
 						</Tooltip>
 					</TooltipProvider>
 				</div>
-				<Tabs defaultValue={bearer ? 'song' : "admin"} className="flex flex-col mt-2">
+				<Tabs defaultValue={bearer ? 'song' : "admin"} className="flex flex-col mt-2 flex-1">
 					<div className="flex justify-center">
 						<TabsList className="mb-4">
 							<TabsTrigger value="admin">Administration</TabsTrigger>
@@ -63,7 +63,7 @@ export default function Dashboard({ auth, bearer = false }: { auth: string, bear
 							<TabsTrigger value="message" disabled={bearer}>Message</TabsTrigger>
 						</TabsList>
 					</div>
-					<div className="bg-zinc-50 dark:bg-zinc-950 lg:p-8 p-2 rounded-xl">
+					<div className="bg-zinc-50 dark:bg-zinc-950 lg:p-8 p-2 rounded-xl flex-1 h-full">
 						<TabsContent value="admin">
 							<ActionTab clickHandler={clickHandler} authData={{auth, bearer}} />
 						</TabsContent>
