@@ -16,7 +16,8 @@ export interface SongReply {
     paused: boolean,
     pausedInMs: number,
     pausedTimestamp: number,
-    canSeek: boolean
+    canSeek: boolean,
+	isMuting: boolean
 }
 
 export enum SongEditType {
@@ -29,7 +30,9 @@ export enum SongEditType {
     RemoveSong = 'removeSong',
     SetVolume = 'setVolume',
     SetQueue = 'setQueue',
-    Quit = 'quit'
+    Quit = 'quit',
+    Mute = 'mute',
+    Unmute = 'unmute'
 }
 
 export const FormatSongEditType: Record<SongEditType, string> = {
@@ -42,7 +45,9 @@ export const FormatSongEditType: Record<SongEditType, string> = {
     [SongEditType.RemoveSong]: 'Removed Song',
     [SongEditType.SetVolume]: 'Set Volume',
     [SongEditType.SetQueue]: 'Set Queue',
-    [SongEditType.Quit]: 'Quit'
+    [SongEditType.Quit]: 'Quit',
+    [SongEditType.Mute]: 'Mute',
+    [SongEditType.Unmute]: 'Unmute'
 } as const
 
 export const YoutubeVideoRegex = /http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-\_]*)(&(amp;)?[\w\?=]*)?/
