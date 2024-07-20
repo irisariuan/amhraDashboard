@@ -6,7 +6,7 @@ import { IoIosArrowForward } from "react-icons/io";
 export default function TermPage() {
     return (
         <div className='p-2 h-full flex items-center justify-center'>
-            <div className="lg:w-1/3 overflow-auto h-2/3 dark:bg-neutral-900 bg-white rounded-xl flex flex-col">
+            <div className="lg:w-1/3 overflow-auto h-2/3 dark:bg-neutral-900 bg-white rounded-xl flex flex-col shadow-lg">
                 <div className="p-6">
                     <h1 className='text-3xl font-extrabold'>
                         Terms of Service for Amhra Discord Music Bot

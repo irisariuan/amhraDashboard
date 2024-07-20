@@ -5,7 +5,7 @@ export async function GET(req: Request) {
     const url = new URL(req.url)
     const code = url.searchParams.get('code')
     if (!code) {
-        return NextResponse.error()
+        return NextResponse.redirect(new URL('/', process.env.NEXT_PUBLIC_URL))
     }
     const res = await fetch(`${process.env.API_URL}/register`, {
         method: 'POST',
@@ -16,7 +16,7 @@ export async function GET(req: Request) {
     })
     if (!res.ok) {
         console.log(await res.text(), `${process.env.API_URL}/register`)
-        return NextResponse.error()
+        return NextResponse.redirect(new URL('/', process.env.NEXT_PUBLIC_URL))
     }
     const { token } = await res.json()
     const redirectUrl = new URL('/dashboard', process.env.NEXT_PUBLIC_URL)

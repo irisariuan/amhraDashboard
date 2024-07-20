@@ -2,6 +2,7 @@
 import { SongDashboard } from '@/components/custom/dashboard/songDashboard'
 import { verifyVisitorWeb } from '@/lib/api/web'
 import { motion } from 'framer-motion'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
@@ -23,6 +24,7 @@ export default function VisitorPage({ params }: { params: { data: string } }) {
 		gid: null,
 	})
 	const router = useRouter()
+
 	useEffect(() => {
 		try {
 			const authData: { guildId: string; auth: string } = JSON.parse(
@@ -57,10 +59,13 @@ export default function VisitorPage({ params }: { params: { data: string } }) {
 		} catch {
 			setOk(Loading.Error)
 		}
+	}, [ok, params.data, router])
+
+	useEffect(() => {
 		if (ok === Loading.Error) {
 			router.push('/')
 		}
-	}, [ok, params.data, router])
+	}, [ok])
 
 	return ok === Loading.Loaded && token && gid ? (
 		<motion.div className="flex justify-center items-center w-full h-full p-4 lg:p-0" animate={{ opacity: [0, 1], scale: [0, 1] }}>
@@ -73,8 +78,11 @@ export default function VisitorPage({ params }: { params: { data: string } }) {
 			<p className="text-3xl text-white">Opening...</p>
 		</div>
 	) : (
-		<div className="flex justify-center items-center w-full h-full">
+		<div className="flex justify-center items-center w-full h-full flex-col gap-2">
 			<p className="text-3xl text-white">Error!</p>
+			<Link href="/">
+				<p className='text-blue-500 underline text-xl'>Return to Home Page</p>
+			</Link>
 		</div>
 	)
 }

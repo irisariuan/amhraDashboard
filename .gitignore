@@ -133,6 +133,8 @@ bun.lockb
 .vscode/*
 test/*
 
+package-lock.json
+
 biome.json
 
 !.gitkeep
