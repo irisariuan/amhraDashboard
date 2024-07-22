@@ -18,8 +18,14 @@ export async function logout(auth: string): Promise<boolean> {
     return req.ok
 }
 
+export enum ActionType {
+    Exit = 'exit',
+    AddAuth = 'addAuth',
+    ReloadCommands = 'reload'
+}
+
 export interface ActionData {
-    action: 'exit' | 'addAuth'
+    action: ActionType
     guildId?: string
 }
 

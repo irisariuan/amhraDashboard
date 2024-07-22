@@ -16,13 +16,7 @@ import SongTab from "./dashboard/area/song"
 import MessageTab from "./dashboard/area/message"
 
 export default function Dashboard({ auth, bearer = false }: { auth: string, bearer?: boolean }) {
-	const router = useRouter()
-	async function clickHandler() {
-		logout(auth)
-		window?.localStorage?.removeItem("key")
-		window?.localStorage?.removeItem("bearer")
-		router.push("/login")
-	}
+	
 	return (
 		<div className="flex h-full w-full items-center justify-center p-4 lg:p-0">
 			<div className="dark:bg-zinc-900 bg-white p-8 rounded-xl w-full h-full lg:h-5/6 lg:w-5/6 overflow-auto shadow-2xl flex flex-col">
@@ -65,7 +59,7 @@ export default function Dashboard({ auth, bearer = false }: { auth: string, bear
 					</div>
 					<div className="bg-zinc-50 dark:bg-zinc-950 lg:p-8 p-2 rounded-xl flex-1 h-full">
 						<TabsContent value="admin">
-							<ActionTab clickHandler={clickHandler} authData={{auth, bearer}} />
+							<ActionTab authData={{auth, bearer}} />
 						</TabsContent>
 						<TabsContent value="log">
 							<LogTab auth={auth} />

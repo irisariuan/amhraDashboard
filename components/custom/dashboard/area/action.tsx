@@ -1,6 +1,6 @@
 "use client"
 import { Button } from "../../../ui/button"
-import { type AuthData, postAction } from "@/lib/api/web"
+import { ActionType, type AuthData, logout, postAction } from "@/lib/api/web"
 import Area from "../../area"
 import {
 	Dialog,
@@ -12,20 +12,25 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/dialog"
-import { redirect } from "next/navigation"
+import { redirect, useRouter } from "next/navigation"
+import { Optional } from "../../optional"
 
 export default function ActionTab({
-	clickHandler,
 	authData,
 }: {
-	clickHandler: () => void
 	authData: Pick<AuthData, 'auth' | 'bearer'>
 }) {
+	const router = useRouter()
+	async function clickHandler() {
+		logout(authData.auth)
+		window?.localStorage?.removeItem("key")
+		window?.localStorage?.removeItem("bearer")
+		router.push("/login")
+	}
 	return (
 		<Area title="Action">
 			<Button onClick={clickHandler}>Logout</Button>
-			{
-				!authData.bearer &&
+			<Optional hidden={authData.bearer}>
 				<Dialog>
 					<DialogTrigger>
 						<Button>Terminate</Button>
@@ -44,7 +49,7 @@ export default function ActionTab({
 											className="w-full"
 											variant="destructive"
 											onClick={() => {
-												postAction(authData.auth, { action: "exit" })
+												postAction(authData.auth, { action: ActionType.Exit })
 												window.localStorage.removeItem("key")
 												redirect("/login")
 											}}
@@ -62,7 +67,10 @@ export default function ActionTab({
 						</DialogHeader>
 					</DialogContent>
 				</Dialog>
-			}
+			</Optional>
+			<Optional hidden={authData.bearer}>
+				<Button onClick={() => {postAction(authData.auth, {action: ActionType.ReloadCommands})}}>Reload</Button>
+			</Optional>
 		</Area>
 	)
 }
