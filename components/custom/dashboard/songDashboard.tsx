@@ -146,6 +146,7 @@ export function SongDashboard({
 														<FormControl>
 															<Input
 																placeholder="YouTube URL or query items"
+																className='text-base placeholder:text-sm'
 																{...field}
 															/>
 														</FormControl>
