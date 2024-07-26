@@ -21,7 +21,8 @@ export async function logout(auth: string): Promise<boolean> {
 export enum ActionType {
     Exit = 'exit',
     AddAuth = 'addAuth',
-    ReloadCommands = 'reload'
+    ReloadCommands = 'reload',
+    ReloadSetting = 'reloadSetting'
 }
 
 export interface ActionData {

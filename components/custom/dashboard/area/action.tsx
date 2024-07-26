@@ -69,7 +69,10 @@ export default function ActionTab({
 				</Dialog>
 			</Optional>
 			<Optional hidden={authData.bearer}>
-				<Button onClick={() => {postAction(authData.auth, {action: ActionType.ReloadCommands})}}>Reload</Button>
+				<Button onClick={() => {postAction(authData.auth, {action: ActionType.ReloadCommands})}}>Reload Commands</Button>
+			</Optional>
+			<Optional hidden={authData.bearer}>
+				<Button onClick={() => {postAction(authData.auth, {action: ActionType.ReloadSetting})}}>Reload Settings</Button>
 			</Optional>
 		</Area>
 	)
