@@ -29,51 +29,53 @@ export default function ActionTab({
 	}
 	return (
 		<Area title="Action">
-			<Button onClick={clickHandler}>Logout</Button>
-			<Optional hidden={authData.bearer}>
-				<Dialog>
-					<DialogTrigger>
-						<Button>Terminate</Button>
-					</DialogTrigger>
-					<DialogContent>
-						<DialogHeader>
-							<DialogTitle>Are you absolutely sure?</DialogTitle>
-							<DialogDescription>
-								This action cannot be undone. The bot will be terminated
-								immediately.
-							</DialogDescription>
-							<DialogFooter>
-								<div className="flex w-full gap-2 mt-8">
-									<DialogClose className="w-full">
-										<Button
-											className="w-full"
-											variant="destructive"
-											onClick={() => {
-												postAction(authData.auth, { action: ActionType.Exit })
-												window.localStorage.removeItem("key")
-												redirect("/login")
-											}}
-										>
-											Confirm
-										</Button>
-									</DialogClose>
-									<DialogClose className="w-full">
-										<Button className="w-full" variant="outline">
-											Cancel
-										</Button>
-									</DialogClose>
-								</div>
-							</DialogFooter>
-						</DialogHeader>
-					</DialogContent>
-				</Dialog>
-			</Optional>
-			<Optional hidden={authData.bearer}>
-				<Button onClick={() => {postAction(authData.auth, {action: ActionType.ReloadCommands})}}>Reload Commands</Button>
-			</Optional>
-			<Optional hidden={authData.bearer}>
-				<Button onClick={() => {postAction(authData.auth, {action: ActionType.ReloadSetting})}}>Reload Settings</Button>
-			</Optional>
+			<div className="overflow-hidden flex flex-wrap gap-2 [&>*]:flex-1">
+				<Button onClick={clickHandler}>Logout</Button>
+				<Optional hidden={authData.bearer}>
+					<Dialog>
+						<DialogTrigger>
+							<Button className="w-full">Terminate</Button>
+						</DialogTrigger>
+						<DialogContent>
+							<DialogHeader>
+								<DialogTitle>Are you absolutely sure?</DialogTitle>
+								<DialogDescription>
+									This action cannot be undone. The bot will be terminated
+									immediately.
+								</DialogDescription>
+								<DialogFooter>
+									<div className="flex w-full gap-2 mt-8">
+										<DialogClose className="w-full">
+											<Button
+												className="w-full"
+												variant="destructive"
+												onClick={() => {
+													postAction(authData.auth, { action: ActionType.Exit })
+													window.localStorage.removeItem("key")
+													redirect("/login")
+												}}
+											>
+												Confirm
+											</Button>
+										</DialogClose>
+										<DialogClose className="w-full">
+											<Button className="w-full" variant="outline">
+												Cancel
+											</Button>
+										</DialogClose>
+									</div>
+								</DialogFooter>
+							</DialogHeader>
+						</DialogContent>
+					</Dialog>
+				</Optional>
+				<Optional hidden={authData.bearer}>
+					<Button onClick={() => { postAction(authData.auth, { action: ActionType.ReloadCommands }) }}>Reload Commands</Button>
+				</Optional>
+				<Optional hidden={authData.bearer}>
+					<Button onClick={() => { postAction(authData.auth, { action: ActionType.ReloadSetting }) }}>Reload Settings</Button>
+				</Optional>
+			</div>
 		</Area>
 	)
 }
