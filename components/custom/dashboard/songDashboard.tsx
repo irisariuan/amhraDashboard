@@ -99,30 +99,34 @@ export function SongDashboard({
 		}
 		setVolume(data.volume * 100)
 
-		if (data.song && (!data.paused || time === null)) {
-			setTime((Date.now() - data.song.startTime + data.song.startFrom) / 1000)
-		}
+		
+	}, [data])
+	
+	useEffect(() => {
+		if (!data) return
 
-		const intervalId = setInterval(() => {
-			if (!data) return
-			if (!data.paused) {
-				if (data.song) {
-					return setTime((Date.now() - data.song.startTime - data.pausedInMs + data.song.startFrom) / 1000)
-				}
-				return setTime(0)
-			}
-			if (data.paused && data.song) {
+		if (data.song) {
+			if (data.paused) {
 				setTime((data.pausedTimestamp - data.song.startTime - data.pausedInMs + data.song.startFrom) / 1000)
+			} else {
+				setTime((Date.now() - data.song.startTime - data.pausedInMs + data.song.startFrom) / 1000)
 			}
-			if ((time ?? 0) < 0) {
-				setTime(0)
+		}
+	
+		const intervalId = setInterval(() => {
+			if (!data.song) return
+			if (data.paused) {
+				console.log((data.pausedTimestamp - data.song.startTime - data.pausedInMs + data.song.startFrom) / 1000, Date.now(), data)
+				return setTime((data.pausedTimestamp - data.song.startTime - data.pausedInMs + data.song.startFrom) / 1000)
 			}
+			console.log((Date.now() - data.song.startTime - data.pausedInMs + data.song.startFrom) / 1000, Date.now(), data)
+			setTime((Date.now() - data.song.startTime - data.pausedInMs + data.song.startFrom) / 1000)
 		}, 100)
 		return () => {
 			clearInterval(intervalId)
 		}
 
-	}, [data])
+	}, [data, data?.pausedInMs])
 
 	return (
 		<>
@@ -252,7 +256,7 @@ export function SongDashboard({
 								<Query url={data.song.link} authData={authData} />
 								<div className="flex flex-col">
 									<div className="w-full">
-										<PlaybackControl now={time ?? 0} totalTime={data.song.duration} enabled={data.canSeek} onRelease={async releaseTime => {
+										<PlaybackControl now={Math.max(time ?? 0, 0)} totalTime={data.song.duration} enabled={data.canSeek} onRelease={async releaseTime => {
 											if (!(await editAction(SongEditType.SetTime, authData, Math.round(releaseTime)))) {
 												return toast('Failed to seek')
 											}
