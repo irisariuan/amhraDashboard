@@ -114,12 +114,10 @@ export function SongDashboard({
 		}
 	
 		const intervalId = setInterval(() => {
-			if (!data.song) return
+			if (!data.song) return setTime(0)
 			if (data.paused) {
-				console.log((data.pausedTimestamp - data.song.startTime - data.pausedInMs + data.song.startFrom) / 1000, Date.now(), data)
 				return setTime((data.pausedTimestamp - data.song.startTime - data.pausedInMs + data.song.startFrom) / 1000)
 			}
-			console.log((Date.now() - data.song.startTime - data.pausedInMs + data.song.startFrom) / 1000, Date.now(), data)
 			setTime((Date.now() - data.song.startTime - data.pausedInMs + data.song.startFrom) / 1000)
 		}, 100)
 		return () => {
