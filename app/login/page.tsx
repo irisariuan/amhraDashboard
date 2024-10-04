@@ -25,7 +25,7 @@ const formSchema = z.object({
 	password: z.string().min(1),
 })
 
-export default function LoginPage({searchParams} : {searchParams: {[key: string]: string | string[] | undefined}}) {
+export default function LoginPage({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) {
 	const router = useRouter()
 	const buttonRef = useRef<null | HTMLButtonElement>(null)
 	useEffect(() => {
@@ -76,6 +76,10 @@ export default function LoginPage({searchParams} : {searchParams: {[key: string]
 
 	return (
 		<div className="h-full w-full flex flex-col items-center justify-center">
+			{
+				process.env.ENABLE_TURNSTILE &&
+				<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async />
+			}
 			<div className="bg-white dark:bg-zinc-900 h-max w-max p-10 rounded-xl flex flex-col justify-center items-center text-3xl gap-2">
 				<h1 className="font-extrabold mb-6">Amhra Dashboard</h1>
 				<div className="flex gap-2 items-center">
@@ -108,6 +112,10 @@ export default function LoginPage({searchParams} : {searchParams: {[key: string]
 										</FormItem>
 									)}
 								/>
+								{
+									process.env.ENABLE_TURNSTILE &&
+									<div className="cf-turnstile" data-sitekey={process.env.SITE_KEY} data-callback="javascriptCallback" />
+								}
 								<Button ref={buttonRef} type="submit" className="text-xl w-full">
 									Login
 								</Button>
