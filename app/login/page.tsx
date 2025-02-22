@@ -66,7 +66,6 @@ export default function LoginPage({ searchParams }: { searchParams: { [key: stri
 		}
 		toast('Failed to login', {
 			closeButton: true,
-			important: true,
 			description: 'Please try again'
 		})
 	}
