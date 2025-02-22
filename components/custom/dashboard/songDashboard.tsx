@@ -168,7 +168,7 @@ export function SongDashboard({
 							</Form>
 						</div>
 						<div className="flex flex-col gap-2">
-							<div className="flex gap-2 items-center justify-center w-full [&>*]:w-full md:[&>*]:w-auto">
+							<div className="flex gap-2 items-center justify-center w-full *:w-full md:*:w-auto">
 								{data.song && <>
 									{
 										data.paused ? (

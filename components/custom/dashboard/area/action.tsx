@@ -29,7 +29,7 @@ export default function ActionTab({
 	}
 	return (
 		<Area title="Action">
-			<div className="overflow-hidden flex flex-wrap gap-2 [&>*]:flex-1">
+			<div className="overflow-hidden flex flex-wrap gap-2 *:flex-1">
 				<Button onClick={clickHandler}>Logout</Button>
 				<Optional hidden={authData.bearer}>
 					<Dialog>

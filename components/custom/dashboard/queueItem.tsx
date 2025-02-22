@@ -21,7 +21,7 @@ export default function QueueItem({
 	const type = useMobile()
 	return (
 		<Reorder.Item value={value} key={value} className="w-full">
-			<div className="break-words w-full flex items-center hover:cursor-grab active:cursor-grabbing gap-2 hover:dark:bg-neutral-800/50 hover:bg-neutral-200/50 p-2 rounded-xl">
+			<div className="break-words w-full flex items-center hover:cursor-grab active:cursor-grabbing gap-2 dark:hover:bg-neutral-800/50 hover:bg-neutral-200/50 p-2 rounded-xl">
 				{
 					type === DeviceType.Mobile || type === DeviceType.Tablet &&
 					<DragHandleDots1Icon />
