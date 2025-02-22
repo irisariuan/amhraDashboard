@@ -1,7 +1,7 @@
 "use client"
 import { login } from "@/lib/api/web"
-import { useRouter, useSearchParams } from "next/navigation"
-import { useEffect, useRef, useState } from "react"
+import { useRouter } from "next/navigation"
+import { use, useEffect, useRef, useState } from "react"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -25,7 +25,12 @@ const formSchema = z.object({
 	password: z.string().min(1),
 })
 
-export default function LoginPage({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) {
+type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>
+
+export default function LoginPage(props: {
+	searchParams: SearchParams
+}) {
+	const searchParams = use(props.searchParams)
 	const router = useRouter()
 	const buttonRef = useRef<null | HTMLButtonElement>(null)
 	useEffect(() => {

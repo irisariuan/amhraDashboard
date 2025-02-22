@@ -4,7 +4,7 @@ import { verifyVisitorWeb } from '@/lib/api/web'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { use, useEffect, useState } from 'react'
 
 enum Loading {
 	Loading = 0,
@@ -17,7 +17,10 @@ interface VisitorPageData {
 	gid: null | string
 }
 
-export default function VisitorPage({ params }: { params: { data: string } }) {
+type Params = Promise<{ data: string }>
+
+export default function VisitorPage(props: { params: Params }) {
+	const params = use(props.params)
 	const [ok, setOk] = useState(Loading.Loading)
 	const [{ token, gid }, setData] = useState<VisitorPageData>({
 		token: null,
