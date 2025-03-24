@@ -19,7 +19,7 @@ export default function MessageTab({ auth }: { auth: string }) {
 	}: {
 		data: Guild[] | undefined
 		isLoading: boolean
-	} = useSWR("/api/guildIds", async () => {
+	} = useSWR("/api/guildIds/all", async () => {
 		return await getAllGuilds(auth)
 	})
 

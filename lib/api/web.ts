@@ -223,7 +223,7 @@ export async function getMessages(authData: Pick<AuthData, 'auth' | 'guildId'>) 
 }
 
 export async function getAllGuilds(auth: string): Promise<Guild[]> {
-    return (await (await fetch('/api/guildIds', {
+    return (await (await fetch('/api/guildIds/all', {
         headers: { Authorization: `Basic ${auth}` }
     })).json()).content ?? []
 }

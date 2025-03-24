@@ -1,13 +1,3 @@
-"use client"
-import { useRouter } from "next/navigation"
-import { AuthData, logout } from "@/lib/api/web"
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-} from "@/components/ui/tooltip"
-import { motion } from "framer-motion"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import ActionTab from "./dashboard/area/action"

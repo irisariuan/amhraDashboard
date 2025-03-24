@@ -39,6 +39,6 @@ export default function DashboardPage() {
 
 	useEffect(() => {
 		redirect()
-	}, [])
+	}, [redirect])
 	return <>{password ? <Dashboard auth={password} bearer={isBearer} /> : <></>}</>
 }
