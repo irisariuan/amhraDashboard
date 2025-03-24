@@ -23,7 +23,7 @@ export default function GlitchText({children, className, speed = 50} : {children
             index++
         }, speed);
         return () => clearInterval(interval)
-    }, [])
+    }, [children, speed])
     return (
         <span className={className}>{text}</span>
     )
