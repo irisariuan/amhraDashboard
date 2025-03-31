@@ -34,7 +34,7 @@ export default function LoginPage(props: {
 	const router = useRouter()
 	const buttonRef = useRef<null | HTMLButtonElement>(null)
 	useEffect(() => {
-		; (async () => {
+		(async () => {
 			const item = window.localStorage.getItem("key")
 			const bearer = window.localStorage.getItem("bearer")
 			if (item) {
@@ -45,12 +45,8 @@ export default function LoginPage(props: {
 					return router.push("/dashboard")
 				}
 			}
-			// if (bearer) {
-			// 	if (await login(bearer, { bearer: true })) {
-			// 		return router.push("/dashboard")
-			// 	}
-			// }
 		})()
+		// remove search params if any
 		router.replace('/login')
 	}, [router])
 	const form = useForm<z.infer<typeof formSchema>>({
@@ -96,7 +92,7 @@ export default function LoginPage(props: {
 									name="password"
 									render={({ field }) => (
 										<FormItem className="">
-											<FormLabel className="text-xl">Password</FormLabel>
+											<FormLabel className="text-xl">Admin Login</FormLabel>
 											<FormControl className="">
 												<Input
 													placeholder="Password"
@@ -105,14 +101,11 @@ export default function LoginPage(props: {
 													className="text-large font-light"
 												/>
 											</FormControl>
-											<FormDescription className="">
-												Login Dashboard
-											</FormDescription>
 											<FormMessage />
 										</FormItem>
 									)}
 								/>
-								<Button ref={buttonRef} type="submit" className="text-xl w-full">
+								<Button ref={buttonRef} type="submit" className="text-xl w-full mt-2">
 									Login
 								</Button>
 							</form>
@@ -121,6 +114,7 @@ export default function LoginPage(props: {
 							<FontAwesomeIcon icon={faDiscord} />
 							Login With Discord
 						</Link>
+						<Link href="/invite" className="text-base text-gray-500 underline">Not a user? Add it to your server</Link>
 					</>
 				}
 			</div>
