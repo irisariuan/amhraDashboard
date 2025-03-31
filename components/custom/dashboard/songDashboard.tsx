@@ -200,7 +200,7 @@ export function SongDashboard({
 								</>}
 								<Button
 									onClick={async () => {
-										if (await editAction(SongEditType.Loop, authData)) {
+										if (await editAction(SongEditType.Loop, authData, !data.loop)) {
 											toast(FormatSongEditType[SongEditType.Loop])
 										} else {
 											toast('Failed to run')
