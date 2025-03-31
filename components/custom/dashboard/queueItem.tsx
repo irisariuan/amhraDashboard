@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button'
-import { SongEditType } from '@/lib/api/song'
+import { type IQueueItem, SongEditType } from '@/lib/api/song'
 import { type AuthData, editAction } from '@/lib/api/web'
 import { Label } from '@/components/ui/label'
 import { TrashIcon, DragHandleDots1Icon } from '@radix-ui/react-icons'
@@ -16,11 +16,11 @@ export default function QueueItem({
 }: {
 	authData: AuthData
 	index: number
-	value: string
+	value: IQueueItem
 }) {
 	const type = useMobile()
 	return (
-		<Reorder.Item value={value} key={value} className="w-full">
+		<Reorder.Item value={value} key={value.url} className="w-full">
 			<div className="break-words w-full flex items-center hover:cursor-grab active:cursor-grabbing gap-2 dark:hover:bg-neutral-800/50 hover:bg-neutral-200/50 p-2 rounded-xl">
 				{
 					type === DeviceType.Mobile || type === DeviceType.Tablet &&
@@ -28,7 +28,7 @@ export default function QueueItem({
 				}
 				<div className="flex-1 overflow-hidden">
 					<Label className="mr-2 font-bold text-base">{index + 1}.</Label>
-					<LinkCard value={value} authData={authData} />
+					<LinkCard value={value.url} authData={authData} />
 				</div>
 				<Button
 					variant="destructive"

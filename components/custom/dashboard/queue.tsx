@@ -1,5 +1,5 @@
 import { Reorder } from 'framer-motion'
-import { SongEditType } from '@/lib/api/song'
+import { type IQueueItem, SongEditType } from '@/lib/api/song'
 import { type AuthData, editAction } from '@/lib/api/web'
 import { useEffect, useState } from 'react'
 import QueueItem from './queueItem'
@@ -9,13 +9,13 @@ export default function Queue({
 	initQueue,
 	authData,
 }: {
-	initQueue: string[]
+	initQueue: IQueueItem[]
 	authData: AuthData
 }) {
 	const { data } = useSongReply(authData)
 
-	const [oldQueue, setOldQueue] = useState<string[]>(initQueue)
-	const [queue, setQueue] = useState<string[]>(initQueue)
+	const [oldQueue, setOldQueue] = useState<IQueueItem[]>(initQueue)
+	const [queue, setQueue] = useState<IQueueItem[]>(initQueue)
 	useEffect(() => {
 		if (data) {
 			setQueue(data.queue)
@@ -43,7 +43,7 @@ export default function Queue({
 					authData={authData}
 					index={i}
 					value={v}
-					key={v}
+					key={v.url}
 				/>
 			))}
 		</Reorder.Group>

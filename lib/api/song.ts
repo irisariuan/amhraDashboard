@@ -1,3 +1,8 @@
+export interface IQueueItem {
+    url: string,
+    repeating: boolean,
+}
+
 export interface SongReply {
     song: {
         link: string,
@@ -8,7 +13,7 @@ export interface SongReply {
         startFrom: number,
         startTime: number
     } | null,
-    queue: string[],
+    queue: IQueueItem[],
     volume: number,
     isPlaying: boolean,
     history: string[],
@@ -17,7 +22,7 @@ export interface SongReply {
     pausedInMs: number,
     pausedTimestamp: number,
     canSeek: boolean,
-	isMuting: boolean
+    isMuting: boolean
 }
 
 export enum SongEditType {

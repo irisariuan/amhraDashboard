@@ -1,5 +1,5 @@
 import type { Channel, Guild, Log } from "./log"
-import { SongEditType } from "./song"
+import { type IQueueItem, SongEditType } from "./song"
 
 interface LoginOptions {
     bearer?: boolean
@@ -77,13 +77,13 @@ export async function getLog(auth: string): Promise<{ content: Log[] }> {
     return { content }
 }
 
-export async function editAction(action: SongEditType.SetQueue, authData: AuthData, queue: string[]): Promise<boolean>
+export async function editAction(action: SongEditType.SetQueue, authData: AuthData, queue: IQueueItem[]): Promise<boolean>
 export async function editAction(action: SongEditType.SetVolume, authData: AuthData, volume: number): Promise<boolean>
 export async function editAction(action: SongEditType.RemoveSong, authData: AuthData, index: number): Promise<boolean>
 export async function editAction(action: SongEditType.SetTime, authData: AuthData, time: number): Promise<boolean>
 export async function editAction(action: SongEditType.AddSong, authData: AuthData, url: string): Promise<boolean>
 export async function editAction(action: SongEditType, authData: AuthData): Promise<boolean>
-export async function editAction(action: SongEditType, authData: AuthData, data?: number | string | string[]): Promise<boolean> {
+export async function editAction(action: SongEditType, authData: AuthData, data?: number | string | IQueueItem[]): Promise<boolean> {
     const headerAuth = authData.visitor ? authData.auth : `${authData.bearer ? 'Bearer' : 'Basic'} ${authData.auth}`
     switch (action) {
         case SongEditType.AddSong: {
