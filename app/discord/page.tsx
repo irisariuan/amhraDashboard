@@ -11,7 +11,7 @@ export default function DiscordRedirect() {
             return router.push("/dashboard")
         }
         router.push(INVITE_LINK ?? '/')
-        }, [])
+        }, [router])
     console.log(INVITE_LINK)
     return <></>
 }

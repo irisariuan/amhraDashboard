@@ -62,13 +62,13 @@ export default function VisitorPage(props: { params: Params }) {
 		} catch {
 			setOk(Loading.Error)
 		}
-	}, [ok, params.data, router])
+	}, [params.data])
 
 	useEffect(() => {
 		if (ok === Loading.Error) {
 			router.push('/')
 		}
-	}, [ok])
+	}, [ok, router])
 
 	return ok === Loading.Loaded && token && gid ? (
 		<motion.div className="flex justify-center items-center w-full h-full p-4 lg:p-0" animate={{ opacity: [0, 1], scale: [0, 1] }}>
