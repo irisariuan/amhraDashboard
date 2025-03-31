@@ -77,13 +77,14 @@ export async function getLog(auth: string): Promise<{ content: Log[] }> {
     return { content }
 }
 
+export async function editAction(action: SongEditType.Loop, authData: AuthData, setLoop: boolean): Promise<boolean>
 export async function editAction(action: SongEditType.SetQueue, authData: AuthData, queue: IQueueItem[]): Promise<boolean>
 export async function editAction(action: SongEditType.SetVolume, authData: AuthData, volume: number): Promise<boolean>
 export async function editAction(action: SongEditType.RemoveSong, authData: AuthData, index: number): Promise<boolean>
 export async function editAction(action: SongEditType.SetTime, authData: AuthData, time: number): Promise<boolean>
 export async function editAction(action: SongEditType.AddSong, authData: AuthData, url: string): Promise<boolean>
 export async function editAction(action: SongEditType, authData: AuthData): Promise<boolean>
-export async function editAction(action: SongEditType, authData: AuthData, data?: number | string | IQueueItem[]): Promise<boolean> {
+export async function editAction(action: SongEditType, authData: AuthData, data?: number | string | boolean | IQueueItem[]): Promise<boolean> {
     const headerAuth = authData.visitor ? authData.auth : `${authData.bearer ? 'Bearer' : 'Basic'} ${authData.auth}`
     switch (action) {
         case SongEditType.AddSong: {
@@ -166,6 +167,23 @@ export async function editAction(action: SongEditType, authData: AuthData, data?
                     guildId: authData.guildId,
                     detail: {
                         queue: data
+                    }
+                })
+            })
+            return req.ok
+        }
+        case SongEditType.Loop: {
+            const req = await fetch('/api/song/edit', {
+                method: 'POST',
+                headers: {
+                    Authorization: headerAuth,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    action,
+                    guildId: authData.guildId,
+                    detail: {
+                        loop: data
                     }
                 })
             })

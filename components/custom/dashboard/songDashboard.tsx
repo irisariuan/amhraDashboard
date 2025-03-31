@@ -26,7 +26,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect, useState } from 'react'
 import Queue from './queue'
 import { useSongReply } from './useSongReply'
-import { ExitIcon, PauseIcon, PlusCircledIcon, ResumeIcon, StopIcon, TrackNextIcon, SpeakerOffIcon, SpeakerLoudIcon } from '@radix-ui/react-icons'
+import { ExitIcon, PauseIcon, PlusCircledIcon, ResumeIcon, StopIcon, TrackNextIcon, SpeakerOffIcon, SpeakerLoudIcon, LoopIcon, ReloadIcon } from '@radix-ui/react-icons'
 import Query from './query'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import HistoryItem from '../historyItem'
@@ -99,9 +99,9 @@ export function SongDashboard({
 		}
 		setVolume(data.volume * 100)
 
-		
+
 	}, [data])
-	
+
 	useEffect(() => {
 		if (!data) return
 
@@ -112,7 +112,7 @@ export function SongDashboard({
 				setTime((Date.now() - data.song.startTime - data.pausedInMs + data.song.startFrom) / 1000)
 			}
 		}
-	
+
 		const intervalId = setInterval(() => {
 			if (!data.song) return setTime(0)
 			if (data.paused) {
@@ -198,6 +198,20 @@ export function SongDashboard({
 										<TrackNextIcon />
 									</Button>
 								</>}
+								<Button
+									onClick={async () => {
+										if (await editAction(SongEditType.Loop, authData)) {
+											toast(FormatSongEditType[SongEditType.Loop])
+										} else {
+											toast('Failed to run')
+										}
+										await mutate(`/api/song/get/${guildId}`)
+									}}
+								>
+									{data.loop ?
+										<LoopIcon /> : <ReloadIcon />
+									}
+								</Button>
 								<Button
 									onClick={() => {
 										handleClick(SongEditType.Stop)
