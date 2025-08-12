@@ -136,5 +136,6 @@ test/*
 package-lock.json
 
 biome.json
+.DS_Store
 
 !.gitkeep
