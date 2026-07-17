@@ -1,6 +1,7 @@
 "use client";
 import {
 	GearIcon,
+	LockClosedIcon,
 	ListBulletIcon,
 	PersonIcon,
 	RocketIcon,
@@ -17,14 +18,14 @@ import { usePlayingGuilds } from "@/hooks/use-guilds";
 import type { Account } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 import { AccountView } from "./account-view";
-import { AdminView } from "./action-tab";
+import { AdministrationView } from "./administration-view";
 import { LogView } from "./log-tab";
 import { SettingsView } from "./settings-view";
 import { PlaybackBar } from "./song/playback-bar";
 import { SongDashboard } from "./song/song-dashboard";
 import Image from "next/image";
 
-type View = "player" | "settings" | "account" | "logs";
+type View = "player" | "settings" | "account" | "logs" | "administration";
 
 /**
  * The dashboard chrome: a slim icon sidebar, a guild picker, the active view,
@@ -68,6 +69,12 @@ export function DashboardShell({
 			label: "Settings",
 			icon: <GearIcon />,
 			show: !isVisitor,
+		},
+		{
+			id: "administration",
+			label: "Administration",
+			icon: <LockClosedIcon />,
+			show: account.isAdmin,
 		},
 		{
 			id: "account",
@@ -175,10 +182,8 @@ export function DashboardShell({
 					{view === "account" && !isVisitor && (
 						<AccountView account={account} />
 					)}
-					{view === "account" && account.isAdmin && (
-						<div className="mt-10">
-							<AdminView />
-						</div>
+					{view === "administration" && account.isAdmin && (
+						<AdministrationView />
 					)}
 				</main>
 

@@ -24,12 +24,14 @@ import {
 interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[]
 	data: TData[]
+	emptyMessage?: string
 }
 
 /** Paginated table with a free-text filter on the `message` column. */
 export function DataTable<TData, TValue>({
 	columns,
 	data,
+	emptyMessage = "No results found.",
 }: DataTableProps<TData, TValue>) {
 	const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
 	const table = useReactTable({
@@ -43,10 +45,11 @@ export function DataTable<TData, TValue>({
 	})
 
 	return (
-		<div className="p-2">
-			<div className="flex items-center py-4">
+		<div>
+			<div className="flex flex-wrap items-center justify-between gap-3 pb-4">
 				<Input
-					placeholder="Find something..."
+					aria-label="Search logs"
+					placeholder="Search messages..."
 					value={
 						(table.getColumn("message")?.getFilterValue() as string) ??
 						""
@@ -58,8 +61,9 @@ export function DataTable<TData, TValue>({
 					}
 					className="max-w-sm"
 				/>
+				<p className="text-sm text-zinc-500">{table.getFilteredRowModel().rows.length} entries</p>
 			</div>
-			<div className="rounded-md border">
+			<div className="overflow-hidden rounded-lg border border-white/10">
 				<Table>
 					<TableHeader>
 						{table.getHeaderGroups().map(headerGroup => (
@@ -103,14 +107,15 @@ export function DataTable<TData, TValue>({
 									colSpan={columns.length}
 									className="h-24 text-center"
 								>
-									No logs found.
+									{emptyMessage}
 								</TableCell>
 							</TableRow>
 						)}
 					</TableBody>
 				</Table>
 			</div>
-			<div className="flex items-center justify-end space-x-2 py-4">
+			<div className="flex items-center justify-end gap-3 pt-4">
+				<p className="mr-auto text-xs text-zinc-500">Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount() || 1}</p>
 				<Button
 					variant="outline"
 					size="sm"
