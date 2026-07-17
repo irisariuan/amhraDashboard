@@ -42,14 +42,14 @@ export function Suggestions({ guildId }: { guildId: string }) {
 			{data.map(s => (
 				<div
 					key={s.url}
-					className="group flex min-w-0 items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-white/5"
+					className="group flex min-w-0 items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-white/5 active:bg-white/5"
 				>
 					<div className="flex-1 min-w-0 overflow-hidden">
 						<a
 							href={s.url}
 							target="_blank"
 							rel="noreferrer"
-							className="text-sm truncate block hover:text-indigo-300"
+							className="block truncate text-sm hover:text-indigo-300 active:text-indigo-300"
 						>
 							{s.title}
 						</a>
@@ -61,7 +61,7 @@ export function Suggestions({ guildId }: { guildId: string }) {
 					<Button
 						variant="ghost"
 						size="icon"
-						className="opacity-0 group-hover:opacity-100 text-zinc-400 hover:text-indigo-300"
+						className="text-zinc-400 opacity-100 hover:text-indigo-300 active:bg-accent active:text-indigo-300 group-active:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
 						onClick={() => add(s.url, s.title)}
 					>
 						<PlusIcon />

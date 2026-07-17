@@ -19,14 +19,14 @@ export function TrackRow({ url, guildId }: { url: string; guildId: string }) {
 	}
 
 	return (
-		<div className="group flex min-w-0 items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-white/5">
+		<div className="group flex min-w-0 items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-white/5 active:bg-white/5">
 			<div className="flex-1 min-w-0 overflow-hidden">
 				<VideoLink url={url} />
 			</div>
 			<Button
 				variant="ghost"
 				size="icon"
-				className="opacity-0 group-hover:opacity-100 text-zinc-400 hover:text-indigo-300"
+				className="text-zinc-400 opacity-100 hover:text-indigo-300 active:bg-accent active:text-indigo-300 group-active:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
 				onClick={addToQueue}
 			>
 				<PlusIcon />

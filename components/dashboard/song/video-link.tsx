@@ -17,7 +17,7 @@ export function VideoLink({ url }: { url: string }) {
 					href={url}
 					rel="noreferrer"
 					target="_blank"
-					className="underline text-indigo-400 hover:text-indigo-300 text-sm truncate block"
+					className="block truncate text-sm text-indigo-400 underline hover:text-indigo-300 active:text-indigo-300"
 				>
 					{isLoading ? url : (data?.title ?? url)}
 				</a>

@@ -1,38 +1,43 @@
-"use client"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { use, useEffect, useState } from "react"
-import { FaDiscord } from "react-icons/fa"
-import { toast } from "sonner"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { getCurrentAccount, loginPasskey, registerPasskey } from "@/lib/api/auth"
+"use client";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { use, useEffect, useState } from "react";
+import { FaDiscord } from "react-icons/fa";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+	getCurrentAccount,
+	loginPasskey,
+	registerPasskey,
+} from "@/lib/api/auth";
+import Image from "next/image";
 
-type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>
+type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 
 export default function LoginPage(props: { searchParams: SearchParams }) {
-	const searchParams = use(props.searchParams)
-	const router = useRouter()
-	const [agreed, setAgreed] = useState(searchParams?.checked === "true")
-	const [displayName, setDisplayName] = useState("")
-	const [busy, setBusy] = useState(false)
+	const searchParams = use(props.searchParams);
+	const router = useRouter();
+	const [agreed, setAgreed] = useState(searchParams?.checked === "true");
+	const [displayName, setDisplayName] = useState("");
+	const [busy, setBusy] = useState(false);
 
 	// If already signed in, skip straight to the dashboard.
 	useEffect(() => {
-		getCurrentAccount().then(a => {
-			if (a) router.replace("/dashboard")
-		})
-	}, [router])
+		getCurrentAccount().then((a) => {
+			if (a) router.replace("/dashboard");
+		});
+	}, [router]);
 
 	async function withBusy(fn: () => Promise<boolean>, cancelMsg: string) {
-		setBusy(true)
+		setBusy(true);
 		try {
-			if (await fn()) router.push("/dashboard")
-			else toast("That didn't work. Please try again.")
+			if (await fn()) router.push("/dashboard");
+			else toast("That didn't work. Please try again.");
 		} catch {
-			toast(cancelMsg)
+			toast(cancelMsg);
 		} finally {
-			setBusy(false)
+			setBusy(false);
 		}
 	}
 
@@ -40,8 +45,13 @@ export default function LoginPage(props: { searchParams: SearchParams }) {
 		<div className="h-full w-full flex items-center justify-center p-4">
 			<div className="w-full max-w-sm rounded-2xl bg-zinc-900 border border-white/10 p-8 flex flex-col gap-5 shadow-2xl">
 				<div className="text-center">
-					<div className="mx-auto mb-3 h-12 w-12 rounded-2xl bg-indigo-500 grid place-items-center font-black text-xl">
-						A
+					<div className="flex items-center justify-center mb-3">
+						<Image
+							src="/icon.png"
+							height={48}
+							width={48}
+							alt="Amhra Icon"
+						/>
 					</div>
 					<h1 className="text-2xl font-extrabold">Amhra</h1>
 					<p className="text-sm text-zinc-400 mt-1">
@@ -53,7 +63,7 @@ export default function LoginPage(props: { searchParams: SearchParams }) {
 					<input
 						type="checkbox"
 						checked={agreed}
-						onChange={e => setAgreed(e.target.checked)}
+						onChange={(e) => setAgreed(e.target.checked)}
 					/>
 					I agree to the{" "}
 					<Link href="/terms" className="text-indigo-400 underline">
@@ -66,7 +76,10 @@ export default function LoginPage(props: { searchParams: SearchParams }) {
 						<Button
 							disabled={busy}
 							onClick={() =>
-								withBusy(loginPasskey, "Passkey sign-in was cancelled")
+								withBusy(
+									loginPasskey,
+									"Passkey sign-in was cancelled",
+								)
 							}
 						>
 							Sign in with a passkey
@@ -81,7 +94,7 @@ export default function LoginPage(props: { searchParams: SearchParams }) {
 						<Input
 							placeholder="Display name (optional)"
 							value={displayName}
-							onChange={e => setDisplayName(e.target.value)}
+							onChange={(e) => setDisplayName(e.target.value)}
 							className="bg-white/5 border-white/10"
 						/>
 						<Button
@@ -89,7 +102,10 @@ export default function LoginPage(props: { searchParams: SearchParams }) {
 							disabled={busy}
 							onClick={() =>
 								withBusy(
-									() => registerPasskey(displayName || undefined),
+									() =>
+										registerPasskey(
+											displayName || undefined,
+										),
 									"Passkey registration was cancelled",
 								)
 							}
@@ -103,7 +119,8 @@ export default function LoginPage(props: { searchParams: SearchParams }) {
 							asChild
 						>
 							<Link href="/discord">
-								<FaDiscord className="mr-2" /> Continue with Discord
+								<FaDiscord className="mr-2" /> Continue with
+								Discord
 							</Link>
 						</Button>
 
@@ -117,5 +134,5 @@ export default function LoginPage(props: { searchParams: SearchParams }) {
 				)}
 			</div>
 		</div>
-	)
+	);
 }

@@ -33,12 +33,12 @@ export function QueueEntry({
 			value={value}
 			dragListener={false}
 			dragControls={controls}
-			className="w-full min-w-0 group flex flex-wrap items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-white/5"
+			className="group flex w-full min-w-0 flex-wrap items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-white/5 active:bg-white/5"
 		>
 			<button
 				type="button"
 				onPointerDown={e => controls.start(e)}
-				className="text-zinc-500 hover:text-zinc-300 cursor-grab active:cursor-grabbing touch-none"
+				className="cursor-grab touch-none text-zinc-500 hover:text-zinc-300 active:cursor-grabbing active:text-zinc-300"
 				aria-label="Drag to reorder"
 			>
 				<DragHandleDots2Icon />
@@ -57,7 +57,7 @@ export function QueueEntry({
 			<Button
 				variant="ghost"
 				size="icon"
-				className="opacity-0 group-hover:opacity-100 text-zinc-400 hover:text-red-400"
+				className="text-zinc-400 opacity-100 hover:text-red-400 active:bg-accent active:text-red-400 group-active:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
 				onClick={remove}
 			>
 				<TrashIcon />
