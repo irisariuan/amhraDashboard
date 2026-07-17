@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import { Toaster } from "@/components/ui/sonner"
 import "./globals.css"
-import { ThemeProvider } from "@/components/custom/theme-provider"
+import { ThemeProvider } from "@/components/theme-provider"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -18,14 +18,6 @@ export default function RootLayout({
 }>) {
 	return (
 		<html lang="en" suppressHydrationWarning>
-			<head>
-				<link
-					rel="icon"
-					href="/icon?<generated>"
-					type="image/<generated>"
-					sizes="<generated>"
-				/>
-			</head>
 			<body
 				className={`${inter.className} bg-blue-500 dark:bg-blue-950 h-screen w-screen p-0 m-0`}
 			>

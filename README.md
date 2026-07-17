@@ -24,8 +24,22 @@ pnpm dev
 bun dev
 ```
 
+## Configuration
+Set the following variables in `.env` (see `docs/API.md` for details):
+- `API_URL` — bot server base URL (proxied via Next.js rewrites)
+- `NEXT_PUBLIC_URL` — public origin of this dashboard
+- `NEXT_PUBLIC_INVITE_LINK` — Discord OAuth authorize URL
+- `INVITE_LINK` — plain bot invite link
+
+## Architecture
+- `app/` — routes (App Router)
+- `components/dashboard/` — dashboard feature components; `components/ui/` — shadcn primitives; `components/shared/` — generic building blocks
+- `hooks/` — SWR data hooks and client utilities
+- `lib/api/` — typed API client for the bot server (contract documented in [docs/API.md](docs/API.md))
+- `lib/session.ts` — admin / bearer / visitor session handling
+
 ## Building
-> Before building the productive server, please make sure API url is correctly set in `settings.json`
+> Before building the production server, please make sure `API_URL` is correctly set in `.env`
 ```bash
 npm run build
 # or

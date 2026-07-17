@@ -1,25 +1,24 @@
 "use client"
-import { login } from "@/lib/api/web"
-import { useRouter } from "next/navigation"
-import { use, useEffect, useRef, useState } from "react"
-import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faDiscord } from '@fortawesome/free-brands-svg-icons'
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { use, useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
+import { FaDiscord } from "react-icons/fa"
+import { toast } from "sonner"
+import { z } from "zod"
 import { Button } from "@/components/ui/button"
 import {
 	Form,
 	FormControl,
-	FormDescription,
 	FormField,
 	FormItem,
 	FormLabel,
 	FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { toast } from "sonner"
-import Link from "next/link"
+import { login } from "@/lib/api/auth"
+import { storeSession } from "@/lib/session"
 
 const formSchema = z.object({
 	password: z.string().min(1),
@@ -27,73 +26,76 @@ const formSchema = z.object({
 
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>
 
-export default function LoginPage(props: {
-	searchParams: SearchParams
-}) {
+export default function LoginPage(props: { searchParams: SearchParams }) {
 	const searchParams = use(props.searchParams)
 	const router = useRouter()
-	const buttonRef = useRef<null | HTMLButtonElement>(null)
+	const [submitting, setSubmitting] = useState(false)
+	const [isChecked, setChecked] = useState(searchParams?.checked === "true")
+
+	// Auto-login with a stored admin password, then strip any search params.
 	useEffect(() => {
-		(async () => {
-			const item = window.localStorage.getItem("key")
-			const bearer = window.localStorage.getItem("bearer")
-			if (item) {
-				if (await login(item)) {
-					if (bearer) {
-						window.localStorage.removeItem("bearer")
-					}
-					return router.push("/dashboard")
-				}
+		;(async () => {
+			const key = window.localStorage.getItem("key")
+			if (key && (await login({ type: "admin", token: key }))) {
+				window.localStorage.removeItem("bearer")
+				router.push("/dashboard")
 			}
 		})()
-		// remove search params if any
-		router.replace('/login')
+		router.replace("/login")
 	}, [router])
+
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
-		defaultValues: {
-			password: "",
-		},
+		defaultValues: { password: "" },
 	})
 
 	async function onSubmit(values: z.infer<typeof formSchema>) {
-		if (await login(values.password)) {
-			window.localStorage.setItem("key", values.password)
-			window.localStorage.removeItem("bearer")
+		const session = { type: "admin", token: values.password } as const
+		if (await login(session)) {
+			storeSession(session)
+			setSubmitting(true)
 			router.push("/dashboard")
-			if (!buttonRef.current) return
-			buttonRef.current.disabled = true
 			return
 		}
-		toast('Failed to login', {
+		toast("Failed to login", {
 			closeButton: true,
-			description: 'Please try again'
+			description: "Please try again",
 		})
 	}
-
-
-	const [isChecked, setChecked] = useState(searchParams?.checked === 'true')
 
 	return (
 		<div className="h-full w-full flex flex-col items-center justify-center">
 			<div className="bg-white dark:bg-zinc-900 h-max w-max p-10 rounded-xl flex flex-col justify-center items-center text-3xl gap-2">
 				<h1 className="font-extrabold mb-6">Amhra Dashboard</h1>
 				<div className="flex gap-2 items-center">
-					<p className="text-base">I agree to <Link href='/terms' className="text-blue-400 underline">Terms of Service</Link></p>
-					<input type="checkbox" checked={isChecked} onChange={ev => { setChecked(ev.target.checked) }} />
+					<p className="text-base">
+						I agree to{" "}
+						<Link href="/terms" className="text-blue-400 underline">
+							Terms of Service
+						</Link>
+					</p>
+					<input
+						type="checkbox"
+						checked={isChecked}
+						onChange={ev => setChecked(ev.target.checked)}
+					/>
 				</div>
-				{
-					isChecked &&
+				{isChecked && (
 					<>
 						<Form {...form}>
-							<form onSubmit={form.handleSubmit(onSubmit)} className="w-full">
+							<form
+								onSubmit={form.handleSubmit(onSubmit)}
+								className="w-full"
+							>
 								<FormField
 									control={form.control}
 									name="password"
 									render={({ field }) => (
-										<FormItem className="">
-											<FormLabel className="text-xl">Admin Login</FormLabel>
-											<FormControl className="">
+										<FormItem>
+											<FormLabel className="text-xl">
+												Admin Login
+											</FormLabel>
+											<FormControl>
 												<Input
 													placeholder="Password"
 													{...field}
@@ -105,18 +107,30 @@ export default function LoginPage(props: {
 										</FormItem>
 									)}
 								/>
-								<Button ref={buttonRef} type="submit" className="text-xl w-full mt-2">
+								<Button
+									type="submit"
+									disabled={submitting}
+									className="text-xl w-full mt-2"
+								>
 									Login
 								</Button>
 							</form>
 						</Form>
-						<Link className="w-full bg-discord hover:bg-discord-dark font-bold text-white flex justify-center items-center gap-2 rounded-md p-2 text-lg" href="/discord">
-							<FontAwesomeIcon icon={faDiscord} />
+						<Link
+							className="w-full bg-discord hover:bg-discord-dark font-bold text-white flex justify-center items-center gap-2 rounded-md p-2 text-lg"
+							href="/discord"
+						>
+							<FaDiscord />
 							Login With Discord
 						</Link>
-						<Link href="/invite" className="text-base text-gray-500 underline">Not a user? Add it to your server</Link>
+						<Link
+							href="/invite"
+							className="text-base text-gray-500 underline"
+						>
+							Not a user? Add it to your server
+						</Link>
 					</>
-				}
+				)}
 			</div>
 		</div>
 	)

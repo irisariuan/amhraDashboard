@@ -1,25 +1,27 @@
 "use client"
-import { useThemeDetector } from "@/components/custom/useThemeDetector"
-import { login } from "@/lib/api/web"
-import { useTheme } from "next-themes"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useCallback, useEffect, useState } from "react"
+import { useEffect } from "react"
+import { login } from "@/lib/api/auth"
 
 export default function Home() {
 	const router = useRouter()
-	const redirect = useCallback(async () => {
-		const item = window.localStorage.getItem("key")
-		if (item) {
-			if (await login(item)) {
-				return router.push("/dashboard")
-			}
-		}
-		return router.push("/login")
-	}, [router])
+
 	useEffect(() => {
+		let cancelled = false
+		async function redirect() {
+			const key = window.localStorage.getItem("key")
+			if (key && (await login({ type: "admin", token: key }))) {
+				if (!cancelled) router.push("/dashboard")
+				return
+			}
+			if (!cancelled) router.push("/login")
+		}
 		redirect()
-	}, [redirect])
+		return () => {
+			cancelled = true
+		}
+	}, [router])
 
 	return (
 		<div className="w-full h-full flex flex-col items-center justify-center">
