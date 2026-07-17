@@ -1,92 +1,65 @@
 "use client"
-import { motion } from "framer-motion"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { use, useEffect, useState } from "react"
-import { SongDashboard } from "@/components/dashboard/song/song-dashboard"
-import { verifyVisitor } from "@/lib/api/auth"
-import type { GuildSession } from "@/lib/session"
+import { DashboardShell } from "@/components/dashboard/dashboard-shell"
+import { Spinner } from "@/components/shared/spinner"
+import { useAccount } from "@/hooks/use-account"
+import { loginAnonymous } from "@/lib/api/auth"
 
 enum Status {
 	Loading = 0,
-	Loaded = 1,
+	Ready = 1,
 	Error = 2,
 }
 
 type Params = Promise<{ data: string }>
 
 /**
- * One-time visitor link: the URL segment is base64-encoded JSON
- * `{ guildId, auth }`. The token is re-verified against the bot every 5 s
- * and the page invalidates itself when the link expires.
+ * Visitor link from the Discord /dashboard command. The URL segment is
+ * base64-encoded `{ guildId, auth }`; we validate the token (which stores it as
+ * an anonymous session cookie) and then render the player for that one guild.
  */
 export default function VisitorPage(props: { params: Params }) {
 	const params = use(props.params)
 	const [status, setStatus] = useState(Status.Loading)
-	const [session, setSession] = useState<GuildSession | null>(null)
-	const router = useRouter()
+	const [guildId, setGuildId] = useState<string | null>(null)
+	const { account, mutate } = useAccount()
 
 	useEffect(() => {
-		let visitorSession: GuildSession
+		let guild: string
+		let auth: string
 		try {
-			const { guildId, auth }: { guildId: string; auth: string } =
-				JSON.parse(atob(decodeURI(params.data)))
-			visitorSession = { type: "visitor", token: auth, guildId }
+			;({ guildId: guild, auth } = JSON.parse(atob(decodeURI(params.data))))
 		} catch {
 			setStatus(Status.Error)
 			return
 		}
+		loginAnonymous(auth, guild)
+			.then(async ok => {
+				if (!ok) return setStatus(Status.Error)
+				setGuildId(guild)
+				await mutate()
+				setStatus(Status.Ready)
+			})
+			.catch(() => setStatus(Status.Error))
+	}, [params.data, mutate])
 
-		async function verify() {
-			try {
-				const ok = await verifyVisitor(visitorSession)
-				setStatus(ok ? Status.Loaded : Status.Error)
-				setSession(visitorSession)
-			} catch {
-				setStatus(Status.Error)
-			}
-		}
-
-		verify()
-		const interval = setInterval(verify, 1000 * 5)
-		return () => clearInterval(interval)
-	}, [params.data])
-
-	useEffect(() => {
-		if (status === Status.Error) {
-			router.push("/")
-		}
-	}, [status, router])
-
-	if (status === Status.Loaded && session) {
-		return (
-			<motion.div
-				className="flex justify-center items-center w-full h-full p-4 lg:p-0"
-				animate={{ opacity: [0, 1], scale: [0, 1] }}
-			>
-				<div className="bg-white dark:bg-zinc-900 p-8 rounded-xl w-full h-full overflow-auto lg:h-5/6 lg:w-5/6">
-					<SongDashboard session={session} />
-				</div>
-			</motion.div>
-		)
+	if (status === Status.Ready && guildId && account) {
+		return <DashboardShell account={account} fixedGuildId={guildId} />
 	}
-
-	if (status === Status.Loading) {
+	if (status === Status.Error) {
 		return (
-			<div className="flex justify-center items-center w-full h-full">
-				<p className="text-3xl text-white">Opening...</p>
+			<div className="flex flex-col items-center justify-center h-full gap-2">
+				<p className="text-2xl">This link has expired.</p>
+				<Link href="/" className="text-indigo-400 underline">
+					Return home
+				</Link>
 			</div>
 		)
 	}
-
 	return (
-		<div className="flex justify-center items-center w-full h-full flex-col gap-2">
-			<p className="text-3xl text-white">Error!</p>
-			<Link href="/">
-				<p className="text-blue-500 underline text-xl">
-					Return to Home Page
-				</p>
-			</Link>
+		<div className="grid place-items-center h-full">
+			<Spinner />
 		</div>
 	)
 }

@@ -26,7 +26,23 @@ export interface SongReply {
 	canSeek: boolean
 	isMuting: boolean
 	loop: boolean
+	autoSuggest: boolean
 	skipToTimestamp: number | null
+}
+
+export interface Account {
+	id: string
+	type: "anonymous" | "web"
+	displayName: string | null
+	permission: number
+	isAdmin: boolean
+}
+
+export interface Suggestion {
+	url: string
+	title: string
+	durationInSec: number
+	channel?: string
 }
 
 export enum SongEditType {
@@ -44,6 +60,7 @@ export enum SongEditType {
 	Unmute = "unmute",
 	Loop = "loop",
 	SkipSegment = "skipSegment",
+	AutoSuggest = "autoSuggest",
 }
 
 export const FormatSongEditType: Record<SongEditType, string> = {
@@ -61,6 +78,7 @@ export const FormatSongEditType: Record<SongEditType, string> = {
 	[SongEditType.Unmute]: "Unmuted",
 	[SongEditType.Loop]: "Loop Toggled",
 	[SongEditType.SkipSegment]: "Skipped Non-Music",
+	[SongEditType.AutoSuggest]: "Radio Toggled",
 } as const
 
 export enum ActionType {

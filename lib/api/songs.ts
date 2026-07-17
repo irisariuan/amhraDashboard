@@ -1,6 +1,5 @@
 import { apiFetch } from "./client"
 import { type QueueItem, SongEditType, type SongReply } from "./types"
-import type { GuildSession } from "@/lib/session"
 
 type EditDetailMap = {
 	[SongEditType.AddSong]: { url: string }
@@ -9,6 +8,7 @@ type EditDetailMap = {
 	[SongEditType.SetVolume]: { volume: number }
 	[SongEditType.SetQueue]: { queue: QueueItem[] }
 	[SongEditType.Loop]: { loop: boolean }
+	[SongEditType.AutoSuggest]: { autoSuggest: boolean }
 }
 
 type DetailAction = keyof EditDetailMap
@@ -16,32 +16,29 @@ type DetailAction = keyof EditDetailMap
 export type PlainSongAction = Exclude<SongEditType, DetailAction>
 
 export async function editSong<A extends DetailAction>(
-	session: GuildSession,
+	guildId: string,
 	action: A,
 	detail: EditDetailMap[A],
 ): Promise<boolean>
 export async function editSong(
-	session: GuildSession,
+	guildId: string,
 	action: PlainSongAction,
 ): Promise<boolean>
 export async function editSong(
-	session: GuildSession,
+	guildId: string,
 	action: SongEditType,
 	detail?: EditDetailMap[DetailAction],
 ): Promise<boolean> {
-	const res = await apiFetch("/api/song/edit", session, {
+	const res = await apiFetch("/api/song/edit", {
 		method: "POST",
-		body: {
-			action,
-			guildId: session.guildId,
-			...(detail ? { detail } : {}),
-		},
+		body: { action, guildId, ...(detail ? { detail } : {}) },
 	})
 	return res.ok
 }
 
-export async function getSong(session: GuildSession): Promise<SongReply | null> {
-	const res = await apiFetch(`/api/song/get/${session.guildId}`, session)
+export async function getSong(guildId: string): Promise<SongReply | null> {
+	const res = await apiFetch(`/api/song/get/${guildId}`)
+	if (!res.ok) return null
 	return res.json()
 }
 

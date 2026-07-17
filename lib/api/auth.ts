@@ -1,33 +1,84 @@
+import {
+	startAuthentication,
+	startRegistration,
+} from "@simplewebauthn/browser"
 import { apiFetch } from "./client"
-import type { ActionData } from "./types"
-import type { GuildSession, Session } from "@/lib/session"
+import type { Account } from "./types"
 
-/** Validates credentials against the bot server. */
-export async function login(session: Session): Promise<boolean> {
-	const res = await apiFetch("/api/new", session)
-	return res.ok
+/** Current signed-in account, or null if unauthenticated. */
+export async function getCurrentAccount(): Promise<Account | null> {
+	const res = await apiFetch("/api/auth/session")
+	if (!res.ok) return null
+	const { account }: { account: Account } = await res.json()
+	return account
 }
 
-// The backend has always received logout as a Basic credential regardless of
-// session type; the call is fire-and-forget.
-export async function logout(session: Session): Promise<boolean> {
-	const res = await apiFetch("/api/logout", { ...session, type: "admin" })
-	return res.ok
-}
-
-/** Admin-only bot actions: terminate, reload commands, reload settings. */
-export function postAction(session: Session, data: ActionData) {
-	return apiFetch("/api/action", { ...session, type: "admin" }, {
+/**
+ * Registers a new web account with a passkey. Runs the WebAuthn ceremony in the
+ * browser and, on success, the server sets the session cookie.
+ */
+export async function registerPasskey(displayName?: string): Promise<boolean> {
+	const beginRes = await apiFetch("/api/auth/passkey/register/begin", {
 		method: "POST",
-		body: data,
+		body: { displayName },
 	})
+	if (!beginRes.ok) return false
+	const { challengeId, options } = await beginRes.json()
+	const attestation = await startRegistration({ optionsJSON: options })
+	const finishRes = await apiFetch("/api/auth/passkey/register/finish", {
+		method: "POST",
+		body: { challengeId, response: attestation },
+	})
+	return finishRes.ok
 }
 
-/** Checks a visitor link is still valid; polled while the visitor page is open. */
-export async function verifyVisitor(session: GuildSession): Promise<boolean> {
-	const res = await apiFetch("/api/live", session, {
+/** Signs in with an existing passkey (usernameless). */
+export async function loginPasskey(): Promise<boolean> {
+	const beginRes = await apiFetch("/api/auth/passkey/login/begin", {
 		method: "POST",
-		body: { guildId: session.guildId },
+	})
+	if (!beginRes.ok) return false
+	const { challengeId, options } = await beginRes.json()
+	const assertion = await startAuthentication({ optionsJSON: options })
+	const finishRes = await apiFetch("/api/auth/passkey/login/finish", {
+		method: "POST",
+		body: { challengeId, response: assertion },
+	})
+	return finishRes.ok
+}
+
+/** Adds another passkey to the current account. */
+export async function addPasskey(): Promise<boolean> {
+	const beginRes = await apiFetch("/api/auth/passkey/add/begin", {
+		method: "POST",
+	})
+	if (!beginRes.ok) return false
+	const { challengeId, options } = await beginRes.json()
+	const attestation = await startRegistration({ optionsJSON: options })
+	const finishRes = await apiFetch("/api/auth/passkey/add/finish", {
+		method: "POST",
+		body: { challengeId, response: attestation },
+	})
+	return finishRes.ok
+}
+
+export async function logout(): Promise<void> {
+	await apiFetch("/api/auth/logout", { method: "POST" })
+}
+
+export async function unlinkDiscord(): Promise<boolean> {
+	const res = await apiFetch("/api/auth/discord/unlink", { method: "POST" })
+	return res.ok
+}
+
+/** Validates a visitor token for a guild and stores it as the anon session. */
+export async function loginAnonymous(
+	token: string,
+	guildId: string,
+): Promise<boolean> {
+	const res = await apiFetch("/api/auth/anon", {
+		method: "POST",
+		body: { token, guildId },
 	})
 	return res.ok
 }

@@ -1,5 +1,3 @@
-import { type Session, authHeader } from "@/lib/session"
-
 interface ApiOptions {
 	method?: "GET" | "POST"
 	body?: unknown
@@ -7,22 +5,19 @@ interface ApiOptions {
 }
 
 /**
- * All `/api/*` paths are proxied to the bot server by the rewrite in
- * next.config.mjs. This wrapper only adds the Authorization header in the
- * format the backend expects for the session's credential type.
+ * Fetches a same-origin `/api/*` route. Authentication rides on the httpOnly
+ * session/anonymous cookie, which same-origin requests send automatically — the
+ * route handlers under app/api attach it to the bot request. No token is ever
+ * handled in the browser.
  */
 export function apiFetch(
 	path: string,
-	session: Session,
 	options: ApiOptions = {},
 ): Promise<Response> {
 	const hasBody = options.body !== undefined
 	return fetch(path, {
 		method: options.method ?? "GET",
-		headers: {
-			Authorization: authHeader(session),
-			...(hasBody ? { "Content-Type": "application/json" } : {}),
-		},
+		headers: hasBody ? { "Content-Type": "application/json" } : undefined,
 		body: hasBody ? JSON.stringify(options.body) : undefined,
 		cache: options.cache,
 	})

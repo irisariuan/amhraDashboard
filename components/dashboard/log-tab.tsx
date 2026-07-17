@@ -5,36 +5,33 @@ import {
 	AccordionItem,
 	AccordionTrigger,
 } from "@/components/ui/accordion"
-import { Area } from "@/components/shared/area"
-import type { Session } from "@/lib/session"
 import { LogTable } from "./log-table"
 
-export function LogTab({ session }: { session: Session }) {
+/** Admin log viewer (message/voice logging has been removed from the bot). */
+export function LogView() {
 	return (
-		<Area title="Logs">
+		<div>
+			<h2 className="text-2xl font-bold mb-4">Logs</h2>
 			<Accordion type="single" collapsible className="w-full">
 				<AccordionItem value="discordLogs">
 					<AccordionTrigger>Discord Bot Logs</AccordionTrigger>
 					<AccordionContent>
-						<LogTable session={session} types={["dcblog"]} />
+						<LogTable types={["dcblog"]} />
 					</AccordionContent>
 				</AccordionItem>
 				<AccordionItem value="expressLogs">
-					<AccordionTrigger>Express Logs</AccordionTrigger>
+					<AccordionTrigger>Server Logs</AccordionTrigger>
 					<AccordionContent>
-						<LogTable
-							session={session}
-							types={["experr", "explog"]}
-						/>
+						<LogTable types={["experr", "explog"]} />
 					</AccordionContent>
 				</AccordionItem>
-				<AccordionItem value="messageLogs">
-					<AccordionTrigger>Message Logs</AccordionTrigger>
+				<AccordionItem value="errorLogs">
+					<AccordionTrigger>Errors & Warnings</AccordionTrigger>
 					<AccordionContent>
-						<LogTable session={session} types={["dcbmsg"]} />
+						<LogTable types={["error", "errwn", "errim"]} />
 					</AccordionContent>
 				</AccordionItem>
 			</Accordion>
-		</Area>
+		</div>
 	)
 }

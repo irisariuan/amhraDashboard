@@ -15,23 +15,17 @@ export function useDevice(): DeviceType | null {
 		const detect = () => {
 			const userAgent = navigator.userAgent.toLowerCase()
 			const isMobile =
-				/iphone|ipad|ipod|android|blackberry|windows phone/g.test(
-					userAgent,
-				)
+				/iphone|ipad|ipod|android|blackberry|windows phone/g.test(userAgent)
 			const isTablet =
-				/(ipad|tablet|playbook|silk)|(android(?!.*mobile))/g.test(
-					userAgent,
-				)
-
-			if (isMobile) {
-				setDevice(DeviceType.Mobile)
-			} else if (isTablet) {
-				setDevice(DeviceType.Tablet)
-			} else {
-				setDevice(DeviceType.Desktop)
-			}
+				/(ipad|tablet|playbook|silk)|(android(?!.*mobile))/g.test(userAgent)
+			setDevice(
+				isMobile
+					? DeviceType.Mobile
+					: isTablet
+						? DeviceType.Tablet
+						: DeviceType.Desktop,
+			)
 		}
-
 		detect()
 		window.addEventListener("resize", detect)
 		return () => window.removeEventListener("resize", detect)

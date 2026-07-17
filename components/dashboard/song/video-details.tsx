@@ -4,17 +4,10 @@ import { ClockIcon } from "lucide-react"
 import { Spinner } from "@/components/shared/spinner"
 import { useVideoDetails } from "@/hooks/use-video-details"
 import { formatDuration } from "@/lib/format"
-import type { Session } from "@/lib/session"
 
 /** Title, channel, duration, and view count for a YouTube URL. */
-export function VideoDetails({
-	url,
-	session,
-}: {
-	url: string
-	session: Session
-}) {
-	const { data, isLoading, error } = useVideoDetails(url, session)
+export function VideoDetails({ url }: { url: string }) {
+	const { data, isLoading, error } = useVideoDetails(url)
 
 	if (isLoading || !data || error) {
 		return (
@@ -26,27 +19,25 @@ export function VideoDetails({
 
 	return (
 		<div className="flex flex-col gap-2">
-			<a href={url} rel="noreferrer" target="_blank">
+			<a href={url} rel="noreferrer" target="_blank" className="font-medium">
 				{data.title}
 			</a>
 			<a
 				href={data.channel?.url}
 				rel="noreferrer"
 				target="_blank"
-				className="text-zinc-500 underline"
+				className="text-zinc-500 underline text-sm"
 			>
 				{data.channel?.name}
 			</a>
 			<div className="flex gap-2">
-				<div className="flex bg-blue-500 rounded-lg px-2 items-center gap-2 text-blue-300">
-					<ClockIcon className="w-4" />
-					<p className="text-white">
-						{formatDuration(data.durationInSec ?? 0)}
-					</p>
+				<div className="flex bg-indigo-500/20 text-indigo-200 rounded-lg px-2 py-0.5 items-center gap-1.5 text-sm">
+					<ClockIcon className="w-3.5" />
+					{formatDuration(data.durationInSec ?? 0)}
 				</div>
-				<div className="flex items-center gap-2 bg-zinc-200 px-2 rounded-lg text-zinc-500">
+				<div className="flex items-center gap-1.5 bg-zinc-500/15 px-2 py-0.5 rounded-lg text-zinc-400 text-sm">
 					<EyeOpenIcon />
-					<span>{data.views}</span>
+					<span>{Intl.NumberFormat().format(data.views)}</span>
 				</div>
 			</div>
 		</div>

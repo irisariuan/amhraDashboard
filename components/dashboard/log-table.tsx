@@ -1,12 +1,9 @@
 "use client"
 import type { ColumnDef } from "@tanstack/react-table"
-import { redirect } from "next/navigation"
-import { useEffect } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useLogs } from "@/hooks/use-logs"
 import { LogFormatted, type LogType } from "@/lib/api/types"
 import { formatLogDate } from "@/lib/format"
-import { clearStoredSession, type Session } from "@/lib/session"
 import { DataTable } from "./data-table"
 
 interface LogRow {
@@ -23,22 +20,9 @@ const columns: ColumnDef<LogRow>[] = [
 	{ accessorKey: "message", header: "Message" },
 ]
 
-/** Filterable table of logs restricted to the given log types. */
-export function LogTable({
-	session,
-	types,
-}: {
-	session: Session
-	types: LogType[]
-}) {
-	const { data, isLoading, error } = useLogs(session)
-
-	useEffect(() => {
-		if (error && !isLoading) {
-			clearStoredSession()
-			redirect("/login")
-		}
-	}, [error, isLoading])
+/** Filterable table of logs restricted to the given log types (admin only). */
+export function LogTable({ types }: { types: LogType[] }) {
+	const { data, isLoading } = useLogs(true)
 
 	if (isLoading) {
 		return <Skeleton className="w-[100px] h-[20px] rounded-full" />

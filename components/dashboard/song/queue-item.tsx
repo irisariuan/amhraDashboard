@@ -1,52 +1,67 @@
 "use client"
-import { DragHandleDots1Icon, TrashIcon } from "@radix-ui/react-icons"
-import { Reorder } from "framer-motion"
+import { DragHandleDots2Icon, TrashIcon } from "@radix-ui/react-icons"
+import { Reorder, useDragControls } from "framer-motion"
 import { toast } from "sonner"
 import { mutate } from "swr"
 import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { DeviceType, useDevice } from "@/hooks/use-device"
 import { editSong, songKey } from "@/lib/api/songs"
 import { SongEditType, type QueueItem } from "@/lib/api/types"
-import type { GuildSession } from "@/lib/session"
 import { VideoLink } from "./video-link"
 
 export function QueueEntry({
-	session,
+	guildId,
 	index,
 	value,
 }: {
-	session: GuildSession
+	guildId: string
 	index: number
 	value: QueueItem
 }) {
-	const device = useDevice()
-	const showDragHandle =
-		device === DeviceType.Mobile || device === DeviceType.Tablet
+	const controls = useDragControls()
 
 	async function remove() {
-		if (await editSong(session, SongEditType.RemoveSong, { index })) {
+		if (await editSong(guildId, SongEditType.RemoveSong, { index })) {
 			toast("Removed song from queue")
 		} else {
 			toast("Failed to remove song from queue")
 		}
-		mutate(songKey(session.guildId))
+		mutate(songKey(guildId))
 	}
 
 	return (
-		<Reorder.Item value={value} key={value.url} className="w-full">
-			<div className="break-words w-full flex items-center hover:cursor-grab active:cursor-grabbing gap-2 dark:hover:bg-neutral-800/50 hover:bg-neutral-200/50 p-2 rounded-xl">
-				{showDragHandle && <DragHandleDots1Icon />}
-				<div className="flex-1 overflow-hidden">
-					<Label className="mr-2 font-bold text-base">
-						{index + 1}.
-					</Label>
-					<VideoLink url={value.url} session={session} />
-				</div>
-				<Button variant="destructive" onClick={remove}>
-					<TrashIcon />
-				</Button>
+		<Reorder.Item
+			value={value}
+			dragListener={false}
+			dragControls={controls}
+			className="w-full group flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-white/5"
+		>
+			<button
+				type="button"
+				onPointerDown={e => controls.start(e)}
+				className="text-zinc-500 hover:text-zinc-300 cursor-grab active:cursor-grabbing touch-none"
+				aria-label="Drag to reorder"
+			>
+				<DragHandleDots2Icon />
+			</button>
+			<span className="text-xs tabular-nums text-zinc-500 w-5 text-right">
+				{index + 1}
+			</span>
+			<div className="flex-1 overflow-hidden">
+				<VideoLink url={value.url} />
 			</div>
+			{value.repeating && (
+				<span className="text-[10px] uppercase tracking-wide text-indigo-400">
+					loop
+				</span>
+			)}
+			<Button
+				variant="ghost"
+				size="icon"
+				className="opacity-0 group-hover:opacity-100 text-zinc-400 hover:text-red-400"
+				onClick={remove}
+			>
+				<TrashIcon />
+			</Button>
 		</Reorder.Item>
 	)
 }

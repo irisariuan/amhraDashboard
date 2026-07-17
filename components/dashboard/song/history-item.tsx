@@ -5,32 +5,30 @@ import { mutate } from "swr"
 import { Button } from "@/components/ui/button"
 import { editSong, songKey } from "@/lib/api/songs"
 import { SongEditType } from "@/lib/api/types"
-import type { GuildSession } from "@/lib/session"
 import { VideoLink } from "./video-link"
 
-/** Previously played song with a one-click re-queue button. */
-export function HistoryItem({
-	link,
-	session,
-}: {
-	link: string
-	session: GuildSession
-}) {
+/** A previously played (or suggested) track with a one-click enqueue button. */
+export function TrackRow({ url, guildId }: { url: string; guildId: string }) {
 	async function addToQueue() {
-		if (await editSong(session, SongEditType.AddSong, { url: link })) {
+		if (await editSong(guildId, SongEditType.AddSong, { url })) {
 			toast("Added song to queue")
 		} else {
 			toast("Failed to add song to queue")
 		}
-		mutate(songKey(session.guildId))
+		mutate(songKey(guildId))
 	}
 
 	return (
-		<div className="break-words w-full flex items-center hover:cursor-pointer gap-2 dark:hover:bg-neutral-900 hover:bg-neutral-200 p-2 rounded-xl">
+		<div className="group flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-white/5">
 			<div className="flex-1 overflow-hidden">
-				<VideoLink url={link} session={session} />
+				<VideoLink url={url} />
 			</div>
-			<Button variant="outline" onClick={addToQueue}>
+			<Button
+				variant="ghost"
+				size="icon"
+				className="opacity-0 group-hover:opacity-100 text-zinc-400 hover:text-indigo-300"
+				onClick={addToQueue}
+			>
 				<PlusIcon />
 			</Button>
 		</div>

@@ -17,13 +17,13 @@ export default function RootLayout({
 	children: React.ReactNode
 }>) {
 	return (
-		<html lang="en" suppressHydrationWarning>
+		<html lang="en" suppressHydrationWarning className="dark">
 			<body
-				className={`${inter.className} bg-blue-500 dark:bg-blue-950 h-screen w-screen p-0 m-0`}
+				className={`${inter.className} bg-zinc-950 text-zinc-100 h-screen w-screen p-0 m-0`}
 			>
 				<ThemeProvider
 					attribute="class"
-					defaultTheme="system"
+					defaultTheme="dark"
 					enableSystem
 					disableTransitionOnChange
 				>

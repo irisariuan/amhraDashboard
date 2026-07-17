@@ -1,19 +1,15 @@
 import { apiFetch } from "./client"
 import type { Log, LogExtraType } from "./types"
-import type { Session } from "@/lib/session"
 
 const ExtraTypeTag = /\[[A-Z].*\]/
 
 /**
- * Fetches server logs. Messages may carry a leading `[VOICE]`/`[DELETE]`/
- * `[EDIT]` tag which is stripped into `extraType`; the list is reversed so
- * the newest entries come first.
+ * Fetches server logs (admin only). A leading `[VOICE]`/`[DELETE]`/`[EDIT]` tag
+ * is stripped into `extraType`; the list is reversed so newest entries lead.
  */
-export async function getLogs(session: Session): Promise<Log[]> {
-	const res = await apiFetch("/api/log", session)
-	if (!res.ok) {
-		throw new Error(`Failed to fetch logs (${res.status})`)
-	}
+export async function getLogs(): Promise<Log[]> {
+	const res = await apiFetch("/api/log")
+	if (!res.ok) throw new Error(`Failed to fetch logs (${res.status})`)
 	const { content }: { content: Log[] } = await res.json()
 	return content
 		.map(log => {

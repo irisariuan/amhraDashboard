@@ -3,13 +3,12 @@ import { useEffect, useState } from "react"
 import useSWR from "swr"
 import { getSong, songKey } from "@/lib/api/songs"
 import type { SongReply } from "@/lib/api/types"
-import type { GuildSession } from "@/lib/session"
 
-/** Live player state, polled from the bot. */
-export function usePlayer(session: GuildSession, refreshInterval = 2000) {
+/** Live player state for a guild, polled from the bot. */
+export function usePlayer(guildId: string, refreshInterval = 2000) {
 	const { data, isLoading } = useSWR<SongReply | null>(
-		songKey(session.guildId),
-		() => getSong(session),
+		songKey(guildId),
+		() => getSong(guildId),
 		{ refreshInterval },
 	)
 	return { data: data ?? null, isLoading }

@@ -4,30 +4,27 @@ import { useEffect, useState } from "react"
 import { usePlayer } from "@/hooks/use-player"
 import { SongEditType, type QueueItem } from "@/lib/api/types"
 import { editSong } from "@/lib/api/songs"
-import type { GuildSession } from "@/lib/session"
 import { QueueEntry } from "./queue-item"
 
 /** Drag-to-reorder queue; the new order is pushed to the bot on release. */
 export function Queue({
 	initQueue,
-	session,
+	guildId,
 }: {
 	initQueue: QueueItem[]
-	session: GuildSession
+	guildId: string
 }) {
-	const { data } = usePlayer(session)
+	const { data } = usePlayer(guildId)
 
 	const [syncedQueue, setSyncedQueue] = useState<QueueItem[]>(initQueue)
 	const [queue, setQueue] = useState<QueueItem[]>(initQueue)
 	useEffect(() => {
-		if (data) {
-			setQueue(data.queue)
-		}
+		if (data) setQueue(data.queue)
 	}, [data])
 
 	function commitReorder() {
-		if (syncedQueue !== queue) {
-			editSong(session, SongEditType.SetQueue, { queue })
+		if (syncedQueue !== queue && queue.length > 0) {
+			editSong(guildId, SongEditType.SetQueue, { queue })
 			setSyncedQueue(queue)
 		}
 	}
@@ -35,15 +32,15 @@ export function Queue({
 	return (
 		<Reorder.Group
 			axis="y"
-			values={initQueue}
+			values={queue}
 			onReorder={setQueue}
 			onMouseUp={commitReorder}
 			onTouchEnd={commitReorder}
-			className="flex flex-col w-full justify-center items-center gap-2"
+			className="flex flex-col w-full gap-1"
 		>
 			{queue.map((item, index) => (
 				<QueueEntry
-					session={session}
+					guildId={guildId}
 					index={index}
 					value={item}
 					key={item.url}
