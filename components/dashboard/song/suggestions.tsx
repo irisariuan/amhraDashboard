@@ -42,9 +42,9 @@ export function Suggestions({ guildId }: { guildId: string }) {
 			{data.map(s => (
 				<div
 					key={s.url}
-					className="group flex items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-white/5"
+					className="group flex min-w-0 items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-white/5"
 				>
-					<div className="flex-1 overflow-hidden">
+					<div className="flex-1 min-w-0 overflow-hidden">
 						<a
 							href={s.url}
 							target="_blank"

@@ -18,9 +18,12 @@ export function Panels({
 	const history = Array.from(new Set(data.history ?? [])).reverse();
 
 	return (
-		<div className="flex flex-col gap-3 h-full">
+		<div className="flex h-full min-w-0 flex-col gap-3">
 			<AddSongForm guildId={guildId} />
-			<Tabs defaultValue="queue" className="flex flex-col flex-1 min-h-0">
+			<Tabs
+				defaultValue="queue"
+				className="flex min-h-0 w-full min-w-0 flex-1 flex-col"
+			>
 				<TabsList className="self-start">
 					<TabsTrigger value="queue">
 						Queue
@@ -29,10 +32,10 @@ export function Panels({
 					<TabsTrigger value="suggestions">Suggestions</TabsTrigger>
 					<TabsTrigger value="history">History</TabsTrigger>
 				</TabsList>
-				<ScrollArea className="flex-1 min-h-0 mt-2 pr-2 max-w-full">
+				<ScrollArea className="mt-2 min-h-0 w-full min-w-0 flex-1 pr-2">
 					<TabsContent
 						value="queue"
-						className="mt-0 max-w-full min-w-0"
+						className="mt-0 w-full min-w-0"
 					>
 						{data.queue?.length > 0 ? (
 							<Queue initQueue={data.queue} guildId={guildId} />
@@ -44,13 +47,13 @@ export function Panels({
 					</TabsContent>
 					<TabsContent
 						value="suggestions"
-						className="mt-0 max-w-full min-w-0"
+						className="mt-0 w-full min-w-0"
 					>
 						<Suggestions guildId={guildId} />
 					</TabsContent>
 					<TabsContent
 						value="history"
-						className="mt-0 max-w-full min-w-0"
+						className="mt-0 w-full min-w-0"
 					>
 						{history.length > 0 ? (
 							<div className="flex flex-col gap-1">

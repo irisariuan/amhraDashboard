@@ -36,7 +36,7 @@ export function Queue({
 			onReorder={setQueue}
 			onMouseUp={commitReorder}
 			onTouchEnd={commitReorder}
-			className="flex flex-col w-full gap-1"
+			className="flex flex-col w-full min-w-0 gap-1"
 		>
 			{queue.map((item, index) => (
 				<QueueEntry
