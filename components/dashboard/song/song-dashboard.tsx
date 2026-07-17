@@ -18,10 +18,10 @@ export function SongDashboard({ guildId }: { guildId: string }) {
 
 	return (
 		<div className="grid lg:grid-cols-2 gap-8 h-full">
-			<div className="flex items-center justify-center">
+			<div className="flex items-center justify-center min-w-0">
 				<NowPlaying data={data} guildId={guildId} />
 			</div>
-			<div className="min-h-0">
+			<div className="min-h-0 min-w-0">
 				<Panels data={data} guildId={guildId} />
 			</div>
 		</div>

@@ -1,58 +1,62 @@
-"use client"
-import { DoubleArrowRightIcon } from "@radix-ui/react-icons"
-import { toast } from "sonner"
-import { mutate } from "swr"
-import { Button } from "@/components/ui/button"
-import { useVideoDetails } from "@/hooks/use-video-details"
-import { editSong, songKey } from "@/lib/api/songs"
-import { SongEditType, type SongReply } from "@/lib/api/types"
+"use client";
+import { DoubleArrowRightIcon } from "@radix-ui/react-icons";
+import { toast } from "sonner";
+import { mutate } from "swr";
+import { Button } from "@/components/ui/button";
+import { useVideoDetails } from "@/hooks/use-video-details";
+import { editSong, songKey } from "@/lib/api/songs";
+import { SongEditType, type SongReply } from "@/lib/api/types";
+import Image from "next/image";
 
 /** Large album-art-forward now-playing hero. */
 export function NowPlaying({
 	data,
 	guildId,
 }: {
-	data: SongReply
-	guildId: string
+	data: SongReply;
+	guildId: string;
 }) {
-	const { data: details } = useVideoDetails(data.song?.link ?? "")
-	const art = data.song?.thumbnails?.at(-1) ?? details?.channel?.url
+	const { data: details } = useVideoDetails(data.song?.link ?? "");
+	const art = data.song?.thumbnails?.at(-1) ?? details?.channel?.url;
 
 	async function skipSegment() {
 		if (await editSong(guildId, SongEditType.SkipSegment)) {
-			toast("Skipped non-music")
+			toast("Skipped non-music");
 		}
-		mutate(songKey(guildId))
+		mutate(songKey(guildId));
 	}
 
 	if (!data.song) {
 		return (
-			<div className="flex flex-col items-center justify-center gap-4 text-center py-16">
+			<div className="flex flex-col items-center justify-center gap-4 text-center py-16 max-w-full">
 				<div className="w-48 h-48 rounded-2xl bg-white/5 grid place-items-center text-zinc-600">
 					<MusicGlyph />
 				</div>
-				<p className="text-zinc-500 italic">Nothing is playing right now</p>
+				<p className="text-zinc-500 italic">
+					Nothing is playing right now
+				</p>
 			</div>
-		)
+		);
 	}
 
 	return (
-		<div className="flex flex-col items-center text-center gap-5">
+		<div className="flex flex-col items-center text-center gap-5 max-w-full">
 			<div className="relative">
 				{art ? (
-					// eslint-disable-next-line @next/next/no-img-element
-					<img
+					<Image
 						src={art}
-						alt=""
-						className="w-56 h-56 md:w-64 md:h-64 rounded-2xl object-cover shadow-2xl shadow-black/50 ring-1 ring-white/10"
+						alt="Song Cover"
+						width={224}
+						height={224}
+						className="w-56 h-56 lg:w-64 lg:h-64 rounded-2xl object-cover shadow-2xl shadow-black/50 ring-1 ring-white/10"
 					/>
 				) : (
-					<div className="w-56 h-56 rounded-2xl bg-white/5 grid place-items-center text-zinc-600">
+					<div className="w-56 h-56 lg:w-64 lg:h-64 rounded-2xl bg-white/5 grid place-items-center text-zinc-600">
 						<MusicGlyph />
 					</div>
 				)}
 			</div>
-			<div className="max-w-md">
+			<div className="max-w-full lg:max-w-md">
 				<h2 className="text-2xl font-bold leading-tight truncate">
 					{data.song.title ?? "Unknown title"}
 				</h2>
@@ -72,7 +76,7 @@ export function NowPlaying({
 				</Button>
 			)}
 		</div>
-	)
+	);
 }
 
 function MusicGlyph() {
@@ -85,8 +89,20 @@ function MusicGlyph() {
 				strokeLinecap="round"
 				strokeLinejoin="round"
 			/>
-			<circle cx="6" cy="18" r="3" stroke="currentColor" strokeWidth="1.5" />
-			<circle cx="18" cy="16" r="3" stroke="currentColor" strokeWidth="1.5" />
+			<circle
+				cx="6"
+				cy="18"
+				r="3"
+				stroke="currentColor"
+				strokeWidth="1.5"
+			/>
+			<circle
+				cx="18"
+				cy="16"
+				r="3"
+				stroke="currentColor"
+				strokeWidth="1.5"
+			/>
 		</svg>
-	)
+	);
 }
