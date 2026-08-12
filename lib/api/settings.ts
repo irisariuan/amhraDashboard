@@ -40,12 +40,49 @@ export interface GlobalSettings {
 	USE_COOKIES?: boolean
 	BANNED_IDS?: string[]
 	MAX_CACHE_IN_GB?: number
+	MAX_REPLAY_BUFFER_IN_SEC?: number
+	MAX_STREAM_BUFFER_IN_MB?: number
 	MESSAGE_LOGGING?: boolean
 	VOICE_LOGGING?: boolean
+	/**
+	 * Settings this build of the dashboard does not name. The form is generated
+	 * from the bot's schema, so it can legitimately be newer than these types;
+	 * unknown keys still round-trip through save.
+	 */
+	[key: string]: unknown
 }
 
 export async function getAdminSettings(): Promise<GlobalSettings | null> {
 	const res = await apiFetch("/api/admin/settings")
+	if (!res.ok) return null
+	return res.json()
+}
+
+/** One entry of the settings JSON Schema, as far as the form builder cares. */
+export interface SettingProperty {
+	type?: "string" | "number" | "integer" | "boolean" | "array"
+	description?: string
+	items?: { type?: string; enum?: string[] }
+	enum?: string[]
+	minimum?: number
+	maximum?: number
+	exclusiveMinimum?: number
+	exclusiveMaximum?: number
+}
+
+export interface SettingSchema {
+	properties: Record<string, SettingProperty>
+	required?: string[]
+}
+
+/**
+ * The schema the bot validates settings against, with secrets removed.
+ *
+ * The administration form is generated from this, so a setting added to the bot
+ * appears here without the dashboard needing a matching release.
+ */
+export async function getAdminSettingsSchema(): Promise<SettingSchema | null> {
+	const res = await apiFetch("/api/admin/settings/schema")
 	if (!res.ok) return null
 	return res.json()
 }

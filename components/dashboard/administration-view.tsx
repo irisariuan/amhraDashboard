@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import useSWR from "swr"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -17,35 +17,164 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select"
+import {
 	getAdminSettings,
+	getAdminSettingsSchema,
 	postAction,
 	saveAdminSettings,
 	type GlobalSettings,
+	type SettingProperty,
+	type SettingSchema,
 } from "@/lib/api/settings"
 
-const PRELOAD_LOGS = ["errim", "error", "errwn", "express", "main"] as const
+/**
+ * Which section a setting belongs to, and what to call it.
+ *
+ * Only presentation lives here. Types, ranges, and help text come from the
+ * schema the bot serves, so a setting added to the bot renders correctly
+ * without a dashboard release. Anything not listed lands in "Other settings"
+ * rather than disappearing.
+ */
+const GROUPS: { title: string; description: string; keys: string[] }[] = [
+	{
+		title: "Server",
+		description: "Connection, command, and Discord application behavior.",
+		keys: [
+			"PREFIX",
+			"CLIENT_ID",
+			"TEST_CLIENT_ID",
+			"REDIRECT_URI",
+			"WEBSITE",
+			"PORT",
+			"RATE_LIMIT",
+			"QUEUE_SIZE",
+			"HTTPS",
+		],
+	},
+	{
+		title: "Playback",
+		description: "Audio streaming, buffering, cache, and access behavior.",
+		keys: [
+			"VOLUME_MODIFIER",
+			"AUTO_LEAVE",
+			"MAX_CACHE_IN_GB",
+			"MAX_REPLAY_BUFFER_IN_SEC",
+			"MAX_STREAM_BUFFER_IN_MB",
+			"BANNED_IDS",
+			"USE_YOUTUBE_DL",
+			"SEEK",
+			"USE_COOKIES",
+		],
+	},
+	{
+		title: "Logging",
+		description: "Choose startup logs and diagnostic output.",
+		keys: ["PRELOAD", "DETAIL_LOGGING", "MESSAGE_LOGGING", "VOICE_LOGGING"],
+	},
+]
 
-type TextSetting =
-	| "PREFIX"
-	| "CLIENT_ID"
-	| "REDIRECT_URI"
-	| "TEST_CLIENT_ID"
-	| "WEBSITE"
-type NumberSetting =
-	| "RATE_LIMIT"
-	| "QUEUE_SIZE"
-	| "PORT"
-	| "VOLUME_MODIFIER"
-	| "AUTO_LEAVE"
-	| "MAX_CACHE_IN_GB"
-type BooleanSetting =
-	| "DETAIL_LOGGING"
-	| "HTTPS"
-	| "USE_YOUTUBE_DL"
-	| "SEEK"
-	| "USE_COOKIES"
-	| "MESSAGE_LOGGING"
-	| "VOICE_LOGGING"
+const LABELS: Record<string, string> = {
+	PREFIX: "Command prefix",
+	CLIENT_ID: "Client ID",
+	TEST_CLIENT_ID: "Testing client ID",
+	REDIRECT_URI: "OAuth redirect URI",
+	WEBSITE: "Website host",
+	PORT: "Port",
+	RATE_LIMIT: "Rate limit",
+	QUEUE_SIZE: "Log queue size",
+	HTTPS: "Use HTTPS",
+	VOLUME_MODIFIER: "Volume modifier",
+	AUTO_LEAVE: "Auto-leave delay (ms)",
+	MAX_CACHE_IN_GB: "Maximum cache (GB)",
+	MAX_REPLAY_BUFFER_IN_SEC: "Replay buffer (seconds)",
+	MAX_STREAM_BUFFER_IN_MB: "Stream buffer (MB)",
+	BANNED_IDS: "Banned IDs",
+	USE_YOUTUBE_DL: "Use yt-dlp",
+	SEEK: "Enable seeking",
+	USE_COOKIES: "Use cookies",
+	PRELOAD: "Preload log files",
+	DETAIL_LOGGING: "Detailed logging",
+	MESSAGE_LOGGING: "Message logging",
+	VOICE_LOGGING: "Voice logging",
+}
+
+/**
+ * Words kept uppercase when a key is turned into a label. Matched explicitly
+ * rather than by length, so units and acronyms are capitalised without also
+ * shouting short ordinary words like "in" or "of".
+ */
+const ACRONYMS = new Set([
+	"ID", "URI", "URL", "API", "IP", "TTL", "UI", "CPU", "RAM", "DL",
+	"MS", "KB", "MB", "GB", "TB", "HTTP", "HTTPS",
+])
+
+/** MAX_STREAM_BUFFER_IN_MB -> "Max stream buffer in MB", for unlabelled settings */
+function humanize(key: string) {
+	const words = key
+		.toLowerCase()
+		.split("_")
+		.map(word => (ACRONYMS.has(word.toUpperCase()) ? word.toUpperCase() : word))
+	const [first, ...rest] = words
+	return [first.charAt(0).toUpperCase() + first.slice(1), ...rest].join(" ")
+}
+
+function labelFor(key: string) {
+	return LABELS[key] ?? humanize(key)
+}
+
+function isBoolean(property: SettingProperty) {
+	return property.type === "boolean"
+}
+
+/** Human-readable bounds, since a number input cannot express exclusivity */
+function rangeHint(property: SettingProperty) {
+	const parts: string[] = []
+	if (property.minimum !== undefined) parts.push(`at least ${property.minimum}`)
+	if (property.exclusiveMinimum !== undefined)
+		parts.push(`greater than ${property.exclusiveMinimum}`)
+	if (property.maximum !== undefined) parts.push(`at most ${property.maximum}`)
+	if (property.exclusiveMaximum !== undefined)
+		parts.push(`less than ${property.exclusiveMaximum}`)
+	return parts.length ? `Must be ${parts.join(", ")}.` : null
+}
+
+/**
+ * Check a value against the schema before saving.
+ *
+ * The bot rejects out-of-range values with a 400 covering the whole request, so
+ * without this one bad field fails the save with nothing pointing at which.
+ */
+function validate(
+	key: string,
+	property: SettingProperty,
+	value: unknown,
+	required: boolean,
+): string | null {
+	if (value === undefined || value === "" || value === null) {
+		return required ? `${labelFor(key)} is required.` : null
+	}
+	if (property.type === "number" || property.type === "integer") {
+		const n = Number(value)
+		if (!Number.isFinite(n)) return "Must be a number."
+		if (property.type === "integer" && !Number.isInteger(n))
+			return "Must be a whole number."
+		if (property.minimum !== undefined && n < property.minimum)
+			return `Must be at least ${property.minimum}.`
+		if (property.exclusiveMinimum !== undefined && n <= property.exclusiveMinimum)
+			return `Must be greater than ${property.exclusiveMinimum}.`
+		if (property.maximum !== undefined && n > property.maximum)
+			return `Must be at most ${property.maximum}.`
+		if (property.exclusiveMaximum !== undefined && n >= property.exclusiveMaximum)
+			return `Must be less than ${property.exclusiveMaximum}.`
+	}
+	return null
+}
 
 function SettingSection({
 	title,
@@ -67,91 +196,190 @@ function SettingSection({
 	)
 }
 
-function TextSettingField({
-	settings,
+function FieldShell({
 	settingKey,
-	label,
-	description,
-	onChange,
+	required,
+	error,
+	hint,
+	children,
+	wide,
 }: {
-	settings: GlobalSettings
-	settingKey: TextSetting
-	label: string
-	description?: string
-	onChange: (key: TextSetting, value: string) => void
+	settingKey: string
+	required: boolean
+	error?: string | null
+	hint?: string | null
+	children: React.ReactNode
+	wide?: boolean
 }) {
 	return (
-		<div className="space-y-1.5">
-			<Label htmlFor={settingKey}>{label}</Label>
+		<div className={`space-y-1.5${wide ? " md:col-span-2" : ""}`}>
+			<Label htmlFor={settingKey}>
+				{labelFor(settingKey)}
+				{required && <span className="ml-1 text-violet-300">*</span>}
+			</Label>
+			{children}
+			{error ? (
+				<p className="text-xs text-red-400">{error}</p>
+			) : (
+				hint && <p className="text-xs text-zinc-500">{hint}</p>
+			)}
+		</div>
+	)
+}
+
+/** Renders whichever input the schema entry calls for. */
+function SettingField({
+	settingKey,
+	property,
+	value,
+	required,
+	error,
+	onChange,
+}: {
+	settingKey: string
+	property: SettingProperty
+	value: unknown
+	required: boolean
+	error?: string | null
+	onChange: (key: string, value: unknown) => void
+}) {
+	const hint = [property.description, rangeHint(property)]
+		.filter(Boolean)
+		.join(" ")
+
+	if (isBoolean(property)) {
+		return (
+			<label className="flex min-h-16 cursor-pointer items-start gap-3 rounded-lg border border-white/10 p-3 transition-colors hover:bg-white/[0.03]">
+				<input
+					type="checkbox"
+					className="mt-0.5 h-4 w-4 accent-violet-500"
+					checked={Boolean(value)}
+					onChange={event => onChange(settingKey, event.target.checked)}
+				/>
+				<span>
+					<span className="block text-sm font-medium text-zinc-100">
+						{labelFor(settingKey)}
+					</span>
+					{hint && (
+						<span className="mt-1 block text-xs text-zinc-500">{hint}</span>
+					)}
+				</span>
+			</label>
+		)
+	}
+
+	// A single choice from a fixed set
+	if (property.enum) {
+		return (
+			<FieldShell settingKey={settingKey} required={required} error={error} hint={hint}>
+				<Select
+					value={value === undefined || value === null ? "" : String(value)}
+					onValueChange={next => onChange(settingKey, next)}
+				>
+					<SelectTrigger id={settingKey}>
+						<SelectValue placeholder="Select…" />
+					</SelectTrigger>
+					<SelectContent>
+						{property.enum.map(option => (
+							<SelectItem key={option} value={option}>
+								{option}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
+			</FieldShell>
+		)
+	}
+
+	// An array of fixed options: PRELOAD and anything later shaped like it
+	if (property.type === "array" && property.items?.enum) {
+		const selected = Array.isArray(value) ? (value as string[]) : []
+		return (
+			<div className="space-y-2 md:col-span-2">
+				<Label>{labelFor(settingKey)}</Label>
+				<div className="flex flex-wrap gap-2">
+					{property.items.enum.map(option => (
+						<label
+							key={option}
+							className="flex cursor-pointer items-center gap-2 rounded-md border border-white/10 px-3 py-2 text-sm capitalize hover:bg-white/[0.03]"
+						>
+							<input
+								type="checkbox"
+								className="h-4 w-4 accent-violet-500"
+								checked={selected.includes(option)}
+								onChange={event =>
+									onChange(
+										settingKey,
+										event.target.checked
+											? [...selected, option]
+											: selected.filter(v => v !== option),
+									)
+								}
+							/>
+							{option}
+						</label>
+					))}
+				</div>
+				{hint && <p className="text-xs text-zinc-500">{hint}</p>}
+			</div>
+		)
+	}
+
+	// A free-form list: edited as comma-separated text
+	if (property.type === "array") {
+		const list = Array.isArray(value) ? (value as string[]) : []
+		return (
+			<FieldShell settingKey={settingKey} required={required} error={error} hint={hint} wide>
+				<Input
+					id={settingKey}
+					value={list.join(", ")}
+					placeholder="Comma-separated"
+					onChange={event =>
+						onChange(
+							settingKey,
+							event.target.value
+								.split(/[,\n]/)
+								.map(v => v.trim())
+								.filter(Boolean),
+						)
+					}
+				/>
+			</FieldShell>
+		)
+	}
+
+	if (property.type === "number" || property.type === "integer") {
+		return (
+			<FieldShell settingKey={settingKey} required={required} error={error} hint={hint}>
+				<Input
+					id={settingKey}
+					type="number"
+					step={property.type === "integer" ? 1 : "any"}
+					min={property.minimum ?? property.exclusiveMinimum}
+					max={property.maximum ?? property.exclusiveMaximum}
+					value={value === undefined || value === null ? "" : String(value)}
+					onChange={event =>
+						onChange(
+							settingKey,
+							event.target.value === ""
+								? undefined
+								: Number(event.target.value),
+						)
+					}
+				/>
+			</FieldShell>
+		)
+	}
+
+	return (
+		<FieldShell settingKey={settingKey} required={required} error={error} hint={hint}>
 			<Input
 				id={settingKey}
 				type="text"
-				value={settings[settingKey] ?? ""}
+				value={value === undefined || value === null ? "" : String(value)}
 				onChange={event => onChange(settingKey, event.target.value)}
 			/>
-			{description && <p className="text-xs text-zinc-500">{description}</p>}
-		</div>
-	)
-}
-
-function NumberSettingField({
-	settings,
-	settingKey,
-	label,
-	description,
-	onChange,
-}: {
-	settings: GlobalSettings
-	settingKey: NumberSetting
-	label: string
-	description?: string
-	onChange: (key: NumberSetting, value: number) => void
-}) {
-	return (
-		<div className="space-y-1.5">
-			<Label htmlFor={settingKey}>{label}</Label>
-			<Input
-				id={settingKey}
-				type="number"
-				value={settings[settingKey] ?? ""}
-				onChange={event => {
-					const value = Number(event.target.value)
-					if (event.target.value !== "" && Number.isFinite(value)) {
-						onChange(settingKey, value)
-					}
-				}}
-			/>
-			{description && <p className="text-xs text-zinc-500">{description}</p>}
-		</div>
-	)
-}
-
-function BooleanSettingField({
-	settings,
-	settingKey,
-	label,
-	description,
-	onChange,
-}: {
-	settings: GlobalSettings
-	settingKey: BooleanSetting
-	label: string
-	description?: string
-	onChange: (key: BooleanSetting, value: boolean) => void
-}) {
-	return (
-		<label className="flex min-h-16 cursor-pointer items-start gap-3 rounded-lg border border-white/10 p-3 transition-colors hover:bg-white/[0.03]">
-			<input
-				type="checkbox"
-				className="mt-0.5 h-4 w-4 accent-violet-500"
-				checked={Boolean(settings[settingKey])}
-				onChange={event => onChange(settingKey, event.target.checked)}
-			/>
-			<span>
-				<span className="block text-sm font-medium text-zinc-100">{label}</span>
-				{description && <span className="mt-1 block text-xs text-zinc-500">{description}</span>}
-			</span>
-		</label>
+		</FieldShell>
 	)
 }
 
@@ -161,6 +389,12 @@ export function AdministrationView() {
 		"/api/admin/settings",
 		getAdminSettings,
 	)
+	// The schema is static for a given bot build, so it never needs revalidating
+	const { data: schema, isLoading: isSchemaLoading } = useSWR<SettingSchema | null>(
+		"/api/admin/settings/schema",
+		getAdminSettingsSchema,
+		{ revalidateOnFocus: false, revalidateIfStale: false },
+	)
 	const [settings, setSettings] = useState<GlobalSettings | null>(null)
 	const [isSaving, setIsSaving] = useState(false)
 
@@ -168,10 +402,45 @@ export function AdministrationView() {
 		if (data) setSettings(data)
 	}, [data])
 
-	function update<K extends keyof GlobalSettings>(
-		key: K,
-		value: GlobalSettings[K],
-	) {
+	const required = useMemo(
+		() => new Set(schema?.required ?? []),
+		[schema],
+	)
+
+	// Every schema key, in group order, with unlisted ones collected at the end
+	const sections = useMemo(() => {
+		if (!schema) return []
+		const known = new Set(GROUPS.flatMap(g => g.keys))
+		const leftovers = Object.keys(schema.properties).filter(k => !known.has(k))
+		return [
+			...GROUPS.map(group => ({
+				...group,
+				keys: group.keys.filter(k => k in schema.properties),
+			})),
+			...(leftovers.length
+				? [
+						{
+							title: "Other settings",
+							description:
+								"Reported by the bot but not yet given a place in this dashboard.",
+							keys: leftovers,
+						},
+					]
+				: []),
+		].filter(section => section.keys.length > 0)
+	}, [schema])
+
+	const errors = useMemo(() => {
+		if (!schema || !settings) return {} as Record<string, string>
+		const found: Record<string, string> = {}
+		for (const [key, property] of Object.entries(schema.properties)) {
+			const message = validate(key, property, settings[key], required.has(key))
+			if (message) found[key] = message
+		}
+		return found
+	}, [schema, settings, required])
+
+	function update(key: string, value: unknown) {
 		setSettings(current =>
 			current ? Object.assign({}, current, { [key]: value }) : current,
 		)
@@ -179,6 +448,11 @@ export function AdministrationView() {
 
 	async function save() {
 		if (!settings) return
+		const count = Object.keys(errors).length
+		if (count > 0) {
+			toast(`Fix ${count} invalid setting${count === 1 ? "" : "s"} first`)
+			return
+		}
 		setIsSaving(true)
 		const saved = await saveAdminSettings(settings)
 		setIsSaving(false)
@@ -190,19 +464,33 @@ export function AdministrationView() {
 		}
 	}
 
-	if (isLoading || !settings) {
+	if (isLoading || isSchemaLoading || !settings) {
 		return <div className="text-sm text-zinc-500">Loading administration…</div>
+	}
+
+	if (!schema) {
+		return (
+			<div className="text-sm text-red-400">
+				Could not load the settings schema from the bot. It may be running a
+				version that predates <code>/api/admin/settings/schema</code>.
+			</div>
+		)
 	}
 
 	return (
 		<div className="mx-auto max-w-5xl space-y-6 pb-8">
 			<div className="flex flex-wrap items-end justify-between gap-4 border-b border-white/10 pb-6">
 				<div>
-					<p className="text-sm font-medium text-violet-300">Administrator only</p>
-					<h2 className="mt-1 text-3xl font-bold tracking-tight">Administration</h2>
+					<p className="text-sm font-medium text-violet-300">
+						Administrator only
+					</p>
+					<h2 className="mt-1 text-3xl font-bold tracking-tight">
+						Administration
+					</h2>
 					<p className="mt-2 max-w-2xl text-sm text-zinc-400">
-						Manage the bot&apos;s runtime configuration and operational controls.
-						Changes are written to <code>data/setting.json</code> and reloaded immediately.
+						Manage the bot&apos;s runtime configuration and operational
+						controls. Changes are written to <code>data/setting.json</code> and
+						reloaded immediately.
 					</p>
 				</div>
 				<div className="flex gap-2">
@@ -215,55 +503,79 @@ export function AdministrationView() {
 				</div>
 			</div>
 
-			<SettingSection title="Server" description="Connection, command, and Discord application behavior.">
-				<TextSettingField settings={settings} settingKey="PREFIX" label="Command prefix" onChange={update} />
-				<TextSettingField settings={settings} settingKey="CLIENT_ID" label="Client ID" onChange={update} />
-				<TextSettingField settings={settings} settingKey="TEST_CLIENT_ID" label="Testing client ID" onChange={update} />
-				<TextSettingField settings={settings} settingKey="REDIRECT_URI" label="OAuth redirect URI" onChange={update} />
-				<TextSettingField settings={settings} settingKey="WEBSITE" label="Website host" description="Host name without the protocol." onChange={update} />
-				<NumberSettingField settings={settings} settingKey="PORT" label="Port" onChange={update} />
-				<NumberSettingField settings={settings} settingKey="RATE_LIMIT" label="Rate limit" description="Requests per five minutes; 0 disables it." onChange={update} />
-				<NumberSettingField settings={settings} settingKey="QUEUE_SIZE" label="Log queue size" description="0 or less keeps all in-memory logs." onChange={update} />
-				<BooleanSettingField settings={settings} settingKey="HTTPS" label="Use HTTPS" description="Build dashboard links with https." onChange={update} />
-			</SettingSection>
+			{sections.map(section => (
+				<SettingSection
+					key={section.title}
+					title={section.title}
+					description={section.description}
+				>
+					{section.keys.map(key => (
+						<SettingField
+							key={key}
+							settingKey={key}
+							property={schema.properties[key]}
+							value={settings[key]}
+							required={required.has(key)}
+							error={errors[key]}
+							onChange={update}
+						/>
+					))}
+				</SettingSection>
+			))}
 
-			<SettingSection title="Playback" description="Audio streaming, cache, and access behavior.">
-				<NumberSettingField settings={settings} settingKey="VOLUME_MODIFIER" label="Volume modifier" onChange={update} />
-				<NumberSettingField settings={settings} settingKey="AUTO_LEAVE" label="Auto-leave delay (ms)" onChange={update} />
-				<NumberSettingField settings={settings} settingKey="MAX_CACHE_IN_GB" label="Maximum cache (GB)" onChange={update} />
-				<div className="space-y-1.5">
-					<Label htmlFor="BANNED_IDS">Banned IDs</Label>
-					<Input id="BANNED_IDS" value={(settings.BANNED_IDS ?? []).join(", ")} onChange={event => update("BANNED_IDS", event.target.value.split(/[,\n]/).map(value => value.trim()).filter(Boolean))} placeholder="Comma-separated Discord IDs" />
-				</div>
-				<BooleanSettingField settings={settings} settingKey="USE_YOUTUBE_DL" label="Use yt-dlp" description="Use yt-dlp instead of the Node audio stream." onChange={update} />
-				<BooleanSettingField settings={settings} settingKey="SEEK" label="Enable seeking" description="Disable when using youtube-dl." onChange={update} />
-				<BooleanSettingField settings={settings} settingKey="USE_COOKIES" label="Use cookies" description="Use cookies while fetching media." onChange={update} />
-			</SettingSection>
-
-			<SettingSection title="Logging" description="Choose startup logs and diagnostic output.">
-				<div className="space-y-2 md:col-span-2">
-					<Label>Preload log files</Label>
-					<div className="flex flex-wrap gap-2">
-						{PRELOAD_LOGS.map(log => {
-							const selected = settings.PRELOAD?.includes(log) ?? false
-							return <label key={log} className="flex cursor-pointer items-center gap-2 rounded-md border border-white/10 px-3 py-2 text-sm capitalize hover:bg-white/[0.03]"><input type="checkbox" className="h-4 w-4 accent-violet-500" checked={selected} onChange={event => update("PRELOAD", event.target.checked ? [...(settings.PRELOAD ?? []), log] : (settings.PRELOAD ?? []).filter(value => value !== log))} />{log}</label>
-						})}
-					</div>
-				</div>
-				<BooleanSettingField settings={settings} settingKey="DETAIL_LOGGING" label="Detailed logging" description="Record diagnostic API requests." onChange={update} />
-				<BooleanSettingField settings={settings} settingKey="MESSAGE_LOGGING" label="Message logging" description="Enable message logging where supported." onChange={update} />
-				<BooleanSettingField settings={settings} settingKey="VOICE_LOGGING" label="Voice logging" description="Enable voice-state logging where supported." onChange={update} />
-			</SettingSection>
-
-			<SettingSection title="Operations" description="Run administrative actions on the bot process.">
+			<SettingSection
+				title="Operations"
+				description="Run administrative actions on the bot process."
+			>
 				<div className="flex flex-wrap gap-3 md:col-span-2">
-					<Button variant="secondary" onClick={async () => toast((await postAction("reload")) ? "Commands reloaded" : "Failed to reload commands")}>Reload commands</Button>
-					<Button variant="secondary" onClick={async () => toast((await postAction("reloadSetting")) ? "Settings reloaded" : "Failed to reload settings")}>Reload settings</Button>
+					<Button
+						variant="secondary"
+						onClick={async () =>
+							toast(
+								(await postAction("reload"))
+									? "Commands reloaded"
+									: "Failed to reload commands",
+							)
+						}
+					>
+						Reload commands
+					</Button>
+					<Button
+						variant="secondary"
+						onClick={async () =>
+							toast(
+								(await postAction("reloadSetting"))
+									? "Settings reloaded"
+									: "Failed to reload settings",
+							)
+						}
+					>
+						Reload settings
+					</Button>
 					<Dialog>
-						<DialogTrigger asChild><Button variant="destructive">Terminate bot</Button></DialogTrigger>
+						<DialogTrigger asChild>
+							<Button variant="destructive">Terminate bot</Button>
+						</DialogTrigger>
 						<DialogContent>
-							<DialogHeader><DialogTitle>Terminate the bot?</DialogTitle><DialogDescription>This immediately stops the bot for every guild.</DialogDescription></DialogHeader>
-							<DialogFooter className="gap-2"><DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose><DialogClose asChild><Button variant="destructive" onClick={() => postAction("exit")}>Terminate</Button></DialogClose></DialogFooter>
+							<DialogHeader>
+								<DialogTitle>Terminate the bot?</DialogTitle>
+								<DialogDescription>
+									This immediately stops the bot for every guild.
+								</DialogDescription>
+							</DialogHeader>
+							<DialogFooter className="gap-2">
+								<DialogClose asChild>
+									<Button variant="outline">Cancel</Button>
+								</DialogClose>
+								<DialogClose asChild>
+									<Button
+										variant="destructive"
+										onClick={() => postAction("exit")}
+									>
+										Terminate
+									</Button>
+								</DialogClose>
+							</DialogFooter>
 						</DialogContent>
 					</Dialog>
 				</div>
