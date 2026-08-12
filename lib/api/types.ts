@@ -109,7 +109,19 @@ export interface YoutubeVideoData {
 export type SearchResult = Pick<
 	YoutubeVideoData,
 	"url" | "title" | "durationInSec"
->
+> & {
+	/** Every hit the bot returned, best match first. Absent on older bots. */
+	results?: SearchHit[]
+}
+
+/** One row of the live search dropdown. */
+export interface SearchHit {
+	url: string
+	title: string
+	durationInSec: number
+	channel: string
+	thumbnail: string | null
+}
 
 export type LogType =
 	| "dcblog"

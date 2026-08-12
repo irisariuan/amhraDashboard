@@ -2,6 +2,8 @@ interface ApiOptions {
 	method?: "GET" | "POST"
 	body?: unknown
 	cache?: RequestCache
+	/** Aborts the request, for searches superseded by newer keystrokes */
+	signal?: AbortSignal
 }
 
 /**
@@ -20,5 +22,6 @@ export function apiFetch(
 		headers: hasBody ? { "Content-Type": "application/json" } : undefined,
 		body: hasBody ? JSON.stringify(options.body) : undefined,
 		cache: options.cache,
+		signal: options.signal,
 	})
 }
