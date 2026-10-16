@@ -6,8 +6,14 @@ import { mutate } from "swr"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { editSong, songKey } from "@/lib/api/songs"
-import { SongEditType, YoutubeVideoRegex, type SearchHit } from "@/lib/api/types"
-import { searchYoutube, searchYoutubeMany } from "@/lib/api/videos"
+import {
+	isYoutubePlaylistUrl,
+	isYoutubeVideoUrl,
+	SongEditType,
+	type SearchHit,
+	type YoutubePlaylistData,
+} from "@/lib/api/types"
+import { getPlaylistDetails, searchYoutube, searchYoutubeMany } from "@/lib/api/videos"
 import { formatDuration } from "@/lib/format"
 
 /** Quiet period after the last keystroke before a search is sent */
@@ -21,43 +27,68 @@ const MIN_QUERY_LENGTH = 2
  * Typing runs a debounced search and offers the matches directly, so the right
  * song can be picked rather than trusting whatever the top hit happens to be.
  * Submitting without choosing keeps the old behavior of taking the best match.
+ * A playlist link is previewed first, then queued whole.
  */
 export function AddSongForm({ guildId }: { guildId: string }) {
 	const [query, setQuery] = useState("")
-	const [hits, setHits] = useState<SearchHit[]>([])
+	// Results remember the query they answer, so a stale one is never shown
+	const [found, setFound] = useState<{ query: string; hits: SearchHit[] } | null>(null)
 	const [open, setOpen] = useState(false)
 	const [highlighted, setHighlighted] = useState(0)
 	const [busy, setBusy] = useState(false)
-	const [searching, setSearching] = useState(false)
 	const containerRef = useRef<HTMLDivElement>(null)
 
-	const isUrl = YoutubeVideoRegex.test(query)
-	const canSearch = !isUrl && query.trim().length >= MIN_QUERY_LENGTH
+	const [preview, setPreview] = useState<{
+		url: string
+		playlist: YoutubePlaylistData | null
+	} | null>(null)
+
+	const trimmed = query.trim()
+	const isPlaylist = isYoutubePlaylistUrl(query)
+	const isUrl = isPlaylist || isYoutubeVideoUrl(query)
+	const canSearch = !isUrl && trimmed.length >= MIN_QUERY_LENGTH
+
+	const hits = canSearch && found?.query === trimmed ? found.hits : []
+	const searching = canSearch && found?.query !== trimmed
+	const playlist = isPlaylist && preview?.url === trimmed ? preview.playlist : null
+	const playlistState = !isPlaylist
+		? "idle"
+		: preview?.url !== trimmed
+			? "loading"
+			: playlist
+				? "idle"
+				: "failed"
+
+	// Show what a playlist link holds before committing a few hundred songs
+	useEffect(() => {
+		if (!isPlaylist) return
+		let cancelled = false
+		getPlaylistDetails(trimmed).then(result => {
+			if (!cancelled) setPreview({ url: trimmed, playlist: result })
+		})
+		return () => {
+			cancelled = true
+		}
+	}, [trimmed, isPlaylist])
 
 	useEffect(() => {
-		if (!canSearch) {
-			setHits([])
-			setSearching(false)
-			return
-		}
+		if (!canSearch) return
 		// Cancels both the timer and any request it already started, so only the
 		// query the user actually stopped on is waited on
 		const controller = new AbortController()
-		setSearching(true)
 		const timer = setTimeout(async () => {
-			const results = await searchYoutubeMany(query.trim(), 5, controller.signal)
+			const results = await searchYoutubeMany(trimmed, 5, controller.signal)
 			if (controller.signal.aborted) return
-			setHits(results)
+			setFound({ query: trimmed, hits: results })
 			setHighlighted(0)
 			setOpen(results.length > 0)
-			setSearching(false)
 		}, DEBOUNCE_MS)
 
 		return () => {
 			clearTimeout(timer)
 			controller.abort()
 		}
-	}, [query, canSearch])
+	}, [trimmed, canSearch])
 
 	// Clicking anywhere else should put the dropdown away
 	useEffect(() => {
@@ -76,10 +107,30 @@ export function AddSongForm({ guildId }: { guildId: string }) {
 			if (await editSong(guildId, SongEditType.AddSong, { url })) {
 				mutate(songKey(guildId))
 				setQuery("")
-				setHits([])
+				setFound(null)
 				toast(title ? `Added "${title}" to queue` : "Added to queue")
 			} else {
 				toast("Failed to add to queue")
+			}
+		} finally {
+			setBusy(false)
+		}
+	}
+
+	async function addPlaylist(next: boolean) {
+		const url = query.trim()
+		setBusy(true)
+		try {
+			if (await editSong(guildId, SongEditType.AddPlaylist, { url, next })) {
+				mutate(songKey(guildId))
+				setQuery("")
+				toast(
+					playlist
+						? `Added ${playlist.videos.length} songs from "${playlist.title}"${next ? " to play next" : ""}`
+						: "Added playlist to queue",
+				)
+			} else {
+				toast("Failed to add playlist")
 			}
 		} finally {
 			setBusy(false)
@@ -91,6 +142,7 @@ export function AddSongForm({ guildId }: { guildId: string }) {
 		event.preventDefault()
 		const value = query.trim()
 		if (!value || busy) return
+		if (isPlaylist) return addPlaylist(false)
 		if (isUrl) return add(value)
 
 		// A loaded dropdown already holds the answer, so do not search again
@@ -124,7 +176,7 @@ export function AddSongForm({ guildId }: { guildId: string }) {
 		<div ref={containerRef} className="relative w-full">
 			<form onSubmit={submit} className="flex w-full items-center gap-2">
 				<Input
-					placeholder="Paste a YouTube URL or search…"
+					placeholder="Paste a YouTube video or playlist link, or search…"
 					className="flex-1 bg-white/5 border-white/10"
 					disabled={busy}
 					value={query}
@@ -143,6 +195,34 @@ export function AddSongForm({ guildId }: { guildId: string }) {
 
 			{searching && !open && (
 				<p className="mt-1 text-xs text-zinc-500">Searching…</p>
+			)}
+
+			{isPlaylist && (
+				<div className="mt-2 flex min-w-0 items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm">
+					<span className="min-w-0 flex-1 truncate text-zinc-300">
+						{playlistState === "loading" && "Reading playlist…"}
+						{playlistState === "failed" && "Couldn't read this playlist"}
+						{playlist &&
+							`${playlist.title} · ${playlist.videos.length} song${playlist.videos.length === 1 ? "" : "s"}`}
+					</span>
+					<Button
+						type="button"
+						size="sm"
+						variant="secondary"
+						disabled={busy || !playlist?.videos.length}
+						onClick={() => addPlaylist(true)}
+					>
+						Play next
+					</Button>
+					<Button
+						type="button"
+						size="sm"
+						disabled={busy || !playlist?.videos.length}
+						onClick={() => addPlaylist(false)}
+					>
+						Add all
+					</Button>
+				</div>
 			)}
 
 			{open && hits.length > 0 && (

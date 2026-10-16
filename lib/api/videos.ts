@@ -1,5 +1,12 @@
 import { apiFetch } from "./client"
-import type { SearchHit, SearchResult, Suggestion, YoutubeVideoData } from "./types"
+import type {
+	LyricsReply,
+	SearchHit,
+	SearchResult,
+	Suggestion,
+	YoutubePlaylistData,
+	YoutubeVideoData,
+} from "./types"
 
 /** Resolves a free-text query to the best-matching YouTube video. */
 export async function searchYoutube(query: string): Promise<SearchResult> {
@@ -44,4 +51,31 @@ export async function getSuggestions(guildId: string): Promise<Suggestion[]> {
 	if (!res.ok) return []
 	const { content }: { content: Suggestion[] } = await res.json()
 	return content ?? []
+}
+
+/** What a playlist link holds, for previewing it before it is queued. */
+export async function getPlaylistDetails(
+	url: string,
+): Promise<YoutubePlaylistData | null> {
+	const res = await apiFetch("/api/getPlaylistDetail", {
+		method: "POST",
+		body: { url },
+	}).catch(() => null)
+	if (!res?.ok) return null
+	return res.json()
+}
+
+/**
+ * Lyrics for a guild's current track, or for `query` when the automatic match
+ * was wrong. Throws on a failed request so SWR can tell "no lyrics" from "the
+ * lyrics service is down".
+ */
+export async function getLyrics(
+	guildId: string,
+	query?: string,
+): Promise<LyricsReply> {
+	const search = query ? `?q=${encodeURIComponent(query)}` : ""
+	const res = await apiFetch(`/api/lyrics/${guildId}${search}`)
+	if (!res.ok) throw new Error(`Lyrics request failed (${res.status})`)
+	return res.json()
 }

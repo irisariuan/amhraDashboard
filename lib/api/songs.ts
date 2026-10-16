@@ -2,7 +2,9 @@ import { apiFetch } from "./client"
 import { type QueueItem, SongEditType, type SongReply } from "./types"
 
 type EditDetailMap = {
-	[SongEditType.AddSong]: { url: string }
+	[SongEditType.AddSong]: { url: string; force?: boolean; seek?: number }
+	[SongEditType.AddPlaylist]: { url: string; next?: boolean; force?: boolean }
+	[SongEditType.SetCrossfade]: { crossfadeMs?: number; skipFadeMs?: number }
 	[SongEditType.SetTime]: { sec: number }
 	[SongEditType.RemoveSong]: { index: number }
 	[SongEditType.SetVolume]: { volume: number }

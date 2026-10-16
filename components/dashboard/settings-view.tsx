@@ -10,7 +10,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select"
 import { Toggle } from "@/components/shared/toggle"
-import { getSettings, saveSettings } from "@/lib/api/settings"
+import { type AccountSettings, getSettings, saveSettings } from "@/lib/api/settings"
 
 const LANGUAGES: Record<string, string> = {
 	en: "English",
@@ -66,7 +66,7 @@ export function SettingsView() {
 					</div>
 					<Select
 						value={data.language}
-						onValueChange={v => update({ language: v })}
+						onValueChange={v => update({ language: v as AccountSettings["language"] })}
 					>
 						<SelectTrigger className="w-40">
 							<SelectValue />

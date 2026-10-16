@@ -18,6 +18,7 @@ import { editSong, songKey, type PlainSongAction } from "@/lib/api/songs"
 import { FormatSongEditType, SongEditType } from "@/lib/api/types"
 import { formatClock } from "@/lib/format"
 import { cn } from "@/lib/utils"
+import { FadeControls } from "./fade-controls"
 import { ScrubBar } from "./scrub-bar"
 
 /**
@@ -61,6 +62,8 @@ export function PlaybackBar({ guildId }: { guildId: string }) {
 	}
 
 	const duration = data.song?.duration ?? 0
+	// The bot allows up to 500%; show 0–200% unless the guild is already louder
+	const volumeRange = Math.min(Math.max(2, data.volume), 5)
 
 	return (
 		<div className="border-t border-white/10 bg-zinc-950/80 backdrop-blur px-4 py-3">
@@ -120,6 +123,7 @@ export function PlaybackBar({ guildId }: { guildId: string }) {
 						>
 							<ShuffleIcon />
 						</Button>
+						<FadeControls data={data} guildId={guildId} />
 					</div>
 					<div className="flex items-center gap-2 w-40">
 						<Button
@@ -134,7 +138,7 @@ export function PlaybackBar({ guildId }: { guildId: string }) {
 						<div className="flex-1">
 							<ScrubBar
 								now={data.volume}
-								totalValue={1}
+								totalValue={volumeRange}
 								enabled
 								onRelease={setVolume}
 								formatter={v => `${(v * 100).toFixed(0)}%`}

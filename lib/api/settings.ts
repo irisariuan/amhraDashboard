@@ -5,7 +5,7 @@ export interface AccountSettings {
 	autoSkip: boolean
 	loop: boolean
 	autoSuggest: boolean
-	language: string
+	language: "en" | "zhTw" | "ja" | "ko"
 }
 
 export async function getSettings(): Promise<AccountSettings | null> {
@@ -37,6 +37,13 @@ export interface GlobalSettings {
 	SEEK?: boolean
 	VOLUME_MODIFIER?: number
 	AUTO_LEAVE?: number
+	AUTO_LEAVE_ALONE?: number
+	CROSSFADE_IN_MS?: number
+	SKIP_FADE_IN_MS?: number
+	USE_NATIVE_FETCH?: boolean
+	NATIVE_FETCH_BIN?: string
+	USE_RUST_VOICE?: boolean
+	NATIVE_VOICE_BIN?: string
 	USE_COOKIES?: boolean
 	BANNED_IDS?: string[]
 	MAX_CACHE_IN_GB?: number

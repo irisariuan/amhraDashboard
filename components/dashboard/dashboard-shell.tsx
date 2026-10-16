@@ -40,14 +40,11 @@ export function DashboardShell({
 	fixedGuildId?: string;
 }) {
 	const { data: guilds } = usePlayingGuilds();
-	const [guildId, setGuildId] = useState<string | null>(fixedGuildId ?? null);
+	const [chosenGuildId, setGuildId] = useState<string | null>(null);
 	const [view, setView] = useState<View>("player");
 
-	// Default to the first available guild once loaded.
-	useEffect(() => {
-		if (fixedGuildId || guildId) return;
-		if (guilds.length > 0) setGuildId(guilds[0].id);
-	}, [guilds, guildId, fixedGuildId]);
+	// Until one is picked, default to the first available guild
+	const guildId = fixedGuildId ?? chosenGuildId ?? guilds[0]?.id ?? null;
 
 	const isVisitor = account.type === "anonymous";
 

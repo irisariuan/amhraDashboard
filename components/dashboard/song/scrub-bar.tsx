@@ -23,8 +23,9 @@ export function ScrubBar({
 	const barRef = useRef<HTMLDivElement>(null)
 	const previewRef = useRef<HTMLDivElement>(null)
 	const device = useDevice()
-	const [value, setValue] = useState(now / totalValue)
+	const [dragValue, setValue] = useState(now / totalValue)
 	const [dragging, setDragging] = useState(false)
+	const value = dragging ? dragValue : now / totalValue
 	const [previewValue, setPreviewValue] = useState(0)
 
 	function fractionAt(element: HTMLDivElement | null, clientX: number) {
@@ -45,26 +46,27 @@ export function ScrubBar({
 		if (fraction !== null) setPreviewValue(fraction)
 	}
 
+	// Picks up from where the bar is, so a press without a move seeks nowhere
+	function startDrag() {
+		setValue(now / totalValue)
+		setDragging(true)
+	}
+
 	function release() {
 		setDragging(false)
 		if (!enabled) return
 		onRelease(value * totalValue)
 	}
 
-	useEffect(() => {
-		if (dragging) return
-		setValue(now / totalValue)
-	}, [now, dragging, totalValue])
-
 	return (
 		<div
 			className="w-full bg-neutral-300 dark:bg-neutral-700 h-4 rounded-full group my-2"
 			ref={barRef}
-			onTouchStart={() => enabled && setDragging(true)}
+			onTouchStart={() => enabled && startDrag()}
 			onTouchMove={ev => enabled && dragging && drag(ev.touches[0].clientX)}
 			onTouchEnd={release}
 			onTouchCancel={() => setDragging(false)}
-			onMouseDown={() => enabled && setDragging(true)}
+			onMouseDown={() => enabled && startDrag()}
 			onMouseMove={ev => enabled && dragging && drag(ev.clientX)}
 			onMouseUp={release}
 		>

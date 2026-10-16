@@ -18,9 +18,12 @@ export function Queue({
 
 	const [syncedQueue, setSyncedQueue] = useState<QueueItem[]>(initQueue)
 	const [queue, setQueue] = useState<QueueItem[]>(initQueue)
-	useEffect(() => {
+	// Each poll replaces the local order
+	const [polled, setPolled] = useState(data)
+	if (data !== polled) {
+		setPolled(data)
 		if (data) setQueue(data.queue)
-	}, [data])
+	}
 
 	function commitReorder() {
 		if (syncedQueue !== queue && queue.length > 0) {

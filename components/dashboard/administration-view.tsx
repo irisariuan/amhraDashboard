@@ -63,6 +63,9 @@ const GROUPS: { title: string; description: string; keys: string[] }[] = [
 		keys: [
 			"VOLUME_MODIFIER",
 			"AUTO_LEAVE",
+			"AUTO_LEAVE_ALONE",
+			"CROSSFADE_IN_MS",
+			"SKIP_FADE_IN_MS",
 			"MAX_CACHE_IN_GB",
 			"MAX_REPLAY_BUFFER_IN_SEC",
 			"MAX_STREAM_BUFFER_IN_MB",
@@ -71,6 +74,11 @@ const GROUPS: { title: string; description: string; keys: string[] }[] = [
 			"SEEK",
 			"USE_COOKIES",
 		],
+	},
+	{
+		title: "Native engine",
+		description: "The Rust downloader and voice sidecar, and where their binaries live.",
+		keys: ["USE_NATIVE_FETCH", "NATIVE_FETCH_BIN", "USE_RUST_VOICE", "NATIVE_VOICE_BIN"],
 	},
 	{
 		title: "Logging",
@@ -91,6 +99,13 @@ const LABELS: Record<string, string> = {
 	HTTPS: "Use HTTPS",
 	VOLUME_MODIFIER: "Volume modifier",
 	AUTO_LEAVE: "Auto-leave delay (ms)",
+	AUTO_LEAVE_ALONE: "Leave when alone after (ms)",
+	CROSSFADE_IN_MS: "Crossfade (ms)",
+	SKIP_FADE_IN_MS: "Skip fade (ms)",
+	USE_NATIVE_FETCH: "Use Rust downloader",
+	NATIVE_FETCH_BIN: "Rust downloader binary",
+	USE_RUST_VOICE: "Use Rust voice",
+	NATIVE_VOICE_BIN: "Rust voice binary",
 	MAX_CACHE_IN_GB: "Maximum cache (GB)",
 	MAX_REPLAY_BUFFER_IN_SEC: "Replay buffer (seconds)",
 	MAX_STREAM_BUFFER_IN_MB: "Stream buffer (MB)",
@@ -398,9 +413,12 @@ export function AdministrationView() {
 	const [settings, setSettings] = useState<GlobalSettings | null>(null)
 	const [isSaving, setIsSaving] = useState(false)
 
-	useEffect(() => {
+	// Fresh data from the bot replaces the draft
+	const [loaded, setLoaded] = useState(data)
+	if (data !== loaded) {
+		setLoaded(data)
 		if (data) setSettings(data)
-	}, [data])
+	}
 
 	const required = useMemo(
 		() => new Set(schema?.required ?? []),

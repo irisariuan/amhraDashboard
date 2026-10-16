@@ -4,10 +4,11 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import type { SongReply } from "@/lib/api/types";
 import { AddSongForm } from "./add-song-form";
 import { Queue } from "./queue";
+import { Lyrics } from "./lyrics";
 import { Suggestions } from "./suggestions";
 import { TrackRow } from "./history-item";
 
-/** Right-hand column: add form plus tabbed Queue / History / Suggestions. */
+/** Right-hand column: add form plus tabbed Queue / Lyrics / Suggestions / History. */
 export function Panels({
 	data,
 	guildId,
@@ -29,6 +30,7 @@ export function Panels({
 						Queue
 						{data.queue?.length ? ` (${data.queue.length})` : ""}
 					</TabsTrigger>
+					<TabsTrigger value="lyrics">Lyrics</TabsTrigger>
 					<TabsTrigger value="suggestions">Suggestions</TabsTrigger>
 					<TabsTrigger value="history">History</TabsTrigger>
 				</TabsList>
@@ -44,6 +46,12 @@ export function Panels({
 								Queue is empty
 							</p>
 						)}
+					</TabsContent>
+					<TabsContent
+						value="lyrics"
+						className="mt-0 w-full min-w-0"
+					>
+						<Lyrics data={data} guildId={guildId} />
 					</TabsContent>
 					<TabsContent
 						value="suggestions"

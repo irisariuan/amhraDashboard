@@ -17,7 +17,8 @@ export function NowPlaying({
 	guildId: string;
 }) {
 	const { data: details } = useVideoDetails(data.song?.link ?? "");
-	const art = data.song?.thumbnails?.at(-1) ?? details?.channel?.url;
+	const art =
+		data.song?.thumbnails?.at(-1) ?? details?.thumbnails?.at(-1)?.url;
 
 	async function skipSegment() {
 		if (await editSong(guildId, SongEditType.SkipSegment)) {

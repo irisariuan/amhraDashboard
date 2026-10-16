@@ -44,12 +44,23 @@ token.
 | `GET /api/register?code=…` | Discord OAuth exchange → set cookie → `/dashboard` |
 | `GET/POST /api/[...path]` | Authenticated proxy for all other bot endpoints |
 
-## Player features preserved
+## Player features
 
-Add-by-URL/search, play/pause/skip/stop, seek, volume, mute, loop, skip-non-music, drag-reorder
-queue, remove, history re-queue, quit. **New:** radio mode toggle (autoplay suggestions) and a
-Suggestions panel (`/api/suggestions/:guildId`). Message/voice logging was removed from the bot,
-so the dashboard no longer has a Messages view.
+Add by URL or live search (any YouTube video link form: `watch`, `youtu.be`, `shorts`,
+`music.`/`m.` hosts), add a whole playlist with a preview (`/api/getPlaylistDetail`, then the
+`addPlaylist` edit, optionally to play next), play/pause/skip/stop, seek, volume (0–500%), mute,
+loop, skip-non-music, drag-reorder queue, remove, history re-queue, quit, radio mode (autoplay
+suggestions) and a Suggestions panel (`/api/suggestions/:guildId`).
+
+- **Lyrics:** a Lyrics tab backed by `GET /api/lyrics/:guildId[?q=…]`, which the bot answers
+  from [LRCLIB](https://lrclib.net) as `{ link, content }`. `link` is the track the lookup was
+  for, so an answer that arrives after a song change is dropped; `content` holds `plain` text
+  and/or `synced` lines (`{ time: ms, text }`). Synced lyrics follow playback and seek on click;
+  `?q=` replaces a wrong automatic match with a search.
+- **Crossfade:** the `setCrossfade` edit (`crossfadeMs` ≤ 15000, `skipFadeMs` ≤ 5000), shown
+  disabled when the player reports `canCrossfade: false` (the bot is not on its Rust voice path).
+- **Administration:** the settings form is generated from `/api/admin/settings/schema`, so new
+  bot settings appear without a dashboard release.
 
 ## Environment
 

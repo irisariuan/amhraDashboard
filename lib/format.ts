@@ -15,14 +15,6 @@ export function formatClock(totalSeconds: number): string {
 	return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`
 }
 
-/** Timestamp → `DD/MM/YYYY hh:mm:ss` (message metadata). */
-export function formatDateTime(timestamp: number): string {
-	const d = new Date(timestamp)
-	const pad = (v: number) => v.toString().padStart(2, "0")
-	const hours12 = d.getHours() % 12 === 0 ? 12 : d.getHours() % 12
-	return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(hours12)}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
-}
-
 const logDateFormatter = new Intl.DateTimeFormat("en", {
 	dateStyle: "medium",
 	timeStyle: "short",

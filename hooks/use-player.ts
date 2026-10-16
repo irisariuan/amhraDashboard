@@ -16,25 +16,22 @@ export function usePlayer(guildId: string, refreshInterval = 2000) {
 
 /**
  * Elapsed playback seconds, derived from the song's start timestamp and
- * accumulated pause time; ticks every 100 ms while playing.
+ * accumulated pause time; ticks every 100 ms while a song is loaded.
  */
 export function usePlaybackTime(data: SongReply | null): number {
-	const [time, setTime] = useState(0)
+	const [now, setNow] = useState(() => Date.now())
+	// Kept ticking through a pause, so the clock is current the moment it resumes
+	const ticking = Boolean(data?.song)
 
 	useEffect(() => {
-		if (!data?.song) {
-			setTime(0)
-			return
-		}
-		const { startTime, startFrom } = data.song
-		const elapsed = () => {
-			const reference = data.paused ? data.pausedTimestamp : Date.now()
-			return (reference - startTime - data.pausedInMs + startFrom) / 1000
-		}
-		setTime(elapsed())
-		const intervalId = setInterval(() => setTime(elapsed()), 100)
+		if (!ticking) return
+		const intervalId = setInterval(() => setNow(Date.now()), 100)
 		return () => clearInterval(intervalId)
-	}, [data])
+	}, [ticking])
 
-	return time
+	if (!data?.song) return 0
+	const { startTime, startFrom } = data.song
+	const reference = data.paused ? data.pausedTimestamp : now
+	// The clock can be up to a tick behind a song that only just started
+	return Math.max(0, (reference - startTime - data.pausedInMs + startFrom) / 1000)
 }
