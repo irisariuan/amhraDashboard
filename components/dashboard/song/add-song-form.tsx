@@ -5,7 +5,7 @@ import { toast } from "sonner"
 import { mutate } from "swr"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { editSong, songKey } from "@/lib/api/songs"
+import { addSong, editSong, songKey } from "@/lib/api/songs"
 import {
 	isYoutubePlaylistUrl,
 	isYoutubeVideoUrl,
@@ -104,13 +104,19 @@ export function AddSongForm({ guildId }: { guildId: string }) {
 		setBusy(true)
 		setOpen(false)
 		try {
-			if (await editSong(guildId, SongEditType.AddSong, { url })) {
-				mutate(songKey(guildId))
-				setQuery("")
-				setFound(null)
-				toast(title ? `Added "${title}" to queue` : "Added to queue")
-			} else {
+			const result = await addSong(guildId, url)
+			if (result === "failed") {
 				toast("Failed to add to queue")
+				return
+			}
+			mutate(songKey(guildId))
+			setQuery("")
+			setFound(null)
+			if (result === "scheduled") {
+				// Premieres cannot play until they start, so the bot schedules them
+				toast("That's an upcoming premiere — it will cut in when it starts (see Scheduled)")
+			} else {
+				toast(title ? `Added "${title}" to queue` : "Added to queue")
 			}
 		} finally {
 			setBusy(false)

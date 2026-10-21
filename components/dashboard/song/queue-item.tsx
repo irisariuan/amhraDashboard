@@ -6,6 +6,7 @@ import { mutate } from "swr"
 import { Button } from "@/components/ui/button"
 import { editSong, songKey } from "@/lib/api/songs"
 import { SongEditType, type QueueItem } from "@/lib/api/types"
+import { formatClock } from "@/lib/format"
 import { VideoLink } from "./video-link"
 
 export function QueueEntry({
@@ -49,6 +50,11 @@ export function QueueEntry({
 			<div className="flex-1 min-w-0 overflow-hidden">
 				<VideoLink url={value.url} />
 			</div>
+			{value.seek ? (
+				<span className="text-[10px] uppercase tracking-wide text-amber-400">
+					resumes {formatClock(value.seek)}
+				</span>
+			) : null}
 			{value.repeating && (
 				<span className="text-[10px] uppercase tracking-wide text-indigo-400">
 					loop

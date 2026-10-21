@@ -59,6 +59,16 @@ suggestions) and a Suggestions panel (`/api/suggestions/:guildId`).
   `?q=` replaces a wrong automatic match with a search.
 - **Crossfade:** the `setCrossfade` edit (`crossfadeMs` ≤ 15000, `skipFadeMs` ≤ 5000), shown
   disabled when the player reports `canCrossfade: false` (the bot is not on its Rust voice path).
+- **Scheduled plays:** a Scheduled tab backed by `POST /api/schedule/add`
+  (`{ guildId, url, at? }`, `at` in epoch ms) and `POST /api/schedule/respond`
+  (`{ guildId, id, action: "cancel" | "queue" }`). Pending entries arrive as `schedules` on
+  `/api/song/get/:guildId`. At its time a scheduled video interrupts whatever is playing, and the
+  interrupted track goes back to the head of the queue with a `seek` so it resumes after. Ten
+  seconds before, the bot posts a warning in Discord and the entry reports `warning: true`;
+  the dashboard shows a banner with the same "Don't cut in" / "Play next instead" choices.
+  Leaving `at` out schedules an upcoming premiere for its start (`422` if the video is not one),
+  `409` means the bot is not in voice, and adding a premiere through `addSong` answers `202`
+  when the bot scheduled it instead of queueing. The bot leaving voice clears its schedules.
 - **Administration:** the settings form is generated from `/api/admin/settings/schema`, so new
   bot settings appear without a dashboard release.
 

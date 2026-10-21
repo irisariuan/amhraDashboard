@@ -7,8 +7,9 @@ import { Queue } from "./queue";
 import { Lyrics } from "./lyrics";
 import { Suggestions } from "./suggestions";
 import { TrackRow } from "./history-item";
+import { Schedules } from "./schedule";
 
-/** Right-hand column: add form plus tabbed Queue / Lyrics / Suggestions / History. */
+/** Right-hand column: add form plus tabbed Queue / Scheduled / Lyrics / Suggestions / History. */
 export function Panels({
 	data,
 	guildId,
@@ -17,6 +18,7 @@ export function Panels({
 	guildId: string;
 }) {
 	const history = Array.from(new Set(data.history ?? [])).reverse();
+	const schedules = data.schedules ?? [];
 
 	return (
 		<div className="flex h-full min-w-0 flex-col gap-3">
@@ -29,6 +31,10 @@ export function Panels({
 					<TabsTrigger value="queue">
 						Queue
 						{data.queue?.length ? ` (${data.queue.length})` : ""}
+					</TabsTrigger>
+					<TabsTrigger value="scheduled">
+						Scheduled
+						{schedules.length ? ` (${schedules.length})` : ""}
 					</TabsTrigger>
 					<TabsTrigger value="lyrics">Lyrics</TabsTrigger>
 					<TabsTrigger value="suggestions">Suggestions</TabsTrigger>
@@ -46,6 +52,16 @@ export function Panels({
 								Queue is empty
 							</p>
 						)}
+					</TabsContent>
+					<TabsContent
+						value="scheduled"
+						className="mt-0 w-full min-w-0"
+					>
+						<Schedules
+							guildId={guildId}
+							schedules={schedules}
+							isPlaying={data.isPlaying}
+						/>
 					</TabsContent>
 					<TabsContent
 						value="lyrics"

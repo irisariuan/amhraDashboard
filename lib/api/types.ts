@@ -3,6 +3,26 @@
 export interface QueueItem {
 	url: string
 	repeating: boolean
+	/** Seconds to resume from: set on a track a scheduled play cut in over */
+	seek?: number
+}
+
+/** A video set to cut in at a given time. See docs/API.md, "Scheduled plays". */
+export interface ScheduledPlay {
+	id: string
+	url: string
+	title: string
+	/** Epoch milliseconds it was scheduled for */
+	at: number
+	/** When it will actually cut in: later than `at` when the warning went out late */
+	fireAt: number
+	/** The ten-second warning is out and it can still be stopped */
+	warning: boolean
+	/** Being started; a premiere retries for a few minutes until it is live */
+	starting: boolean
+	/** An upcoming premiere, timed to its start */
+	premiere: boolean
+	createdBy: string
 }
 
 export interface SongReply {
@@ -34,6 +54,8 @@ export interface SongReply {
 	skipFadeMs: number
 	/** Only the bot's Rust voice path mixes tracks; elsewhere fades are ignored */
 	canCrossfade: boolean
+	/** Absent on a bot that predates scheduling */
+	schedules?: ScheduledPlay[]
 }
 
 export interface Account {

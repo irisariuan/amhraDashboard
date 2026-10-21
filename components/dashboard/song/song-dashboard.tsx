@@ -3,6 +3,7 @@ import { usePlayer } from "@/hooks/use-player"
 import { NowPlaying } from "./now-playing"
 import { Panels } from "./panels"
 import { PlayerPlaceholder } from "./placeholder"
+import { ScheduleBanner } from "./schedule"
 
 /**
  * The player view for one guild: now-playing hero on the left, queue/history/
@@ -17,12 +18,19 @@ export function SongDashboard({ guildId }: { guildId: string }) {
 	}
 
 	return (
-		<div className="grid lg:grid-cols-2 gap-8 h-full">
-			<div className="flex items-center justify-center min-w-0">
-				<NowPlaying data={data} guildId={guildId} />
-			</div>
-			<div className="min-h-0 min-w-0">
-				<Panels data={data} guildId={guildId} />
+		<div className="flex h-full flex-col">
+			<ScheduleBanner
+				guildId={guildId}
+				schedules={data.schedules ?? []}
+				isPlaying={data.isPlaying}
+			/>
+			<div className="grid min-h-0 flex-1 lg:grid-cols-2 gap-8">
+				<div className="flex items-center justify-center min-w-0">
+					<NowPlaying data={data} guildId={guildId} />
+				</div>
+				<div className="min-h-0 min-w-0">
+					<Panels data={data} guildId={guildId} />
+				</div>
 			</div>
 		</div>
 	)

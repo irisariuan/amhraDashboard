@@ -38,6 +38,22 @@ export async function editSong(
 	return res.ok
 }
 
+/**
+ * Add a video, which the bot may schedule instead of queueing: an upcoming
+ * premiere cannot be played yet, so it is set to cut in when it starts (202).
+ */
+export async function addSong(
+	guildId: string,
+	url: string,
+): Promise<"queued" | "scheduled" | "failed"> {
+	const res = await apiFetch("/api/song/edit", {
+		method: "POST",
+		body: { action: SongEditType.AddSong, guildId, detail: { url } },
+	})
+	if (res.status === 202) return "scheduled"
+	return res.ok ? "queued" : "failed"
+}
+
 export async function getSong(guildId: string): Promise<SongReply | null> {
 	const res = await apiFetch(`/api/song/get/${guildId}`)
 	if (!res.ok) return null
