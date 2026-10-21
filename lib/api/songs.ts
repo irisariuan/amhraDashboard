@@ -14,11 +14,15 @@ type EditDetailMap = {
 	[SongEditType.RemoveLayer]: { id: string }
 	[SongEditType.SetLayerVolume]: { id: string; volume: number }
 	[SongEditType.SetMainVolume]: { volume: number }
+	[SongEditType.SwapLayer]: { id: string }
 }
 
 type DetailAction = keyof EditDetailMap
-/** Actions that carry no detail payload. AddLayer has its own helper below. */
-export type PlainSongAction = Exclude<SongEditType, DetailAction | SongEditType.AddLayer>
+/** Actions that carry no detail payload. The mix-in actions have their own helpers below. */
+export type PlainSongAction = Exclude<
+	SongEditType,
+	DetailAction | SongEditType.AddLayer | SongEditType.MixFromQueue
+>
 
 export async function editSong<A extends DetailAction>(
 	guildId: string,
@@ -78,6 +82,24 @@ export async function addLayer(
 	const res = await apiFetch("/api/song/edit", {
 		method: "POST",
 		body: { action: SongEditType.AddLayer, guildId, detail: { url, volume } },
+	})
+	if (res.ok) return { ok: true }
+	return { error: ADD_LAYER_ERRORS[res.status] ?? "failed" }
+}
+
+/**
+ * Take a queued song out of the queue and mix it in now. `url` is what was
+ * at `index` when the drag started, so a reorder landing at the same moment
+ * cannot mix in the wrong song. Slow, like `addLayer`.
+ */
+export async function mixFromQueue(
+	guildId: string,
+	index: number,
+	url: string,
+): Promise<{ ok: true } | { error: AddLayerError }> {
+	const res = await apiFetch("/api/song/edit", {
+		method: "POST",
+		body: { action: SongEditType.MixFromQueue, guildId, detail: { index, url } },
 	})
 	if (res.ok) return { ok: true }
 	return { error: ADD_LAYER_ERRORS[res.status] ?? "failed" }

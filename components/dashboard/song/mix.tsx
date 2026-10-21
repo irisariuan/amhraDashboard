@@ -1,5 +1,5 @@
 "use client"
-import { Cross2Icon, PlusIcon } from "@radix-ui/react-icons"
+import { Cross2Icon, PlusIcon, SwitchIcon } from "@radix-ui/react-icons"
 import { useState } from "react"
 import { toast } from "sonner"
 import { mutate } from "swr"
@@ -42,6 +42,7 @@ const rounded = (volume: number) => Math.round(volume * 100) / 100
 export function Mix({ data, guildId }: { data: SongReply; guildId: string }) {
 	const [input, setInput] = useState("")
 	const [busy, setBusy] = useState(false)
+	const [swapping, setSwapping] = useState<string | null>(null)
 	const mix = data.mix ?? { mainVolume: 1, layers: [] }
 	const full = mix.layers.length >= MAX_MIX_LAYERS
 
@@ -100,6 +101,21 @@ export function Mix({ data, guildId }: { data: SongReply; guildId: string }) {
 		mutate(songKey(guildId))
 	}
 
+	async function swap(layer: MixLayer) {
+		if (swapping) return
+		setSwapping(layer.id)
+		try {
+			if (await editSong(guildId, SongEditType.SwapLayer, { id: layer.id })) {
+				toast(`"${layer.title}" is now the queue's song`)
+			} else {
+				toast(`Couldn't swap "${layer.title}" in`)
+			}
+			mutate(songKey(guildId))
+		} finally {
+			setSwapping(null)
+		}
+	}
+
 	async function remove(layer: MixLayer) {
 		if (!(await editSong(guildId, SongEditType.RemoveLayer, { id: layer.id }))) {
 			toast(`"${layer.title}" is no longer playing`)
@@ -130,7 +146,7 @@ export function Mix({ data, guildId }: { data: SongReply; guildId: string }) {
 				<p className="text-xs text-zinc-500">
 					{full
 						? ERROR_TEXT.full
-						: "Plays once on top of the queue, at its own volume. The player's volume bar sets the level of everything together."}
+						: "Plays once on top of the queue, at its own volume. The player's volume bar sets the level of everything together. Swap a song with the queue's to make it the one skip, seek and lyrics follow; you can also drag a queued song sideways to mix it in."}
 				</p>
 			</form>
 
@@ -149,6 +165,9 @@ export function Mix({ data, guildId }: { data: SongReply; guildId: string }) {
 						volume={layer.volume}
 						onRelease={volume => setLayerVolume(layer, volume)}
 						onRemove={() => remove(layer)}
+						// Swapping needs a queue song to trade places with
+						onSwap={data.isPlaying ? () => swap(layer) : undefined}
+						swapping={swapping === layer.id}
 					/>
 				))}
 				{mix.layers.length === 0 && (
@@ -168,6 +187,8 @@ function VolumeRow({
 	volume,
 	onRelease,
 	onRemove,
+	onSwap,
+	swapping = false,
 }: {
 	title: string
 	subtitle?: string
@@ -175,6 +196,8 @@ function VolumeRow({
 	volume: number
 	onRelease: (volume: number) => void
 	onRemove?: () => void
+	onSwap?: () => void
+	swapping?: boolean
 }) {
 	return (
 		<div className="group flex min-w-0 items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-white/5 active:bg-white/5">
@@ -203,6 +226,19 @@ function VolumeRow({
 					formatter={percent}
 				/>
 			</div>
+			{onSwap && (
+				<Button
+					variant="ghost"
+					size="icon"
+					title="Swap with the queue's song"
+					aria-label={`Make ${title} the queue's song`}
+					className="text-zinc-400 hover:text-indigo-300 active:bg-accent active:text-indigo-300"
+					disabled={swapping}
+					onClick={onSwap}
+				>
+					<SwitchIcon className={swapping ? "animate-pulse" : undefined} />
+				</Button>
+			)}
 			{onRemove ? (
 				<Button
 					variant="ghost"

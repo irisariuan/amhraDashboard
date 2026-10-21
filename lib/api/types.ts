@@ -118,6 +118,8 @@ export enum SongEditType {
 	RemoveLayer = "removeLayer",
 	SetLayerVolume = "setLayerVolume",
 	SetMainVolume = "setMainVolume",
+	SwapLayer = "swapLayer",
+	MixFromQueue = "mixFromQueue",
 }
 
 export const FormatSongEditType: Record<SongEditType, string> = {
@@ -142,6 +144,8 @@ export const FormatSongEditType: Record<SongEditType, string> = {
 	[SongEditType.RemoveLayer]: "Removed Mixed Song",
 	[SongEditType.SetLayerVolume]: "Set Mixed Song Volume",
 	[SongEditType.SetMainVolume]: "Set Queue Song Mix Volume",
+	[SongEditType.SwapLayer]: "Swapped Mixed Song In",
+	[SongEditType.MixFromQueue]: "Mixed In Queued Song",
 } as const
 
 export interface YoutubeVideoData {

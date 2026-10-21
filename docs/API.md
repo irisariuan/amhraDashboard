@@ -79,6 +79,13 @@ suggestions) and a Suggestions panel (`/api/suggestions/:guildId`).
   `404` for a video it cannot find and `502` when the download fails; a layer edit naming an id
   that has ended answers `404`. A mixed-in song plays once and leaves `layers` when it ends;
   stopping the player or the bot leaving voice clears them all.
+  `swapLayer` (`{ id }`) trades a layer with the queue's song: inaudible, each keeps its place
+  and volume, and afterwards skip, seek, lyrics and now playing follow the swapped-in song while
+  the old queue song plays on under the same layer `id` (`409` when nothing in the queue is
+  playing, `502` when the bot could not make the exchange, such as mid-crossfade).
+  `mixFromQueue` (`{ index, url, volume? }`) takes a queued song out of the queue and mixes it
+  in now — the queue's sideways drag; `url` guards against a reorder landing at the same moment.
+  It answers like `addLayer`, and leaves the queue untouched when it fails.
 - **Administration:** the settings form is generated from `/api/admin/settings/schema`, so new
   bot settings appear without a dashboard release.
 
