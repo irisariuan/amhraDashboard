@@ -56,7 +56,30 @@ export interface SongReply {
 	canCrossfade: boolean
 	/** Absent on a bot that predates scheduling */
 	schedules?: ScheduledPlay[]
+	/** Only the bot's Rust voice path can mix songs over the queue. Absent on older bots */
+	canMix?: boolean
+	/** Songs playing on top of the queue. Absent on a bot that predates mixing */
+	mix?: Mix
 }
+
+/** A song mixed in over the queue. See docs/API.md, "Mix". */
+export interface MixLayer {
+	/** Stable while other layers come and go; what the edits name it by */
+	id: string
+	title: string
+	url: string
+	/** Linear, like the player's volume: 1 is 100% */
+	volume: number
+}
+
+export interface Mix {
+	/** The queue song's own volume within the mix, under the player's volume */
+	mainVolume: number
+	layers: MixLayer[]
+}
+
+/** The bot's cap on songs mixed in at once */
+export const MAX_MIX_LAYERS = 8
 
 export interface Account {
 	id: string
@@ -91,6 +114,10 @@ export enum SongEditType {
 	Loop = "loop",
 	SkipSegment = "skipSegment",
 	AutoSuggest = "autoSuggest",
+	AddLayer = "addLayer",
+	RemoveLayer = "removeLayer",
+	SetLayerVolume = "setLayerVolume",
+	SetMainVolume = "setMainVolume",
 }
 
 export const FormatSongEditType: Record<SongEditType, string> = {
@@ -111,6 +138,10 @@ export const FormatSongEditType: Record<SongEditType, string> = {
 	[SongEditType.Loop]: "Loop Toggled",
 	[SongEditType.SkipSegment]: "Skipped Non-Music",
 	[SongEditType.AutoSuggest]: "Radio Toggled",
+	[SongEditType.AddLayer]: "Mixed In Song",
+	[SongEditType.RemoveLayer]: "Removed Mixed Song",
+	[SongEditType.SetLayerVolume]: "Set Mixed Song Volume",
+	[SongEditType.SetMainVolume]: "Set Queue Song Mix Volume",
 } as const
 
 export interface YoutubeVideoData {

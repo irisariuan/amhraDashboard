@@ -69,6 +69,16 @@ suggestions) and a Suggestions panel (`/api/suggestions/:guildId`).
   Leaving `at` out schedules an upcoming premiere for its start (`422` if the video is not one),
   `409` means the bot is not in voice, and adding a premiere through `addSong` answers `202`
   when the bot scheduled it instead of queueing. The bot leaving voice clears its schedules.
+- **Mix:** a Mix tab plays songs on top of the queue, each at its own volume, with the player's
+  volume as the master over everything. `/api/song/get/:guildId` reports `canMix` (false when the
+  bot is not on its Rust voice path) and `mix: { mainVolume, layers: [{ id, title, url, volume }] }`,
+  volumes linear like `volume`. Edits: `addLayer` (`{ url, volume? }`, a video link; answers once
+  the download has started), `removeLayer` (`{ id }`), `setLayerVolume` (`{ id, volume }`) and
+  `setMainVolume` (`{ volume }`, the queue song's own level). `addLayer` answers `501` when mixing
+  is unavailable, `409` when the bot is not in voice, `422` when 8 songs are already mixed in,
+  `404` for a video it cannot find and `502` when the download fails; a layer edit naming an id
+  that has ended answers `404`. A mixed-in song plays once and leaves `layers` when it ends;
+  stopping the player or the bot leaving voice clears them all.
 - **Administration:** the settings form is generated from `/api/admin/settings/schema`, so new
   bot settings appear without a dashboard release.
 

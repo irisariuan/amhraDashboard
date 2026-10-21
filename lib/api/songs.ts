@@ -11,11 +11,14 @@ type EditDetailMap = {
 	[SongEditType.SetQueue]: { queue: QueueItem[] }
 	[SongEditType.Loop]: { loop: boolean }
 	[SongEditType.AutoSuggest]: { autoSuggest: boolean }
+	[SongEditType.RemoveLayer]: { id: string }
+	[SongEditType.SetLayerVolume]: { id: string; volume: number }
+	[SongEditType.SetMainVolume]: { volume: number }
 }
 
 type DetailAction = keyof EditDetailMap
-/** Actions that carry no detail payload. */
-export type PlainSongAction = Exclude<SongEditType, DetailAction>
+/** Actions that carry no detail payload. AddLayer has its own helper below. */
+export type PlainSongAction = Exclude<SongEditType, DetailAction | SongEditType.AddLayer>
 
 export async function editSong<A extends DetailAction>(
 	guildId: string,
@@ -52,6 +55,32 @@ export async function addSong(
 	})
 	if (res.status === 202) return "scheduled"
 	return res.ok ? "queued" : "failed"
+}
+
+export type AddLayerError = "not_native" | "not_connected" | "full" | "not_found" | "failed"
+
+const ADD_LAYER_ERRORS: Record<number, AddLayerError> = {
+	501: "not_native",
+	409: "not_connected",
+	422: "full",
+	404: "not_found",
+}
+
+/**
+ * Mix a video in over the queue at `volume` (linear, 1 is 100%). Slow: the bot
+ * starts the download before it answers.
+ */
+export async function addLayer(
+	guildId: string,
+	url: string,
+	volume = 1,
+): Promise<{ ok: true } | { error: AddLayerError }> {
+	const res = await apiFetch("/api/song/edit", {
+		method: "POST",
+		body: { action: SongEditType.AddLayer, guildId, detail: { url, volume } },
+	})
+	if (res.ok) return { ok: true }
+	return { error: ADD_LAYER_ERRORS[res.status] ?? "failed" }
 }
 
 export async function getSong(guildId: string): Promise<SongReply | null> {
