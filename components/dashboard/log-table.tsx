@@ -1,10 +1,9 @@
 "use client"
 
-import type { ColumnDef } from "@tanstack/react-table"
 import { Badge } from "@/components/ui/badge"
 import { LogFormatted, type Log } from "@/lib/api/types"
 import { formatLogDate } from "@/lib/format"
-import { DataTable } from "./data-table"
+import { DataTable, type DataTableColumn } from "./data-table"
 
 interface LogRow {
 	type: string
@@ -14,7 +13,7 @@ interface LogRow {
 	isError: boolean
 }
 
-const columns: ColumnDef<LogRow>[] = [
+const columns: DataTableColumn<LogRow>[] = [
 	{
 		accessorKey: "type",
 		header: "Type",

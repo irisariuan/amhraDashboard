@@ -3,11 +3,15 @@
 import {
 	type ColumnDef,
 	type ColumnFiltersState,
+	type RowData,
+	columnFilteringFeature,
+	createFilteredRowModel,
+	createPaginatedRowModel,
+	filterFn_includesString,
 	flexRender,
-	getCoreRowModel,
-	getFilteredRowModel,
-	getPaginationRowModel,
-	useReactTable,
+	rowPaginationFeature,
+	tableFeatures,
+	useTable,
 } from "@tanstack/react-table"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
@@ -21,26 +25,41 @@ import {
 	TableRow,
 } from "@/components/ui/table"
 
-interface DataTableProps<TData, TValue> {
-	columns: ColumnDef<TData, TValue>[]
+/**
+ * Filtering then pagination. `includesString` is what a string column's
+ * `auto` filter resolves to, so the search box keeps substring matching.
+ */
+export const dataTableFeatures = tableFeatures({
+	columnFilteringFeature,
+	filteredRowModel: createFilteredRowModel(),
+	filterFns: { includesString: filterFn_includesString },
+	rowPaginationFeature,
+	paginatedRowModel: createPaginatedRowModel(),
+})
+
+export type DataTableColumn<TData extends RowData> = ColumnDef<
+	typeof dataTableFeatures,
+	TData
+>
+
+interface DataTableProps<TData extends RowData> {
+	columns: DataTableColumn<TData>[]
 	data: TData[]
 	emptyMessage?: string
 }
 
 /** Paginated table with a free-text filter on the `message` column. */
-export function DataTable<TData, TValue>({
+export function DataTable<TData extends RowData>({
 	columns,
 	data,
 	emptyMessage = "No results found.",
-}: DataTableProps<TData, TValue>) {
+}: DataTableProps<TData>) {
 	const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
-	const table = useReactTable({
+	const table = useTable({
+		features: dataTableFeatures,
 		data,
 		columns,
-		getCoreRowModel: getCoreRowModel(),
-		getPaginationRowModel: getPaginationRowModel(),
 		onColumnFiltersChange: setColumnFilters,
-		getFilteredRowModel: getFilteredRowModel(),
 		state: { columnFilters },
 	})
 
@@ -85,13 +104,8 @@ export function DataTable<TData, TValue>({
 					<TableBody>
 						{table.getRowModel().rows?.length ? (
 							table.getRowModel().rows.map(row => (
-								<TableRow
-									key={row.id}
-									data-state={
-										row.getIsSelected() && "selected"
-									}
-								>
-									{row.getVisibleCells().map(cell => (
+								<TableRow key={row.id}>
+									{row.getAllCells().map(cell => (
 										<TableCell key={cell.id}>
 											{flexRender(
 												cell.column.columnDef.cell,
@@ -115,7 +129,7 @@ export function DataTable<TData, TValue>({
 				</Table>
 			</div>
 			<div className="flex items-center justify-end gap-3 pt-4">
-				<p className="mr-auto text-xs text-zinc-500">Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount() || 1}</p>
+				<p className="mr-auto text-xs text-zinc-500">Page {table.state.pagination.pageIndex + 1} of {table.getPageCount() || 1}</p>
 				<Button
 					variant="outline"
 					size="sm"
