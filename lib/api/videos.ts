@@ -1,5 +1,6 @@
 import { apiFetch } from "./client"
 import type {
+	LyricsDelayReply,
 	LyricsReply,
 	SearchHit,
 	SearchResult,
@@ -77,5 +78,23 @@ export async function getLyrics(
 	const search = query ? `?q=${encodeURIComponent(query)}` : ""
 	const res = await apiFetch(`/api/lyrics/${guildId}${search}`)
 	if (!res.ok) throw new Error(`Lyrics request failed (${res.status})`)
+	return res.json()
+}
+
+/**
+ * Sets the playing song's lyrics delay for everyone who plays it, or with null
+ * returns it to the bot-wide default. `link` must be the playing track; null
+ * when the request failed or the song changed meanwhile.
+ */
+export async function setLyricsDelay(
+	guildId: string,
+	link: string,
+	delayMs: number | null,
+): Promise<LyricsDelayReply | null> {
+	const res = await apiFetch(`/api/lyrics/${guildId}/delay`, {
+		method: "POST",
+		body: { link, delayMs },
+	}).catch(() => null)
+	if (!res?.ok) return null
 	return res.json()
 }

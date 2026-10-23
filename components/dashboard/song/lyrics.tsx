@@ -1,5 +1,5 @@
 "use client"
-import { MagnifyingGlassIcon, ResetIcon } from "@radix-ui/react-icons"
+import { MagnifyingGlassIcon, MinusIcon, PlusIcon, ResetIcon } from "@radix-ui/react-icons"
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
 import { mutate } from "swr"
@@ -10,10 +10,17 @@ import { useLyrics } from "@/hooks/use-lyrics"
 import { usePlaybackTime } from "@/hooks/use-player"
 import { editSong, songKey } from "@/lib/api/songs"
 import { type LyricLine, SongEditType, type SongReply } from "@/lib/api/types"
+import { setLyricsDelay } from "@/lib/api/videos"
 import { cn } from "@/lib/utils"
 
 /** After a manual scroll, leave the user in charge for this long */
 const MANUAL_SCROLL_HOLD_MS = 4000
+/** One press of the delay buttons; shift-click moves ten times as far */
+const DELAY_STEP_MS = 100
+/** The bot refuses delays beyond this either way */
+const MAX_DELAY_MS = 10_000
+/** Presses this close together are sent as one change */
+const DELAY_SAVE_MS = 500
 
 /** Index of the line showing at `ms`, or -1 before the first one. */
 function lineIndexAt(lines: LyricLine[], ms: number) {
@@ -47,6 +54,45 @@ export function Lyrics({ data, guildId }: { data: SongReply; guildId: string }) 
 	const { data: reply, error, isLoading } = useLyrics(guildId, link, query)
 	// Without a search, an answer for another track is stale
 	const lyrics = reply && (query || reply.link === link) ? reply.content : null
+
+	// The delay is the playing song's, shared with everyone who plays it. The
+	// synced times arrive already moved by `reply.delayMs`; a change shows at
+	// once by moving them the difference, and is saved after a pause
+	const savedDelay = reply?.delayMs ?? 0
+	const [draftDelay, setDraftDelay] = useState<{ ms: number; link: string | null } | null>(null)
+	const delayMs = draftDelay && draftDelay.link === link ? draftDelay.ms : savedDelay
+	const saveTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
+	useEffect(() => () => clearTimeout(saveTimer.current), [])
+	const synced = useMemo(() => {
+		const shift = delayMs - savedDelay
+		if (!lyrics?.synced || !shift) return lyrics?.synced ?? null
+		return lyrics.synced.map(line => ({ ...line, time: Math.max(0, line.time + shift) }))
+	}, [lyrics, delayMs, savedDelay])
+
+	async function saveDelay(ms: number | null) {
+		if (!link) return
+		const saved = await setLyricsDelay(guildId, link, ms)
+		if (!saved) {
+			toast("Failed to change the lyrics delay")
+			setDraftDelay(null)
+			return
+		}
+		// A nudge already shows its value, and may have been followed by another
+		if (ms === null) setDraftDelay({ ms: saved.delayMs, link })
+		await mutate(["lyrics", guildId, link, query])
+	}
+
+	function nudgeDelay(by: number) {
+		const ms = Math.max(-MAX_DELAY_MS, Math.min(MAX_DELAY_MS, delayMs + by))
+		setDraftDelay({ ms, link })
+		clearTimeout(saveTimer.current)
+		saveTimer.current = setTimeout(() => saveDelay(ms), DELAY_SAVE_MS)
+	}
+
+	function resetDelay() {
+		clearTimeout(saveTimer.current)
+		saveDelay(null)
+	}
 
 	function submit(event: React.FormEvent) {
 		event.preventDefault()
@@ -118,8 +164,15 @@ export function Lyrics({ data, guildId }: { data: SongReply; guildId: string }) 
 						{canFollow ? "Synced" : "Plain"} · LRCLIB
 					</span>
 				</div>
-				{canFollow && lyrics.synced ? (
-					<SyncedLyrics lines={lyrics.synced} data={data} guildId={guildId} />
+				{canFollow && synced && (
+					<DelayControl
+						delayMs={delayMs}
+						onNudge={nudgeDelay}
+						onReset={resetDelay}
+					/>
+				)}
+				{canFollow && synced ? (
+					<SyncedLyrics lines={synced} data={data} guildId={guildId} />
 				) : (
 					<p className="whitespace-pre-line px-2 text-sm leading-7 text-zinc-300">
 						{lyrics.plain ?? lyrics.synced?.map(line => line.text).join("\n")}
@@ -133,6 +186,58 @@ export function Lyrics({ data, guildId }: { data: SongReply; guildId: string }) 
 		<div className="flex flex-col gap-3 pb-4">
 			{searchForm}
 			{body}
+		</div>
+	)
+}
+
+function DelayControl({
+	delayMs,
+	onNudge,
+	onReset,
+}: {
+	delayMs: number
+	onNudge: (by: number) => void
+	onReset: () => void
+}) {
+	const step = (sign: number) => (event: React.MouseEvent) =>
+		onNudge(sign * DELAY_STEP_MS * (event.shiftKey ? 10 : 1))
+	const seconds = (delayMs / 1000).toFixed(1)
+	return (
+		<div className="flex items-center gap-1 px-2 text-xs text-zinc-400">
+			<span className="mr-auto">Lyrics timing for this song</span>
+			<Button
+				size="icon"
+				variant="ghost"
+				className="h-7 w-7"
+				title="Show lyrics sooner (shift: 1 s)"
+				disabled={delayMs <= -MAX_DELAY_MS}
+				onClick={step(-1)}
+			>
+				<MinusIcon />
+			</Button>
+			<span className="w-14 text-center tabular-nums" aria-live="polite">
+				{delayMs > 0 ? "+" : ""}
+				{seconds} s
+			</span>
+			<Button
+				size="icon"
+				variant="ghost"
+				className="h-7 w-7"
+				title="Show lyrics later (shift: 1 s)"
+				disabled={delayMs >= MAX_DELAY_MS}
+				onClick={step(1)}
+			>
+				<PlusIcon />
+			</Button>
+			<Button
+				size="icon"
+				variant="ghost"
+				className="h-7 w-7"
+				title="Back to the default timing"
+				onClick={onReset}
+			>
+				<ResetIcon />
+			</Button>
 		</div>
 	)
 }
