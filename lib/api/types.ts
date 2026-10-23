@@ -279,4 +279,14 @@ export interface LyricsReply {
 	/** The track these lyrics were looked up for; null for a pure search */
 	link: string | null
 	content: Lyrics | null
+	/**
+	 * Milliseconds the synced times were already moved by: the playing song's
+	 * own lyrics delay, or the bot-wide default when it has none
+	 */
+	delayMs?: number
+}
+
+export interface LyricsDelayReply {
+	link: string
+	delayMs: number
 }
