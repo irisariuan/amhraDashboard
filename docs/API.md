@@ -76,7 +76,8 @@ suggestions) and a Suggestions panel (`/api/suggestions/:guildId`).
   on when it runs dry, and pausing the player pauses them too. `/api/song/get/:guildId` reports
   `canMix` (false when the bot is not on its Rust voice path) and `mix: { mainVolume, maxTracks,
   tracks: [{ id, volume, gapMs, loop, playing, loading, queue, dueInMs }] }`. Songs are
-  `{ title, url, durationMs }` (`durationMs` null when unknown); `playing` adds `positionMs`;
+  `{ title, url, durationMs, gapBeforeMs }` (`durationMs` null when unknown; `gapBeforeMs` is
+  the silence before the song in place of the track's gap, null for the track's); `playing` adds `positionMs`;
   `loading` is a song being downloaded to play next; `dueInMs` is how long until the next song
   while the track waits out its gap. Times are as of the reply and hold still while `paused`.
   Volumes are linear like `volume`. Edits, named by track `id`:
@@ -89,7 +90,10 @@ suggestions) and a Suggestions panel (`/api/suggestions/:guildId`).
   `moveMixSong` (`{ from: { track, index }, to: { track, index? }, url? }`) drags a queued song
   anywhere: `track` is a mix track's id or `null` for the guild's queue, and as a destination
   `"new"` makes a track for it; `index` is counted after the song has left, and left out means
-  the end. `url` is what was at `from`, guarding against a reorder landing at the same moment.
+  the end. On a mix track, `to.gapMs` sets the song's `gapBeforeMs`: where the editor dropped
+  it, as silence after the song before it, or after now when it lands first on a track with
+  nothing playing. The editor snaps a dragged song's start or end to the start or end of any
+  song on any lane. `url` is what was at `from`, guarding against a reorder landing at the same moment.
   The queue's sideways drag is a move to `"new"`.
   They answer `501` when mixing is unavailable, `409` when the bot is not in voice, `422` when the
   mix has as many tracks as it can or a track's queue is full, and `404` for a track, song or

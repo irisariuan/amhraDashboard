@@ -39,20 +39,33 @@ import {
 import { searchYoutube } from "@/lib/api/videos"
 import { cn } from "@/lib/utils"
 import { Clip, Gap, QueueClip, type DragSong } from "./clip"
-import { Fader, GapInput, LaneButton, LaneRow, Playhead } from "./lane"
+import {
+	Fader,
+	GapInput,
+	GhostClip,
+	LaneButton,
+	LaneRow,
+	Playhead,
+	SnapLine,
+	type Ghost,
+} from "./lane"
 import {
 	DEFAULT_ZOOM,
 	END_PX,
+	gapBefore,
 	LANE_COLOURS,
 	LANE_DOTS,
 	PAST_PX,
+	place,
 	QUEUE_COLOUR,
 	rulerLabel,
 	rulerStep,
+	snap,
 	trackClock,
 	trackSeconds,
 	UNKNOWN_SECONDS,
 	ZOOMS,
+	type Span,
 } from "./timeline"
 
 const ERROR_TEXT: Record<MixError, string> = {
@@ -63,8 +76,19 @@ const ERROR_TEXT: Record<MixError, string> = {
 	failed: "Couldn't do that, try again",
 }
 
-/** Where a dropped song goes: a lane by id (`null` the queue, `"new"` a new track). */
-type DropPlace = { track: string | null; index?: number }
+/**
+ * Where a dragged song would land, worked out as it moves: a lane by id
+ * (`null` the queue, `"new"` a new track), its index there with it taken out,
+ * the silence before it, and what to draw — the ghost on that lane, and the
+ * edge it snapped to across all of them.
+ */
+interface Landing {
+	lane: string | null
+	index?: number
+	gapMs?: number
+	ghost: Ghost
+	snapPx: number | null
+}
 
 /**
  * The mix as a track editor. The guild's queue is the top lane and every mix
@@ -101,6 +125,7 @@ function Editor({
 }) {
 	const [zoom, setZoom] = useState<number>(DEFAULT_ZOOM)
 	const [dragging, setDragging] = useState<DragSong | null>(null)
+	const [landing, setLanding] = useState<Landing | null>(null)
 	const [busy, setBusy] = useState<string | null>(null)
 	const now = useNow(true, 250)
 	const queueSeconds = usePlaybackTime(data)
@@ -138,36 +163,78 @@ function Editor({
 			"That track is gone",
 		)
 
-	function lengthOf(track: string | null) {
-		return track === null
-			? data.queue.length
-			: (tracks.find(listed => listed.id === track)?.queue.length ?? 0)
+	/**
+	 * Follow a drag over a lane's timeline: snap the song's start or end to
+	 * the nearest edge of a song on any lane, then work out where on this
+	 * lane that puts it. Read from the lanes as drawn, so it snaps to what is
+	 * on screen, durations looked up for the queue included.
+	 */
+	function dragAt(lane: string | null, clientX: number, timeline: HTMLElement) {
+		const lanes = timeline.closest("[data-lanes]")
+		if (!dragging || !lanes) return
+		const timelines = [...lanes.querySelectorAll<HTMLElement>("[data-lane-timeline]")]
+		const edges = [PAST_PX, ...timelines.flatMap(each => spansIn(each).flatMap(span => [span.left, span.right]))]
+		const pointer = clientX - timeline.getBoundingClientRect().left - dragging.grabPx
+		const snapped = snap(pointer, dragging.widthPx, edges)
+		const placed =
+			lane === "new"
+				? (() => {
+						const left = Math.max(snapped.start, PAST_PX)
+						return { left, gapMs: Math.round(((left - PAST_PX) / zoom) * 1000) }
+					})()
+				: place(snapped.start, spansIn(timeline), zoom, { gaps: lane !== null })
+		// A start held back by the song before it no longer sits on the edge
+		const onEdge = Math.abs(placed.left - snapped.start) < 0.5
+		setLanding({
+			lane,
+			index: "index" in placed ? placed.index : undefined,
+			gapMs: placed.gapMs,
+			ghost: { left: placed.left, width: dragging.widthPx },
+			snapPx: onEdge ? snapped.edge : null,
+		})
 	}
 
-	async function drop(to: DropPlace) {
-		const from = dragging
+	function endDrag() {
 		setDragging(null)
-		if (!from) return
-		let index = to.index
-		if (to.track === from.track) {
-			// Counted in the lane as it is once the song has left it
-			if (index !== undefined && from.index < index) index -= 1
-			if ((index ?? lengthOf(from.track) - 1) === from.index) return
-		}
-		const toastId = to.track !== from.track && from.track === null ? toast("Mixing in…") : null
-		const result = await moveMixSong(guildId, from, { track: to.track, index }, from.url)
+		setLanding(null)
+	}
+
+	async function drop() {
+		const from = dragging
+		const to = landing
+		endDrag()
+		if (!from || !to) return
+		const mixing = from.track === null && to.lane !== null
+		const toastId = mixing ? toast("Mixing in…") : null
+		const result = await moveMixSong(
+			guildId,
+			{ track: from.track, index: from.index },
+			{ track: to.lane, index: to.index, gapMs: to.gapMs },
+			from.url,
+		)
 		if (toastId !== null) toast.dismiss(toastId)
 		if ("error" in result) toast(ERROR_TEXT[result.error])
 		refresh()
 	}
 
-	const dragFor = (track: string | null, index: number, url: string) => ({
-		payload: { track, index, url },
+	const dragFor = (track: string | null, index: number) => ({
+		track,
+		index,
 		onStart: setDragging,
-		onEnd: () => setDragging(null),
-		onDropBefore: () => drop({ track, index }),
-		active: dragging !== null,
+		onEnd: endDrag,
 	})
+	const isDragged = (track: string | null, index: number) =>
+		dragging?.track === track && dragging.index === index
+	/** What a lane needs to take drops and show where one would land. */
+	const dropFor = (lane: string | null) =>
+		dragging
+			? {
+					onDragAt: (clientX: number, timeline: HTMLElement) => dragAt(lane, clientX, timeline),
+					onDrop: drop,
+					ghost: landing?.lane === lane ? landing.ghost : null,
+					snapPx: landing?.snapPx ?? null,
+				}
+			: {}
 
 	return (
 		<div className="flex h-full min-h-0 flex-col gap-3">
@@ -182,14 +249,13 @@ function Editor({
 			/>
 
 			<div className="min-h-0 flex-1 overflow-auto rounded-lg border border-white/10 bg-zinc-950">
-				<div className="w-max min-w-full">
-					<Ruler width={width} zoom={zoom} seconds={longest} />
+				<div data-lanes className="w-max min-w-full">
+					<Ruler width={width} zoom={zoom} seconds={longest} snapPx={landing?.snapPx ?? null} />
 
 					<LaneRow
 						width={width}
 						offsetPx={PAST_PX - (data.song ? queueSeconds * zoom : 0)}
-						dragActive={dragging !== null}
-						onDropEnd={() => drop({ track: null })}
+						{...dropFor(null)}
 						header={
 							<>
 								<div className="flex items-center gap-1.5">
@@ -244,7 +310,8 @@ function Editor({
 								url={item.url}
 								zoom={zoom}
 								colour={QUEUE_COLOUR}
-								drag={dragFor(null, index, item.url)}
+								drag={dragFor(null, index)}
+								dragging={isDragged(null, index)}
 								onRemove={() =>
 									act(
 										`remove:queue:${index}`,
@@ -264,8 +331,7 @@ function Editor({
 								key={track.id}
 								width={width}
 								offsetPx={PAST_PX - (track.playing ? (positionMs / 1000) * zoom : 0)}
-								dragActive={dragging !== null}
-								onDropEnd={() => drop({ track: track.id })}
+								{...dropFor(track.id)}
 								header={
 									<TrackHeader
 										track={track}
@@ -323,7 +389,7 @@ function Editor({
 								{track.queue.map((song, index) => (
 									<Fragment key={`${song.url}:${index}`}>
 										{(index > 0 || track.playing || track.loading) && (
-											<Gap ms={track.gapMs} zoom={zoom} />
+											<Gap ms={gapBefore(track, index)} zoom={zoom} />
 										)}
 										<Clip
 											title={song.title}
@@ -331,7 +397,8 @@ function Editor({
 											durationMs={song.durationMs}
 											zoom={zoom}
 											colour={colour}
-											drag={dragFor(track.id, index, song.url)}
+											drag={dragFor(track.id, index)}
+											dragging={isDragged(track.id, index)}
 											onRemove={() =>
 												act(
 													`remove:${track.id}:${index}`,
@@ -360,7 +427,7 @@ function Editor({
 						width={width}
 						full={full}
 						dragActive={dragging !== null}
-						onDrop={() => drop({ track: "new" })}
+						{...dropFor("new")}
 						onAdd={() =>
 							act(
 								"add-track",
@@ -458,7 +525,17 @@ function TrackHeader({
 }
 
 /** Seconds from now along the top, with the playhead's "now" marked. */
-function Ruler({ width, zoom, seconds }: { width: number; zoom: number; seconds: number }) {
+function Ruler({
+	width,
+	zoom,
+	seconds,
+	snapPx,
+}: {
+	width: number
+	zoom: number
+	seconds: number
+	snapPx: number | null
+}) {
 	const step = rulerStep(zoom)
 	const first = -Math.floor(PAST_PX / zoom / step) * step
 	const last = seconds + END_PX / zoom
@@ -480,28 +557,37 @@ function Ruler({ width, zoom, seconds }: { width: number; zoom: number; seconds:
 					</div>
 				))}
 				<Playhead />
+				<SnapLine snapPx={snapPx} />
 			</div>
 		</div>
 	)
 }
 
-/** The last row: add an empty track, or drop a song on it for a track of its own. */
+/**
+ * The last row: add an empty track, or drop a song on it for a track of its
+ * own, starting where it was dropped.
+ */
 function NewTrackRow({
 	width,
 	full,
 	dragActive,
 	busy,
-	onDrop,
 	onAdd,
+	onDragAt,
+	onDrop,
+	ghost,
+	snapPx,
 }: {
 	width: number
 	full: boolean
 	dragActive: boolean
 	busy: boolean
-	onDrop: () => void
 	onAdd: () => void
+	onDragAt?: (clientX: number, timeline: HTMLElement) => void
+	onDrop?: () => void
+	ghost?: Ghost | null
+	snapPx?: number | null
 }) {
-	const [over, setOver] = useState(false)
 	const droppable = dragActive && !full
 	return (
 		<div className="flex">
@@ -518,32 +604,36 @@ function NewTrackRow({
 				</Button>
 			</div>
 			<div
-				className={cn(
-					"m-2 flex h-12 shrink-0 items-center rounded-md border border-dashed px-3 text-xs text-zinc-500 transition-colors",
-					droppable ? "border-indigo-400/60 text-indigo-300" : "border-white/10",
-					over && "bg-indigo-500/15",
-				)}
-				style={{ width: Math.max(0, width - 16) }}
+				data-lane-timeline
+				className="relative h-16 shrink-0 overflow-hidden"
+				style={{ width }}
 				onDragOver={event => {
-					if (!droppable) return
+					if (!droppable || !onDragAt) return
 					event.preventDefault()
-					setOver(true)
+					onDragAt(event.clientX, event.currentTarget)
 				}}
-				onDragLeave={() => setOver(false)}
 				onDrop={event => {
-					if (!droppable) return
+					if (!droppable || !onDrop) return
 					event.preventDefault()
-					setOver(false)
 					onDrop()
 				}}
 			>
-				<span className="sticky left-64">
-					{dragActive
-						? full
-							? "The mix has all the tracks it can"
-							: "Drop here for a new track"
-						: "Drag a song here to give it a track of its own"}
-				</span>
+				<div
+					className={cn(
+						"absolute inset-2 flex items-center rounded-md border border-dashed px-3 text-xs text-zinc-500 transition-colors",
+						droppable ? "border-indigo-400/60 text-indigo-300" : "border-white/10",
+					)}
+				>
+					<span className="sticky left-64">
+						{dragActive
+							? full
+								? "The mix has all the tracks it can"
+								: "Drop here for a new track, starting where you let go"
+							: "Drag a song here to give it a track of its own"}
+					</span>
+				</div>
+				{droppable && ghost && <GhostClip ghost={ghost} />}
+				<SnapLine snapPx={snapPx} />
 			</div>
 		</div>
 	)
@@ -663,4 +753,19 @@ function Toolbar({
 			</div>
 		</div>
 	)
+}
+
+/** The songs drawn on a lane's timeline, the one being dragged left out. */
+function spansIn(timeline: HTMLElement): Span[] {
+	const origin = timeline.getBoundingClientRect().left
+	return [...timeline.querySelectorAll<HTMLElement>("[data-clip]")]
+		.filter(clip => !clip.dataset.dragging)
+		.map(clip => {
+			const rect = clip.getBoundingClientRect()
+			return {
+				left: rect.left - origin,
+				right: rect.right - origin,
+				kind: clip.dataset.clip === "queued" ? "queued" : "fixed",
+			}
+		})
 }

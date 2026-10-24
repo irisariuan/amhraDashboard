@@ -7,29 +7,40 @@ import { PAST_PX } from "./timeline"
 /** Each lane's height, header and timeline alike, so the rows line up. */
 export const LANE_CLASS = "h-28"
 
+/** Where a dragged song would land on a lane, in pixels from the lanes' left edge. */
+export interface Ghost {
+	left: number
+	width: number
+}
+
 /**
  * One row of the editor: its controls on the left, kept in view while the
  * timeline scrolls, and its songs sliding past the playhead on the right.
- * Dropping a song anywhere on the row's empty timeline puts it at the end.
+ * While a song is dragged over the timeline, the row reports where the
+ * pointer is and shows where the song would land.
  */
 export function LaneRow({
 	header,
 	width,
 	offsetPx,
-	dragActive,
-	onDropEnd,
+	onDragAt,
+	onDrop,
+	ghost,
+	snapPx,
 	children,
 }: {
 	header: React.ReactNode
 	width: number
 	/** Where the row's first song starts, from the timeline's left edge */
 	offsetPx: number
-	dragActive: boolean
-	onDropEnd?: () => void
+	/** A drag is over the timeline at `clientX`; absent where nothing can be dropped */
+	onDragAt?: (clientX: number, timeline: HTMLElement) => void
+	onDrop?: () => void
+	ghost?: Ghost | null
+	/** An edge the dragged song is snapped to, drawn across every lane */
+	snapPx?: number | null
 	children: React.ReactNode
 }) {
-	const [over, setOver] = useState(false)
-	const droppable = dragActive && Boolean(onDropEnd)
 	return (
 		<div className="flex border-b border-white/5">
 			<div
@@ -41,27 +52,51 @@ export function LaneRow({
 				{header}
 			</div>
 			<div
-				className={cn("relative shrink-0 overflow-hidden", LANE_CLASS, over && "bg-white/5")}
+				data-lane-timeline
+				className={cn("relative shrink-0 overflow-hidden", LANE_CLASS)}
 				style={{ width }}
 				onDragOver={event => {
-					if (!droppable) return
+					if (!onDragAt) return
 					event.preventDefault()
-					setOver(true)
+					onDragAt(event.clientX, event.currentTarget)
 				}}
-				onDragLeave={() => setOver(false)}
 				onDrop={event => {
-					if (!droppable) return
+					if (!onDrop) return
 					event.preventDefault()
-					setOver(false)
-					onDropEnd?.()
+					onDrop()
 				}}
 			>
 				<div className="absolute inset-y-0 flex items-stretch" style={{ left: offsetPx }}>
 					{children}
 				</div>
+				{ghost && <GhostClip ghost={ghost} />}
 				<Playhead />
+				<SnapLine snapPx={snapPx} />
 			</div>
 		</div>
+	)
+}
+
+/** Where the dragged song would land. */
+export function GhostClip({ ghost }: { ghost: Ghost }) {
+	return (
+		<div
+			className="pointer-events-none absolute inset-y-2 z-10 rounded-md border-2 border-dashed border-white/70 bg-white/10"
+			style={{ left: ghost.left, width: ghost.width }}
+			aria-hidden
+		/>
+	)
+}
+
+/** The edge a dragged song is snapped to. */
+export function SnapLine({ snapPx }: { snapPx?: number | null }) {
+	if (snapPx === null || snapPx === undefined) return null
+	return (
+		<div
+			className="pointer-events-none absolute inset-y-0 z-20 w-px bg-amber-300"
+			style={{ left: snapPx }}
+			aria-hidden
+		/>
 	)
 }
 

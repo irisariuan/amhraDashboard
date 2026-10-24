@@ -1,33 +1,35 @@
 "use client"
 import { Cross2Icon } from "@radix-ui/react-icons"
-import { useState } from "react"
 import { useVideoDetails } from "@/hooks/use-video-details"
 import { formatClock } from "@/lib/format"
 import { cn } from "@/lib/utils"
 import { PAST_PX, songSeconds } from "./timeline"
 
-/** What a drag carries: where the song was, and which song it was. */
+/** What a drag carries: where the song was, which song, and where it was held. */
 export interface DragSong {
 	track: string | null
 	index: number
 	url: string
+	/** How far into the clip it was picked up, so it lands under the pointer */
+	grabPx: number
+	widthPx: number
 }
 
-/** A queued song's drag-and-drop wiring; absent on what cannot move. */
+/** A queued song's drag wiring; absent on what cannot move. */
 export interface ClipDrag {
-	payload: DragSong
+	track: string | null
+	index: number
 	onStart: (song: DragSong) => void
 	onEnd: () => void
-	/** Something is being dragged over this clip: drop it in front. */
-	onDropBefore?: () => void
-	/** Whether a drag is in progress anywhere, so drop targets light up. */
-	active: boolean
 }
 
 /**
  * One song on a lane, as wide as it is long. A playing song shades the part
- * already played; a queued one can be dragged elsewhere, and takes a dropped
- * song in front of itself.
+ * already played; a queued one can be dragged elsewhere.
+ *
+ * The editor snaps and places drops by reading the lanes as laid out, so each
+ * clip says what it is: `data-clip` is "fixed" for the song playing or
+ * loading and "queued" for one that can still move.
  */
 export function Clip({
 	title,
@@ -37,6 +39,7 @@ export function Clip({
 	colour,
 	playedMs,
 	loading = false,
+	dragging = false,
 	drag,
 	onRemove,
 }: {
@@ -48,13 +51,13 @@ export function Clip({
 	/** How much of it has played, for the song playing now */
 	playedMs?: number
 	loading?: boolean
+	/** It is the one being dragged, and is left out of snapping and placing */
+	dragging?: boolean
 	drag?: ClipDrag
 	onRemove?: () => void
 }) {
-	const [over, setOver] = useState(false)
 	const seconds = songSeconds(durationMs)
 	const width = Math.max(seconds * zoom, 6)
-	const dropTarget = Boolean(drag?.active && drag.onDropBefore)
 	// A playing song starts left of the playhead, and close up its start is
 	// out of view: the label moves along to stay on the part that is shown.
 	const labelInset =
@@ -64,29 +67,24 @@ export function Clip({
 
 	return (
 		<div
+			data-clip={drag ? "queued" : "fixed"}
+			data-dragging={dragging || undefined}
 			draggable={Boolean(drag)}
 			onDragStart={event => {
 				if (!drag) return
+				const rect = event.currentTarget.getBoundingClientRect()
 				event.dataTransfer.effectAllowed = "move"
 				// Some browsers will not start a drag without data
 				event.dataTransfer.setData("text/uri-list", url)
-				drag.onStart(drag.payload)
+				drag.onStart({
+					track: drag.track,
+					index: drag.index,
+					url,
+					grabPx: event.clientX - rect.left,
+					widthPx: rect.width,
+				})
 			}}
 			onDragEnd={() => drag?.onEnd()}
-			onDragOver={event => {
-				if (!dropTarget) return
-				event.preventDefault()
-				event.stopPropagation()
-				setOver(true)
-			}}
-			onDragLeave={() => setOver(false)}
-			onDrop={event => {
-				if (!dropTarget) return
-				event.preventDefault()
-				event.stopPropagation()
-				setOver(false)
-				drag?.onDropBefore?.()
-			}}
 			style={{ width }}
 			title={`${title} · ${durationMs ? formatClock(durationMs / 1000) : "length unknown"}`}
 			className={cn(
@@ -95,7 +93,7 @@ export function Clip({
 				!durationMs && "border-dashed",
 				drag && "cursor-grab active:cursor-grabbing",
 				loading && "animate-pulse",
-				over && "ring-2 ring-white/80",
+				dragging && "opacity-40",
 			)}
 		>
 			{playedMs !== undefined && (
@@ -104,9 +102,6 @@ export function Clip({
 					style={{ width: (playedMs / 1000) * zoom }}
 					aria-hidden
 				/>
-			)}
-			{over && (
-				<div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-white" aria-hidden />
 			)}
 			<a
 				href={url}

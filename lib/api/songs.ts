@@ -109,6 +109,11 @@ export async function addMixSong(
 export interface MixPlace {
 	track: string | null
 	index?: number
+	/**
+	 * As a destination on a mix track: the silence before it, after whatever
+	 * comes before it — where on the timeline it was dropped.
+	 */
+	gapMs?: number
 }
 
 /**
@@ -119,7 +124,7 @@ export interface MixPlace {
  */
 export async function moveMixSong(
 	guildId: string,
-	from: Required<MixPlace>,
+	from: { track: string | null; index: number },
 	to: MixPlace,
 	url: string,
 ): Promise<{ ok: true } | { error: MixError }> {

@@ -78,7 +78,6 @@ export function trackClock(track: MixTrack, elapsedMs: number) {
 /** Seconds a mix track has ahead of it, for sizing the editor. */
 export function trackSeconds(track: MixTrack, elapsedMs: number) {
 	const { positionMs, dueInMs } = trackClock(track, elapsedMs)
-	const gap = track.gapMs / 1000
 	let seconds = 0
 	if (track.playing) seconds += songSeconds(track.playing.durationMs) - positionMs / 1000
 	else if (track.loading) seconds += songSeconds(track.loading.durationMs)
@@ -86,8 +85,66 @@ export function trackSeconds(track: MixTrack, elapsedMs: number) {
 	track.queue.forEach((song, index) => {
 		// The wait before the first queued song is already counted when it is
 		// waiting out the gap rather than playing
-		if (index > 0 || track.playing || track.loading) seconds += gap
+		if (index > 0 || track.playing || track.loading) seconds += gapBefore(track, index) / 1000
 		seconds += songSeconds(song.durationMs)
 	})
 	return Math.max(0, seconds)
+}
+
+/** The silence before a queued song: its own, where it was placed, or the track's. */
+export function gapBefore(track: MixTrack, index: number) {
+	return track.queue[index]?.gapBeforeMs ?? track.gapMs
+}
+
+/** How close, in pixels, a dragged song's start or end has to come to an edge to snap to it. */
+export const SNAP_PX = 10
+
+/**
+ * Snap a dragged song so its start, or failing that its end, lands on the
+ * nearest edge — the start or end of a song on any lane, or now — when one
+ * is within `SNAP_PX`. Positions are pixels from the lanes' left edge.
+ */
+export function snap(start: number, width: number, edges: readonly number[]) {
+	let best: { start: number; edge: number; distance: number } | null = null
+	for (const edge of edges) {
+		for (const candidate of [edge, edge - width]) {
+			const distance = Math.abs(candidate - start)
+			if (distance <= SNAP_PX && (!best || distance < best.distance)) {
+				best = { start: candidate, edge, distance }
+			}
+		}
+	}
+	return best ? { start: best.start, edge: best.edge } : { start, edge: null }
+}
+
+/** A song as laid out on a lane, in pixels from the lanes' left edge. */
+export interface Span {
+	left: number
+	right: number
+	/** "fixed" for the song playing or loading, "queued" for one that can move */
+	kind: "fixed" | "queued"
+}
+
+/**
+ * Where a song dropped to start at `start` lands on a lane: its index among
+ * the lane's queued songs (the dragged one left out), where it will actually
+ * start, and the silence before it. It can start no earlier than the song
+ * before it ends; on a lane with nothing before it, no earlier than now. The
+ * guild's queue plays back to back, so there it has no gap of its own.
+ */
+export function place(
+	start: number,
+	spans: readonly Span[],
+	zoom: number,
+	{ gaps }: { gaps: boolean },
+): { index: number; left: number; gapMs?: number } {
+	const queued = spans.filter(span => span.kind === "queued").sort((a, b) => a.left - b.left)
+	const fixed = spans.filter(span => span.kind === "fixed").sort((a, b) => a.left - b.left)
+	// A start snapped onto a song's own start goes in front of it
+	const before = queued.filter(span => span.left < start)
+	const previous = before.at(-1) ?? fixed.at(-1)
+	const base = previous ? previous.right : PAST_PX
+	if (!gaps) return { index: before.length, left: base }
+	const left = Math.max(start, base)
+	return { index: before.length, left, gapMs: Math.round(((left - base) / zoom) * 1000) }
 }

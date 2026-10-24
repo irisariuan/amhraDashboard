@@ -70,6 +70,11 @@ export interface MixSong {
 	url: string
 	/** Null when the bot did not know the video's length */
 	durationMs: number | null
+	/**
+	 * Silence before it in place of the track's gap, set by where it was
+	 * dropped on the timeline. Null or absent: the track's gap.
+	 */
+	gapBeforeMs?: number | null
 }
 
 /** A lane of the mix: one song at a time, then the next after its gap. */
