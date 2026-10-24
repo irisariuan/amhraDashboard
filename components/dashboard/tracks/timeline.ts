@@ -16,7 +16,7 @@ export const DEFAULT_ZOOM = 2
 /** How wide a song whose length the bot did not know is drawn. */
 export const UNKNOWN_SECONDS = 180
 
-/** Lane colours, one per track in order, so a track keeps its colour as others go. */
+/** Lane colours for queues 2 and up, by number, so a queue keeps its colour as others go. */
 export const LANE_COLOURS = [
 	"bg-sky-500/20 border-sky-400/50 text-sky-100",
 	"bg-emerald-500/20 border-emerald-400/50 text-emerald-100",
@@ -27,6 +27,7 @@ export const LANE_COLOURS = [
 	"bg-orange-500/20 border-orange-400/50 text-orange-100",
 	"bg-fuchsia-500/20 border-fuchsia-400/50 text-fuchsia-100",
 ] as const
+/** Queue 1's, set apart from the queues mixed in over it. */
 export const QUEUE_COLOUR = "bg-indigo-500/25 border-indigo-400/60 text-indigo-100"
 
 export const LANE_DOTS = [
@@ -39,6 +40,17 @@ export const LANE_DOTS = [
 	"bg-orange-400",
 	"bg-fuchsia-400",
 ] as const
+
+/** A queue's clip colour and dot, by its id. */
+export function laneColour(id: string) {
+	const n = Number(id)
+	return n === 1 ? QUEUE_COLOUR : LANE_COLOURS[(n - 2 + LANE_COLOURS.length) % LANE_COLOURS.length]
+}
+
+export function laneDot(id: string) {
+	const n = Number(id)
+	return n === 1 ? "bg-indigo-400" : LANE_DOTS[(n - 2 + LANE_DOTS.length) % LANE_DOTS.length]
+}
 
 /** Ruler steps, in seconds; the first that leaves labels room to breathe is used. */
 const STEPS = [5, 10, 15, 30, 60, 120, 300, 600, 1200]
@@ -141,21 +153,18 @@ export interface Span {
  * Where a song dropped to start at `start` lands on a lane: its index among
  * the lane's queued songs (the dragged one left out), where it will actually
  * start, and the silence before it. It can start no earlier than the song
- * before it ends; on a lane with nothing before it, no earlier than now. The
- * guild's queue plays back to back, so there it has no gap of its own.
+ * before it ends; on a lane with nothing before it, no earlier than now.
  */
 export function place(
 	start: number,
 	spans: readonly Span[],
 	zoom: number,
-	{ gaps }: { gaps: boolean },
-): { index: number; left: number; gapMs?: number } {
+): { index: number; left: number; gapMs: number } {
 	const queued = spans.filter(span => span.kind === "queued").sort((a, b) => a.left - b.left)
 	const fixed = spans.filter(span => span.kind === "fixed").sort((a, b) => a.left - b.left)
 	// A start snapped onto a song's own start goes in front of it
 	const before = queued.filter(span => span.left < start)
 	const previous = before.at(-1) ?? fixed.at(-1)
 	const base = previous ? previous.right : PAST_PX
-	if (!gaps) return { index: before.length, left: base }
 	return { index: before.length, ...leadIn(start, base, zoom) }
 }

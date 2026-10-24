@@ -5,6 +5,13 @@ import { toast } from "sonner"
 import { mutate } from "swr"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select"
 import { useNow } from "@/hooks/use-now"
 import { addSchedule, respondToSchedule, type ScheduleError } from "@/lib/api/schedule"
 import { songKey } from "@/lib/api/songs"
@@ -42,12 +49,18 @@ export function Schedules({
 	guildId,
 	schedules,
 	isPlaying,
+	queues,
 }: {
 	guildId: string
 	schedules: ScheduledPlay[]
 	isPlaying: boolean
+	/** The guild's queues by id; the choice is offered once there is more than one */
+	queues: string[]
 }) {
 	const [url, setUrl] = useState("")
+	const [chosenQueue, setQueue] = useState("1")
+	// A queue that has gone falls back to queue 1
+	const queue = queues.includes(chosenQueue) ? chosenQueue : "1"
 	const [time, setTime] = useState("")
 	const [busy, setBusy] = useState(false)
 	const now = useNow(schedules.length > 0)
@@ -66,7 +79,7 @@ export function Schedules({
 		}
 		setBusy(true)
 		try {
-			const result = await addSchedule(guildId, url.trim(), at)
+			const result = await addSchedule(guildId, url.trim(), at, Number(queue))
 			if ("error" in result) {
 				toast(ERROR_TEXT[result.error])
 				return
@@ -104,6 +117,20 @@ export function Schedules({
 						onChange={event => setTime(event.target.value)}
 						disabled={busy}
 					/>
+					{queues.length > 1 && (
+						<Select value={queue} onValueChange={setQueue} disabled={busy}>
+							<SelectTrigger className="w-28 border-white/10 bg-white/5" aria-label="Queue to cut in on">
+								<SelectValue />
+							</SelectTrigger>
+							<SelectContent>
+								{queues.map(id => (
+									<SelectItem key={id} value={id}>
+										Queue {id}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+					)}
 					<Button type="submit" disabled={busy || !validUrl}>
 						<ClockIcon className="mr-1.5" />
 						Schedule
@@ -147,6 +174,11 @@ export function Schedules({
 									{entry.premiere && (
 										<span className="text-[10px] uppercase tracking-wide text-indigo-400">
 											premiere
+										</span>
+									)}
+									{entry.queue !== undefined && entry.queue !== 1 && (
+										<span className="text-[10px] uppercase tracking-wide text-zinc-400">
+											queue {entry.queue}
 										</span>
 									)}
 								</span>

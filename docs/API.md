@@ -60,48 +60,50 @@ suggestions) and a Suggestions panel (`/api/suggestions/:guildId`).
 - **Crossfade:** the `setCrossfade` edit (`crossfadeMs` ≤ 15000, `skipFadeMs` ≤ 5000), shown
   disabled when the player reports `canCrossfade: false` (the bot is not on its Rust voice path).
 - **Scheduled plays:** a Scheduled tab backed by `POST /api/schedule/add`
-  (`{ guildId, url, at? }`, `at` in epoch ms) and `POST /api/schedule/respond`
+  (`{ guildId, url, at?, queue? }`, `at` in epoch ms, `queue` the queue to cut in on, 1 when
+  left out; `501` for another queue without the Rust voice path) and `POST /api/schedule/respond`
   (`{ guildId, id, action: "cancel" | "queue" }`). Pending entries arrive as `schedules` on
-  `/api/song/get/:guildId`. At its time a scheduled video interrupts whatever is playing, and the
+  `/api/song/get/:guildId`, each with its `queue`. At its time a scheduled video interrupts whatever is playing, and the
   interrupted track goes back to the head of the queue with a `seek` so it resumes after. Ten
   seconds before, the bot posts a warning in Discord and the entry reports `warning: true`;
   the dashboard shows a banner with the same "Don't cut in" / "Play next instead" choices.
   Leaving `at` out schedules an upcoming premiere for its start (`422` if the video is not one),
   `409` means the bot is not in voice, and adding a premiere through `addSong` answers `202`
   when the bot scheduled it instead of queueing. The bot leaving voice clears its schedules.
-- **Tracks (the mix):** a Tracks view edits the mix like a track editor. The guild's queue is
-  the top lane; under it, up to 8 mix tracks play on top of it, each one song at a time with its
-  own volume, its own queue, a gap of silence between songs and an optional loop (a song that
-  ends goes to the back of the track's queue). Tracks run independently of the queue: they play
-  on when it runs dry, and pausing the player pauses them too. `/api/song/get/:guildId` reports
-  `canMix` (false when the bot is not on its Rust voice path) and `mix: { mainVolume, maxTracks,
-  tracks: [{ id, volume, gapMs, loop, playing, loading, queue, dueInMs }] }`. Songs are
-  `{ title, url, durationMs, gapBeforeMs }` (`durationMs` null when unknown; `gapBeforeMs` is
-  the silence before the song in place of the track's gap, null for the track's); `playing` adds `positionMs`;
-  `loading` is a song being downloaded to play next; `dueInMs` is how long until the next song
-  while the track waits out its gap. Times are as of the reply and hold still while `paused`.
-  Volumes are linear like `volume`. Edits, named by track `id`:
-  `addMixTrack` (`{ volume?, gapMs?, loop? }`), `removeMixTrack` (`{ track }`), `setMixTrack`
-  (`{ track, volume?, gapMs?, loop? }`), `skipMixTrack` (`{ track }`, the next song now, cutting
-  any gap short), `swapMixTrack` (`{ track }`), `addMixSong` (`{ url, track?, index? }`, on a new
-  track with the given settings when `track` is left out), `removeMixSong` (`{ track, index, url? }`),
-  `moveMixSong` and `setMainVolume` (`{ volume }`, the queue song's own level). A track's `gapMs` is at
-  most 600000 (10 minutes).
+- **Tracks (the queues):** a Tracks view edits every queue the guild has like a track editor,
+  one lane each, all alike. Queue 1 is the one `/play` fills; up to 8 more (2 to 9) play over it
+  at once, each a full player: one song at a time with its own volume, its own songs, a gap of
+  silence between songs, loop and pause. `/api/song/get/:guildId` reports `canMix` (false when
+  the bot is not on its Rust voice path, which is the only one that plays more than queue 1) and
+  `queues: [{ id, volume, gapMs, loop, paused, playing, loading, queue, dueInMs }]`, queue 1
+  first. `id` is the queue's number as a string. `volume` is the queue's own level, linear, under
+  the bot's `volume`; for queue 1 it is the same as `mix.mainVolume`. Songs are
+  `{ title, url, durationMs, gapBeforeMs }`: `title` is null for a song queued by URL alone, as
+  `/play` queues them, whose title and length the dashboard looks up; `durationMs` null when
+  unknown; `gapBeforeMs` the silence before the song in place of the queue's gap, null for the
+  queue's. `playing` adds `positionMs`; `dueInMs` is how long until the next song while the queue
+  waits out a gap. Times are as of the reply and hold still while that queue is `paused`. The
+  older `mix: { mainVolume, maxTracks, tracks }` lists queues 2 and up in the same shape, and
+  `maxTracks` is how many of those there may be. Edits, named by queue `id`, `"1"` included:
+  `addMixTrack` (`{ volume?, gapMs?, loop? }`, a new queue under the lowest free number),
+  `removeMixTrack` (`{ track }`; `409` for queue 1, which stays), `setMixTrack`
+  (`{ track, volume?, gapMs?, loop?, paused? }`), `skipMixTrack` (`{ track }`, the next song now,
+  cutting any gap short), `addMixSong` (`{ url, track?, index? }`, on a new queue with the given
+  settings when `track` is left out), `removeMixSong` (`{ track, index, url? }`), `moveMixSong`
+  and `setMainVolume` (`{ volume }`, queue 1's own level). A queue's `gapMs` is at most 600000
+  (10 minutes).
   `moveMixSong` (`{ from: { track, index }, to: { track, index? }, url? }`) drags a queued song
-  anywhere: `track` is a mix track's id or `null` for the guild's queue, and as a destination
-  `"new"` makes a track for it; `index` is counted after the song has left, and left out means
-  the end. On a mix track, `to.gapMs` (at most 21600000, 6 hours) sets the song's `gapBeforeMs`: where the editor dropped
-  it, as silence after the song before it, or after now when it lands first on a track with
-  nothing playing. The editor snaps a dragged song's start or end to the start or end of any
-  song on any lane. `url` is what was at `from`, guarding against a reorder landing at the same moment.
-  The queue's sideways drag is a move to `"new"`.
-  They answer `501` when mixing is unavailable, `409` when the bot is not in voice, `422` when the
-  mix has as many tracks as it can or a track's queue is full, and `404` for a track, song or
-  video that is gone. `swapMixTrack` trades the track's playing song with the queue's:
-  inaudible, each keeps its place and volume, and afterwards skip, seek, lyrics and now playing
-  follow the swapped-in song while the old queue song plays on in the track (`409` when either
-  is not playing, `502` when the bot could not make the exchange, such as mid-crossfade).
-  Stopping the player or the bot leaving voice clears every track.
+  anywhere: `track` is a queue's id (older dashboards send `null` for queue 1), and as a
+  destination `"new"` makes a queue for it; `index` is counted after the song has left, and left
+  out means the end. `to.gapMs` (at most 21600000, 6 hours) sets the song's `gapBeforeMs`: where
+  the editor dropped it, as silence after the song before it, or after now when it lands first
+  on a queue with nothing playing. The editor snaps a dragged song's start or end to the start
+  or end of any song on any lane. `url` is what was at `from`, guarding against a reorder landing
+  at the same moment. The queue list's sideways drag is a move from `"1"` to `"new"`.
+  They answer `501` when more than one queue is unavailable, `409` when the bot is not in voice,
+  `422` when the bot has as many queues as it can or a queue past the first is full (100 songs),
+  and `404` for a queue, song or video that is gone. Stopping the player or the bot leaving voice
+  clears every queue past the first.
 - **Administration:** the settings form is generated from `/api/admin/settings/schema`, so new
   bot settings appear without a dashboard release.
 

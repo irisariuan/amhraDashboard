@@ -61,6 +61,7 @@ export function Panels({
 							guildId={guildId}
 							schedules={schedules}
 							isPlaying={data.isPlaying}
+							queues={data.queues?.map(queue => queue.id) ?? []}
 						/>
 					</TabsContent>
 					<TabsContent

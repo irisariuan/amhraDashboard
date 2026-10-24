@@ -11,10 +11,17 @@ export async function addSchedule(
 	guildId: string,
 	url: string,
 	at?: number,
+	/** The queue to cut in on; queue 1 when left out */
+	queue?: number,
 ): Promise<{ entry: ScheduledPlay } | { error: ScheduleError }> {
 	const res = await apiFetch("/api/schedule/add", {
 		method: "POST",
-		body: { guildId, url, ...(at !== undefined ? { at } : {}) },
+		body: {
+			guildId,
+			url,
+			...(at !== undefined ? { at } : {}),
+			...(queue !== undefined && queue !== 1 ? { queue } : {}),
+		},
 	})
 	if (res.ok) return { entry: await res.json() }
 	switch (res.status) {
