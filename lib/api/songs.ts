@@ -16,7 +16,6 @@ type EditDetailMap = {
 	[SongEditType.RemoveMixTrack]: { track: string }
 	[SongEditType.SetMixTrack]: TrackSettings & { track: string }
 	[SongEditType.SkipMixTrack]: { track: string }
-	[SongEditType.SwapMixTrack]: { track: string }
 	[SongEditType.RemoveMixSong]: { track: string; index: number; url?: string }
 }
 
@@ -25,6 +24,8 @@ export interface TrackSettings {
 	volume?: number
 	gapMs?: number
 	loop?: boolean
+	/** Hold or release just this queue; only for a queue already there */
+	paused?: boolean
 }
 
 type DetailAction = keyof EditDetailMap
@@ -71,9 +72,17 @@ export async function addSong(
 	return res.ok ? "queued" : "failed"
 }
 
-export type MixError = "not_native" | "not_connected" | "full" | "not_found" | "failed"
+export type MixError =
+	| "not_native"
+	| "not_connected"
+	| "full"
+	| "not_found"
+	| "rejected"
+	| "failed"
 
 const MIX_ERRORS: Record<number, MixError> = {
+	// The request itself was refused, such as a bot older than this dashboard
+	400: "rejected",
 	501: "not_native",
 	409: "not_connected",
 	422: "full",
@@ -102,12 +111,12 @@ export async function addMixSong(
 }
 
 /**
- * Where a song sits: a mix track's queue by id, or `null` for the guild's own
- * queue. As a destination, `"new"` is a track made for it, and a missing
- * `index` is the end.
+ * Where a song sits: a queue by its number, "1" for the guild's first. As a
+ * destination, `"new"` is a queue made for it, and a missing `index` is the
+ * end.
  */
 export interface MixPlace {
-	track: string | null
+	track: string
 	index?: number
 	/**
 	 * As a destination on a mix track: the silence before it, after whatever
@@ -124,7 +133,7 @@ export interface MixPlace {
  */
 export async function moveMixSong(
 	guildId: string,
-	from: { track: string | null; index: number },
+	from: { track: string; index: number },
 	to: MixPlace,
 	url: string,
 ): Promise<{ ok: true } | { error: MixError }> {

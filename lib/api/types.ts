@@ -23,6 +23,8 @@ export interface ScheduledPlay {
 	/** An upcoming premiere, timed to its start */
 	premiere: boolean
 	createdBy: string
+	/** The queue it cuts in on. Absent on older bots, which only have queue 1 */
+	queue?: number
 }
 
 export interface SongReply {
@@ -60,13 +62,19 @@ export interface SongReply {
 	canMix?: boolean
 	/** Tracks playing on top of the queue. Absent on a bot that predates mixing */
 	mix?: Mix
+	/**
+	 * Every queue, queue 1 first, each a lane of the editor in the same shape.
+	 * Absent on a bot from before queues were equal
+	 */
+	queues?: MixTrack[]
 	/** When this reply arrived, by this browser's clock; set by `getSong`, not the bot */
 	receivedAt?: number
 }
 
-/** A song on a mix track. See docs/API.md, "Mix". */
+/** A song on a queue's lane. See docs/API.md, "Mix". */
 export interface MixSong {
-	title: string
+	/** Null when the bot queued it without looking it up, as `/play` does */
+	title: string | null
 	url: string
 	/** Null when the bot did not know the video's length */
 	durationMs: number | null
@@ -77,12 +85,14 @@ export interface MixSong {
 	gapBeforeMs?: number | null
 }
 
-/** A lane of the mix: one song at a time, then the next after its gap. */
+/** A queue as a lane: one song at a time, then the next after its gap. */
 export interface MixTrack {
-	/** Stable while other tracks come and go; what the edits name it by */
+	/** The queue's number, as a string: "1" and up. What the edits name it by */
 	id: string
-	/** Linear, like the player's volume: 1 is 100% */
+	/** Linear, like the player's volume: 1 is 100%. The queue's own level, under the bot's */
 	volume: number
+	/** Paused on its own. Absent on older bots */
+	paused?: boolean
 	/** Silence between one song ending and the next starting */
 	gapMs: number
 	/** Songs that end go to the back of the track's queue */
@@ -144,7 +154,6 @@ export enum SongEditType {
 	RemoveMixTrack = "removeMixTrack",
 	SetMixTrack = "setMixTrack",
 	SkipMixTrack = "skipMixTrack",
-	SwapMixTrack = "swapMixTrack",
 	AddMixSong = "addMixSong",
 	RemoveMixSong = "removeMixSong",
 	MoveMixSong = "moveMixSong",
@@ -173,7 +182,6 @@ export const FormatSongEditType: Record<SongEditType, string> = {
 	[SongEditType.RemoveMixTrack]: "Removed Mix Track",
 	[SongEditType.SetMixTrack]: "Changed Mix Track",
 	[SongEditType.SkipMixTrack]: "Skipped On Mix Track",
-	[SongEditType.SwapMixTrack]: "Swapped Mix Track In",
 	[SongEditType.AddMixSong]: "Queued On Mix Track",
 	[SongEditType.RemoveMixSong]: "Removed Mix Track Song",
 	[SongEditType.MoveMixSong]: "Moved Song",

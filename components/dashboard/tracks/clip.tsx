@@ -7,7 +7,7 @@ import { PAST_PX, songSeconds } from "./timeline"
 
 /** What a drag carries: where the song was, which song, and where it was held. */
 export interface DragSong {
-	track: string | null
+	track: string
 	index: number
 	url: string
 	/** How far into the clip it was picked up, so it lands under the pointer */
@@ -17,7 +17,7 @@ export interface DragSong {
 
 /** A queued song's drag wiring; absent on what cannot move. */
 export interface ClipDrag {
-	track: string | null
+	track: string
 	index: number
 	onStart: (song: DragSong) => void
 	onEnd: () => void
@@ -137,7 +137,7 @@ export function Clip({
 	)
 }
 
-/** A song on the guild's queue, which the bot reports only by URL. */
+/** A song the bot reports only by URL, as `/play` queues them: its title and length are looked up. */
 export function QueueClip({
 	url,
 	...props
@@ -153,7 +153,7 @@ export function QueueClip({
 	)
 }
 
-/** Silence between two songs on a track, hatched so it reads as empty time. */
+/** Silence between two songs on a queue, hatched so it reads as empty time. */
 export function Gap({ ms, zoom }: { ms: number; zoom: number }) {
 	if (ms <= 0) return null
 	const width = (ms / 1000) * zoom
