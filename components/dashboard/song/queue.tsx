@@ -5,13 +5,13 @@ import { toast } from "sonner"
 import { mutate } from "swr"
 import { usePlayer } from "@/hooks/use-player"
 import { SongEditType, type QueueItem } from "@/lib/api/types"
-import { editSong, mixFromQueue, songKey, type AddLayerError } from "@/lib/api/songs"
+import { editSong, moveMixSong, songKey, type MixError } from "@/lib/api/songs"
 import { QueueEntry } from "./queue-item"
 
-const MIX_ERROR_TEXT: Record<AddLayerError, string> = {
+const MIX_ERROR_TEXT: Record<MixError, string> = {
 	not_native: "Mixing needs the bot's Rust voice engine (USE_RUST_VOICE), which is off",
 	not_connected: "The bot needs to be in a voice channel to mix",
-	full: "The mix is full — remove a song from the Mix tab first",
+	full: "The mix has all the tracks it can — remove one in Tracks first",
 	not_found: "That song is no longer in the queue",
 	failed: "Couldn't mix that song in",
 }
@@ -19,7 +19,7 @@ const MIX_ERROR_TEXT: Record<AddLayerError, string> = {
 /**
  * Drag up or down to reorder, pushed to the bot on release. Where the bot can
  * mix, dragging sideways instead takes a song out of the queue and starts it
- * on top of whatever is playing.
+ * on a mix track of its own, on top of whatever is playing.
  */
 export function Queue({
 	initQueue,
@@ -47,9 +47,9 @@ export function Queue({
 		setQueue(rest)
 		setSyncedQueue(rest)
 		toast("Mixing in…")
-		const result = await mixFromQueue(guildId, index, item.url)
+		const result = await moveMixSong(guildId, { track: null, index }, { track: "new" }, item.url)
 		// Either way the next poll is the truth: without it, or back in place
-		toast("error" in result ? MIX_ERROR_TEXT[result.error] : "Mixed in — see the Mix tab")
+		toast("error" in result ? MIX_ERROR_TEXT[result.error] : "Mixed in on a new track — see Tracks")
 		mutate(songKey(guildId))
 	}
 

@@ -11,17 +11,27 @@ type EditDetailMap = {
 	[SongEditType.SetQueue]: { queue: QueueItem[] }
 	[SongEditType.Loop]: { loop: boolean }
 	[SongEditType.AutoSuggest]: { autoSuggest: boolean }
-	[SongEditType.RemoveLayer]: { id: string }
-	[SongEditType.SetLayerVolume]: { id: string; volume: number }
 	[SongEditType.SetMainVolume]: { volume: number }
-	[SongEditType.SwapLayer]: { id: string }
+	[SongEditType.AddMixTrack]: TrackSettings
+	[SongEditType.RemoveMixTrack]: { track: string }
+	[SongEditType.SetMixTrack]: TrackSettings & { track: string }
+	[SongEditType.SkipMixTrack]: { track: string }
+	[SongEditType.SwapMixTrack]: { track: string }
+	[SongEditType.RemoveMixSong]: { track: string; index: number; url?: string }
+}
+
+/** Volume is linear, like the player's; what is left out stays as it is. */
+export interface TrackSettings {
+	volume?: number
+	gapMs?: number
+	loop?: boolean
 }
 
 type DetailAction = keyof EditDetailMap
-/** Actions that carry no detail payload. The mix-in actions have their own helpers below. */
+/** Actions that carry no detail payload. The slow mix actions have their own helpers below. */
 export type PlainSongAction = Exclude<
 	SongEditType,
-	DetailAction | SongEditType.AddLayer | SongEditType.MixFromQueue
+	DetailAction | SongEditType.AddMixSong | SongEditType.MoveMixSong
 >
 
 export async function editSong<A extends DetailAction>(
@@ -61,9 +71,9 @@ export async function addSong(
 	return res.ok ? "queued" : "failed"
 }
 
-export type AddLayerError = "not_native" | "not_connected" | "full" | "not_found" | "failed"
+export type MixError = "not_native" | "not_connected" | "full" | "not_found" | "failed"
 
-const ADD_LAYER_ERRORS: Record<number, AddLayerError> = {
+const MIX_ERRORS: Record<number, MixError> = {
 	501: "not_native",
 	409: "not_connected",
 	422: "full",
@@ -71,44 +81,63 @@ const ADD_LAYER_ERRORS: Record<number, AddLayerError> = {
 }
 
 /**
- * Mix a video in over the queue at `volume` (linear, 1 is 100%). Slow: the bot
- * starts the download before it answers.
+ * Queue a video on a mix track, or on a new track when `track` is left out.
+ * Slow: the bot looks the video up before it answers.
  */
-export async function addLayer(
+export async function addMixSong(
 	guildId: string,
 	url: string,
-	volume = 1,
-): Promise<{ ok: true } | { error: AddLayerError }> {
+	track?: string,
+): Promise<{ ok: true } | { error: MixError }> {
 	const res = await apiFetch("/api/song/edit", {
 		method: "POST",
-		body: { action: SongEditType.AddLayer, guildId, detail: { url, volume } },
+		body: {
+			action: SongEditType.AddMixSong,
+			guildId,
+			detail: { url, ...(track ? { track } : {}) },
+		},
 	})
 	if (res.ok) return { ok: true }
-	return { error: ADD_LAYER_ERRORS[res.status] ?? "failed" }
+	return { error: MIX_ERRORS[res.status] ?? "failed" }
 }
 
 /**
- * Take a queued song out of the queue and mix it in now. `url` is what was
- * at `index` when the drag started, so a reorder landing at the same moment
- * cannot mix in the wrong song. Slow, like `addLayer`.
+ * Where a song sits: a mix track's queue by id, or `null` for the guild's own
+ * queue. As a destination, `"new"` is a track made for it, and a missing
+ * `index` is the end.
  */
-export async function mixFromQueue(
+export interface MixPlace {
+	track: string | null
+	index?: number
+}
+
+/**
+ * Move a queued song along its lane or onto another, the guild's queue
+ * included. `url` is what was at `from` when the drag started, so a reorder
+ * landing at the same moment cannot move the wrong song. Slow when it moves
+ * a song off the queue, which the bot looks up first.
+ */
+export async function moveMixSong(
 	guildId: string,
-	index: number,
+	from: Required<MixPlace>,
+	to: MixPlace,
 	url: string,
-): Promise<{ ok: true } | { error: AddLayerError }> {
+): Promise<{ ok: true } | { error: MixError }> {
 	const res = await apiFetch("/api/song/edit", {
 		method: "POST",
-		body: { action: SongEditType.MixFromQueue, guildId, detail: { index, url } },
+		body: { action: SongEditType.MoveMixSong, guildId, detail: { from, to, url } },
 	})
 	if (res.ok) return { ok: true }
-	return { error: ADD_LAYER_ERRORS[res.status] ?? "failed" }
+	return { error: MIX_ERRORS[res.status] ?? "failed" }
 }
 
 export async function getSong(guildId: string): Promise<SongReply | null> {
 	const res = await apiFetch(`/api/song/get/${guildId}`)
 	if (!res.ok) return null
-	return res.json()
+	const reply: SongReply = await res.json()
+	// Times in the reply are as of when the bot made it; this is what they
+	// are counted on from.
+	return { ...reply, receivedAt: Date.now() }
 }
 
 export function songKey(guildId: string) {

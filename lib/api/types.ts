@@ -58,28 +58,48 @@ export interface SongReply {
 	schedules?: ScheduledPlay[]
 	/** Only the bot's Rust voice path can mix songs over the queue. Absent on older bots */
 	canMix?: boolean
-	/** Songs playing on top of the queue. Absent on a bot that predates mixing */
+	/** Tracks playing on top of the queue. Absent on a bot that predates mixing */
 	mix?: Mix
+	/** When this reply arrived, by this browser's clock; set by `getSong`, not the bot */
+	receivedAt?: number
 }
 
-/** A song mixed in over the queue. See docs/API.md, "Mix". */
-export interface MixLayer {
-	/** Stable while other layers come and go; what the edits name it by */
-	id: string
+/** A song on a mix track. See docs/API.md, "Mix". */
+export interface MixSong {
 	title: string
 	url: string
+	/** Null when the bot did not know the video's length */
+	durationMs: number | null
+}
+
+/** A lane of the mix: one song at a time, then the next after its gap. */
+export interface MixTrack {
+	/** Stable while other tracks come and go; what the edits name it by */
+	id: string
 	/** Linear, like the player's volume: 1 is 100% */
 	volume: number
+	/** Silence between one song ending and the next starting */
+	gapMs: number
+	/** Songs that end go to the back of the track's queue */
+	loop: boolean
+	playing: (MixSong & { positionMs: number }) | null
+	/** Being downloaded to play next */
+	loading: MixSong | null
+	queue: MixSong[]
+	/** Until the next song starts, while the track waits out its gap */
+	dueInMs: number | null
 }
 
 export interface Mix {
 	/** The queue song's own volume within the mix, under the player's volume */
 	mainVolume: number
-	layers: MixLayer[]
+	/** The bot's cap on tracks at once. Absent, with `tracks`, on a bot from before tracks */
+	maxTracks?: number
+	tracks?: MixTrack[]
 }
 
-/** The bot's cap on songs mixed in at once */
-export const MAX_MIX_LAYERS = 8
+/** The bot's cap on tracks, for a bot that does not say */
+export const MAX_MIX_TRACKS = 8
 
 export interface Account {
 	id: string
@@ -114,12 +134,15 @@ export enum SongEditType {
 	Loop = "loop",
 	SkipSegment = "skipSegment",
 	AutoSuggest = "autoSuggest",
-	AddLayer = "addLayer",
-	RemoveLayer = "removeLayer",
-	SetLayerVolume = "setLayerVolume",
 	SetMainVolume = "setMainVolume",
-	SwapLayer = "swapLayer",
-	MixFromQueue = "mixFromQueue",
+	AddMixTrack = "addMixTrack",
+	RemoveMixTrack = "removeMixTrack",
+	SetMixTrack = "setMixTrack",
+	SkipMixTrack = "skipMixTrack",
+	SwapMixTrack = "swapMixTrack",
+	AddMixSong = "addMixSong",
+	RemoveMixSong = "removeMixSong",
+	MoveMixSong = "moveMixSong",
 }
 
 export const FormatSongEditType: Record<SongEditType, string> = {
@@ -140,12 +163,15 @@ export const FormatSongEditType: Record<SongEditType, string> = {
 	[SongEditType.Loop]: "Loop Toggled",
 	[SongEditType.SkipSegment]: "Skipped Non-Music",
 	[SongEditType.AutoSuggest]: "Radio Toggled",
-	[SongEditType.AddLayer]: "Mixed In Song",
-	[SongEditType.RemoveLayer]: "Removed Mixed Song",
-	[SongEditType.SetLayerVolume]: "Set Mixed Song Volume",
 	[SongEditType.SetMainVolume]: "Set Queue Song Mix Volume",
-	[SongEditType.SwapLayer]: "Swapped Mixed Song In",
-	[SongEditType.MixFromQueue]: "Mixed In Queued Song",
+	[SongEditType.AddMixTrack]: "Added Mix Track",
+	[SongEditType.RemoveMixTrack]: "Removed Mix Track",
+	[SongEditType.SetMixTrack]: "Changed Mix Track",
+	[SongEditType.SkipMixTrack]: "Skipped On Mix Track",
+	[SongEditType.SwapMixTrack]: "Swapped Mix Track In",
+	[SongEditType.AddMixSong]: "Queued On Mix Track",
+	[SongEditType.RemoveMixSong]: "Removed Mix Track Song",
+	[SongEditType.MoveMixSong]: "Moved Song",
 } as const
 
 export interface YoutubeVideoData {
