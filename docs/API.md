@@ -69,23 +69,39 @@ suggestions) and a Suggestions panel (`/api/suggestions/:guildId`).
   Leaving `at` out schedules an upcoming premiere for its start (`422` if the video is not one),
   `409` means the bot is not in voice, and adding a premiere through `addSong` answers `202`
   when the bot scheduled it instead of queueing. The bot leaving voice clears its schedules.
-- **Mix:** a Mix tab plays songs on top of the queue, each at its own volume, with the player's
-  volume as the master over everything. `/api/song/get/:guildId` reports `canMix` (false when the
-  bot is not on its Rust voice path) and `mix: { mainVolume, layers: [{ id, title, url, volume }] }`,
-  volumes linear like `volume`. Edits: `addLayer` (`{ url, volume? }`, a video link; answers once
-  the download has started), `removeLayer` (`{ id }`), `setLayerVolume` (`{ id, volume }`) and
-  `setMainVolume` (`{ volume }`, the queue song's own level). `addLayer` answers `501` when mixing
-  is unavailable, `409` when the bot is not in voice, `422` when 8 songs are already mixed in,
-  `404` for a video it cannot find and `502` when the download fails; a layer edit naming an id
-  that has ended answers `404`. A mixed-in song plays once and leaves `layers` when it ends;
-  stopping the player or the bot leaving voice clears them all.
-  `swapLayer` (`{ id }`) trades a layer with the queue's song: inaudible, each keeps its place
-  and volume, and afterwards skip, seek, lyrics and now playing follow the swapped-in song while
-  the old queue song plays on under the same layer `id` (`409` when nothing in the queue is
-  playing, `502` when the bot could not make the exchange, such as mid-crossfade).
-  `mixFromQueue` (`{ index, url, volume? }`) takes a queued song out of the queue and mixes it
-  in now — the queue's sideways drag; `url` guards against a reorder landing at the same moment.
-  It answers like `addLayer`, and leaves the queue untouched when it fails.
+- **Tracks (the mix):** a Tracks view edits the mix like a track editor. The guild's queue is
+  the top lane; under it, up to 8 mix tracks play on top of it, each one song at a time with its
+  own volume, its own queue, a gap of silence between songs and an optional loop (a song that
+  ends goes to the back of the track's queue). Tracks run independently of the queue: they play
+  on when it runs dry, and pausing the player pauses them too. `/api/song/get/:guildId` reports
+  `canMix` (false when the bot is not on its Rust voice path) and `mix: { mainVolume, maxTracks,
+  tracks: [{ id, volume, gapMs, loop, playing, loading, queue, dueInMs }] }`. Songs are
+  `{ title, url, durationMs, gapBeforeMs }` (`durationMs` null when unknown; `gapBeforeMs` is
+  the silence before the song in place of the track's gap, null for the track's); `playing` adds `positionMs`;
+  `loading` is a song being downloaded to play next; `dueInMs` is how long until the next song
+  while the track waits out its gap. Times are as of the reply and hold still while `paused`.
+  Volumes are linear like `volume`. Edits, named by track `id`:
+  `addMixTrack` (`{ volume?, gapMs?, loop? }`), `removeMixTrack` (`{ track }`), `setMixTrack`
+  (`{ track, volume?, gapMs?, loop? }`), `skipMixTrack` (`{ track }`, the next song now, cutting
+  any gap short), `swapMixTrack` (`{ track }`), `addMixSong` (`{ url, track?, index? }`, on a new
+  track with the given settings when `track` is left out), `removeMixSong` (`{ track, index, url? }`),
+  `moveMixSong` and `setMainVolume` (`{ volume }`, the queue song's own level). `gapMs` is at most
+  600000.
+  `moveMixSong` (`{ from: { track, index }, to: { track, index? }, url? }`) drags a queued song
+  anywhere: `track` is a mix track's id or `null` for the guild's queue, and as a destination
+  `"new"` makes a track for it; `index` is counted after the song has left, and left out means
+  the end. On a mix track, `to.gapMs` sets the song's `gapBeforeMs`: where the editor dropped
+  it, as silence after the song before it, or after now when it lands first on a track with
+  nothing playing. The editor snaps a dragged song's start or end to the start or end of any
+  song on any lane. `url` is what was at `from`, guarding against a reorder landing at the same moment.
+  The queue's sideways drag is a move to `"new"`.
+  They answer `501` when mixing is unavailable, `409` when the bot is not in voice, `422` when the
+  mix has as many tracks as it can or a track's queue is full, and `404` for a track, song or
+  video that is gone. `swapMixTrack` trades the track's playing song with the queue's:
+  inaudible, each keeps its place and volume, and afterwards skip, seek, lyrics and now playing
+  follow the swapped-in song while the old queue song plays on in the track (`409` when either
+  is not playing, `502` when the bot could not make the exchange, such as mid-crossfade).
+  Stopping the player or the bot leaving voice clears every track.
 - **Administration:** the settings form is generated from `/api/admin/settings/schema`, so new
   bot settings appear without a dashboard release.
 

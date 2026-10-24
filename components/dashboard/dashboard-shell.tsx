@@ -3,6 +3,7 @@ import {
 	GearIcon,
 	LockClosedIcon,
 	ListBulletIcon,
+	MixIcon,
 	PersonIcon,
 	RocketIcon,
 } from "@radix-ui/react-icons";
@@ -23,9 +24,10 @@ import { LogView } from "./log-tab";
 import { SettingsView } from "./settings-view";
 import { PlaybackBar } from "./song/playback-bar";
 import { SongDashboard } from "./song/song-dashboard";
+import { TrackEditor } from "./tracks/track-editor";
 import Image from "next/image";
 
-type View = "player" | "settings" | "account" | "logs" | "administration";
+type View = "player" | "tracks" | "settings" | "account" | "logs" | "administration";
 
 /**
  * The dashboard chrome: a slim icon sidebar, a guild picker, the active view,
@@ -47,6 +49,8 @@ export function DashboardShell({
 	const guildId = fixedGuildId ?? chosenGuildId ?? guilds[0]?.id ?? null;
 
 	const isVisitor = account.type === "anonymous";
+	// The views of one guild's playback, which share its picker and bar
+	const onPlayer = view === "player" || view === "tracks";
 
 	const nav: {
 		id: View;
@@ -55,6 +59,7 @@ export function DashboardShell({
 		show: boolean;
 	}[] = [
 		{ id: "player", label: "Player", icon: <RocketIcon />, show: true },
+		{ id: "tracks", label: "Tracks", icon: <MixIcon />, show: true },
 		{
 			id: "logs",
 			label: "Logs",
@@ -114,7 +119,7 @@ export function DashboardShell({
 				{/* Top bar, including navigation while the sidebar is hidden. */}
 				<header className="flex shrink-0 flex-wrap items-center gap-3 border-b border-white/10 px-4 py-3 sm:h-16 sm:flex-nowrap sm:px-5 sm:py-0">
 					<h1 className="ml-1 text-2xl font-bold">Amhra</h1>
-					{view === "player" && !fixedGuildId && (
+					{onPlayer && !fixedGuildId && (
 						<div className="ml-auto w-40 sm:w-64">
 							<Select
 								value={guildId ?? undefined}
@@ -174,6 +179,14 @@ export function DashboardShell({
 								Select a server to start controlling playback.
 							</div>
 						))}
+					{view === "tracks" &&
+						(guildId ? (
+							<TrackEditor guildId={guildId} />
+						) : (
+							<div className="grid place-items-center h-full text-zinc-500">
+								Select a server to edit its tracks.
+							</div>
+						))}
 					{view === "logs" && account.isAdmin && <LogView />}
 					{view === "settings" && !isVisitor && <SettingsView />}
 					{view === "account" && !isVisitor && (
@@ -185,7 +198,7 @@ export function DashboardShell({
 				</main>
 
 				{/* Persistent playback bar */}
-				{view === "player" && guildId && (
+				{onPlayer && guildId && (
 					<PlaybackBar guildId={guildId} />
 				)}
 			</div>
