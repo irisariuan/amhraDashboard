@@ -96,6 +96,18 @@ export function gapBefore(track: MixTrack, index: number) {
 	return track.queue[index]?.gapBeforeMs ?? track.gapMs
 }
 
+/** The bot's cap on the silence before a dropped song, kept in step with MAX_LEAD_IN_MS there. */
+export const MAX_LEAD_IN_MS = 6 * 60 * 60_000
+
+/**
+ * A song starting at `left`, after something that ends at `base`: no earlier
+ * than `base`, and no further out than the bot will wait.
+ */
+export function leadIn(left: number, base: number, zoom: number) {
+	const gapMs = Math.min(Math.round((Math.max(0, left - base) / zoom) * 1000), MAX_LEAD_IN_MS)
+	return { left: base + (gapMs / 1000) * zoom, gapMs }
+}
+
 /** How close, in pixels, a dragged song's start or end has to come to an edge to snap to it. */
 export const SNAP_PX = 10
 
@@ -145,6 +157,5 @@ export function place(
 	const previous = before.at(-1) ?? fixed.at(-1)
 	const base = previous ? previous.right : PAST_PX
 	if (!gaps) return { index: before.length, left: base }
-	const left = Math.max(start, base)
-	return { index: before.length, left, gapMs: Math.round(((left - base) / zoom) * 1000) }
+	return { index: before.length, ...leadIn(start, base, zoom) }
 }

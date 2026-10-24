@@ -53,6 +53,7 @@ import {
 	DEFAULT_ZOOM,
 	END_PX,
 	gapBefore,
+	leadIn,
 	LANE_COLOURS,
 	LANE_DOTS,
 	PAST_PX,
@@ -73,6 +74,7 @@ const ERROR_TEXT: Record<MixError, string> = {
 	not_connected: "The bot needs to be in a voice channel to mix",
 	full: "The mix has all the tracks it can — queue on a track or remove one",
 	not_found: "Couldn't find that — it may have moved or ended",
+	rejected: "The bot didn't accept that — it may need updating",
 	failed: "Couldn't do that, try again",
 }
 
@@ -178,10 +180,7 @@ function Editor({
 		const snapped = snap(pointer, dragging.widthPx, edges)
 		const placed =
 			lane === "new"
-				? (() => {
-						const left = Math.max(snapped.start, PAST_PX)
-						return { left, gapMs: Math.round(((left - PAST_PX) / zoom) * 1000) }
-					})()
+				? leadIn(snapped.start, PAST_PX, zoom)
 				: place(snapped.start, spansIn(timeline), zoom, { gaps: lane !== null })
 		// A start held back by the song before it no longer sits on the edge
 		const onEdge = Math.abs(placed.left - snapped.start) < 0.5

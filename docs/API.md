@@ -85,12 +85,12 @@ suggestions) and a Suggestions panel (`/api/suggestions/:guildId`).
   (`{ track, volume?, gapMs?, loop? }`), `skipMixTrack` (`{ track }`, the next song now, cutting
   any gap short), `swapMixTrack` (`{ track }`), `addMixSong` (`{ url, track?, index? }`, on a new
   track with the given settings when `track` is left out), `removeMixSong` (`{ track, index, url? }`),
-  `moveMixSong` and `setMainVolume` (`{ volume }`, the queue song's own level). `gapMs` is at most
-  600000.
+  `moveMixSong` and `setMainVolume` (`{ volume }`, the queue song's own level). A track's `gapMs` is at
+  most 600000 (10 minutes).
   `moveMixSong` (`{ from: { track, index }, to: { track, index? }, url? }`) drags a queued song
   anywhere: `track` is a mix track's id or `null` for the guild's queue, and as a destination
   `"new"` makes a track for it; `index` is counted after the song has left, and left out means
-  the end. On a mix track, `to.gapMs` sets the song's `gapBeforeMs`: where the editor dropped
+  the end. On a mix track, `to.gapMs` (at most 21600000, 6 hours) sets the song's `gapBeforeMs`: where the editor dropped
   it, as silence after the song before it, or after now when it lands first on a track with
   nothing playing. The editor snaps a dragged song's start or end to the start or end of any
   song on any lane. `url` is what was at `from`, guarding against a reorder landing at the same moment.

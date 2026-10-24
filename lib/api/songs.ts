@@ -71,9 +71,17 @@ export async function addSong(
 	return res.ok ? "queued" : "failed"
 }
 
-export type MixError = "not_native" | "not_connected" | "full" | "not_found" | "failed"
+export type MixError =
+	| "not_native"
+	| "not_connected"
+	| "full"
+	| "not_found"
+	| "rejected"
+	| "failed"
 
 const MIX_ERRORS: Record<number, MixError> = {
+	// The request itself was refused, such as a bot older than this dashboard
+	400: "rejected",
 	501: "not_native",
 	409: "not_connected",
 	422: "full",

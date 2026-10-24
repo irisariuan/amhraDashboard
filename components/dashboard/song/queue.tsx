@@ -13,6 +13,7 @@ const MIX_ERROR_TEXT: Record<MixError, string> = {
 	not_connected: "The bot needs to be in a voice channel to mix",
 	full: "The mix has all the tracks it can — remove one in Tracks first",
 	not_found: "That song is no longer in the queue",
+	rejected: "The bot didn't accept that — it may need updating",
 	failed: "Couldn't mix that song in",
 }
 
