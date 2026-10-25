@@ -8,7 +8,7 @@ import {
 	TrackNextIcon,
 	TrashIcon,
 } from "@radix-ui/react-icons"
-import { Fragment, useState } from "react"
+import { Fragment, useRef, useState } from "react"
 import { toast } from "sonner"
 import { mutate } from "swr"
 import { Button } from "@/components/ui/button"
@@ -36,10 +36,12 @@ import {
 	SongEditType,
 	type MixSong,
 	type MixTrack,
+	type SearchHit,
 	type SongReply,
 } from "@/lib/api/types"
 import { searchYoutube } from "@/lib/api/videos"
 import { cn } from "@/lib/utils"
+import { SearchResults, useYoutubeSearch } from "../song/search-results"
 import { Clip, Gap, QueueClip, type DragSong } from "./clip"
 import {
 	Fader,
@@ -570,19 +572,22 @@ function Toolbar({
 	const [input, setInput] = useState("")
 	const [chosen, setTarget] = useState<string>("1")
 	const [adding, setAdding] = useState(false)
+	const containerRef = useRef<HTMLDivElement>(null)
 	// A queue that has gone falls back to queue 1
 	const target = chosen === "new" || lanes.some(lane => lane.id === chosen) ? chosen : "1"
 	const blocked = target === "new" && full
 	const zoomAt = ZOOMS.indexOf(zoom as (typeof ZOOMS)[number])
+	const search = useYoutubeSearch(input, containerRef, !isYoutubeVideoUrl(input))
 
-	async function submit(event: React.FormEvent) {
-		event.preventDefault()
+	/** A picked match, a link, or else the best match for what was typed */
+	async function add(hit?: SearchHit) {
 		const query = input.trim()
 		if (!query || adding || blocked) return
 		setAdding(true)
+		search.setOpen(false)
 		try {
-			let url = query
-			if (!isYoutubeVideoUrl(query)) {
+			let url = hit?.url ?? query
+			if (!hit && !isYoutubeVideoUrl(query)) {
 				const found = await searchYoutube(query).catch(() => null)
 				if (!found?.url) {
 					toast("Couldn't find that video")
@@ -596,23 +601,38 @@ function Toolbar({
 				return
 			}
 			setInput("")
+			search.clear()
 			onChanged()
 		} finally {
 			setAdding(false)
 		}
 	}
 
+	function submit(event: React.FormEvent) {
+		event.preventDefault()
+		// A loaded dropdown already holds the answer, so do not search again
+		add(search.chosen)
+	}
+
 	return (
 		<div className="flex flex-wrap items-center gap-2">
 			<form onSubmit={submit} className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-				<Input
-					placeholder="YouTube link or search"
-					className="min-w-48 flex-1 border-white/10 bg-white/5"
-					value={input}
-					onChange={event => setInput(event.target.value)}
-					disabled={adding}
-					autoComplete="off"
-				/>
+				<div ref={containerRef} className="relative min-w-48 flex-1">
+					<Input
+						placeholder="YouTube link or search"
+						className="border-white/10 bg-white/5"
+						value={input}
+						onChange={event => setInput(event.target.value)}
+						onFocus={() => search.hits.length && search.setOpen(true)}
+						onKeyDown={search.onKeyDown}
+						disabled={adding}
+						autoComplete="off"
+						aria-expanded={search.open}
+						aria-autocomplete="list"
+						role="combobox"
+					/>
+					<SearchResults search={search} disabled={adding || blocked} onPick={add} />
+				</div>
 				<Select value={target} onValueChange={setTarget}>
 					<SelectTrigger className="w-36 border-white/10 bg-white/5" aria-label="Queue to add it to">
 						<SelectValue />

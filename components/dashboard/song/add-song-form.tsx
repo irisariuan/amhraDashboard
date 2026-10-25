@@ -10,16 +10,10 @@ import {
 	isYoutubePlaylistUrl,
 	isYoutubeVideoUrl,
 	SongEditType,
-	type SearchHit,
 	type YoutubePlaylistData,
 } from "@/lib/api/types"
-import { getPlaylistDetails, searchYoutube, searchYoutubeMany } from "@/lib/api/videos"
-import { formatDuration } from "@/lib/format"
-
-/** Quiet period after the last keystroke before a search is sent */
-const DEBOUNCE_MS = 300
-/** Below this, a query matches too much to be worth a request */
-const MIN_QUERY_LENGTH = 2
+import { getPlaylistDetails, searchYoutube } from "@/lib/api/videos"
+import { SearchResults, useYoutubeSearch } from "./search-results"
 
 /**
  * Adds a song by URL or free-text search.
@@ -31,10 +25,6 @@ const MIN_QUERY_LENGTH = 2
  */
 export function AddSongForm({ guildId }: { guildId: string }) {
 	const [query, setQuery] = useState("")
-	// Results remember the query they answer, so a stale one is never shown
-	const [found, setFound] = useState<{ query: string; hits: SearchHit[] } | null>(null)
-	const [open, setOpen] = useState(false)
-	const [highlighted, setHighlighted] = useState(0)
 	const [busy, setBusy] = useState(false)
 	const containerRef = useRef<HTMLDivElement>(null)
 
@@ -46,10 +36,7 @@ export function AddSongForm({ guildId }: { guildId: string }) {
 	const trimmed = query.trim()
 	const isPlaylist = isYoutubePlaylistUrl(query)
 	const isUrl = isPlaylist || isYoutubeVideoUrl(query)
-	const canSearch = !isUrl && trimmed.length >= MIN_QUERY_LENGTH
-
-	const hits = canSearch && found?.query === trimmed ? found.hits : []
-	const searching = canSearch && found?.query !== trimmed
+	const search = useYoutubeSearch(query, containerRef, !isUrl)
 	const playlist = isPlaylist && preview?.url === trimmed ? preview.playlist : null
 	const playlistState = !isPlaylist
 		? "idle"
@@ -71,38 +58,9 @@ export function AddSongForm({ guildId }: { guildId: string }) {
 		}
 	}, [trimmed, isPlaylist])
 
-	useEffect(() => {
-		if (!canSearch) return
-		// Cancels both the timer and any request it already started, so only the
-		// query the user actually stopped on is waited on
-		const controller = new AbortController()
-		const timer = setTimeout(async () => {
-			const results = await searchYoutubeMany(trimmed, 5, controller.signal)
-			if (controller.signal.aborted) return
-			setFound({ query: trimmed, hits: results })
-			setHighlighted(0)
-			setOpen(results.length > 0)
-		}, DEBOUNCE_MS)
-
-		return () => {
-			clearTimeout(timer)
-			controller.abort()
-		}
-	}, [trimmed, canSearch])
-
-	// Clicking anywhere else should put the dropdown away
-	useEffect(() => {
-		if (!open) return
-		function onPointerDown(event: MouseEvent) {
-			if (!containerRef.current?.contains(event.target as Node)) setOpen(false)
-		}
-		document.addEventListener("mousedown", onPointerDown)
-		return () => document.removeEventListener("mousedown", onPointerDown)
-	}, [open])
-
 	async function add(url: string, title?: string) {
 		setBusy(true)
-		setOpen(false)
+		search.setOpen(false)
 		try {
 			const result = await addSong(guildId, url)
 			if (result === "failed") {
@@ -111,7 +69,7 @@ export function AddSongForm({ guildId }: { guildId: string }) {
 			}
 			mutate(songKey(guildId))
 			setQuery("")
-			setFound(null)
+			search.clear()
 			if (result === "scheduled") {
 				// Premieres cannot play until they start, so the bot schedules them
 				toast("That's an upcoming premiere — it will cut in when it starts (see Scheduled)")
@@ -152,7 +110,7 @@ export function AddSongForm({ guildId }: { guildId: string }) {
 		if (isUrl) return add(value)
 
 		// A loaded dropdown already holds the answer, so do not search again
-		if (hits.length) return add(hits[highlighted]?.url ?? hits[0].url, hits[highlighted]?.title)
+		if (search.chosen) return add(search.chosen.url, search.chosen.title)
 
 		setBusy(true)
 		try {
@@ -165,19 +123,6 @@ export function AddSongForm({ guildId }: { guildId: string }) {
 		}
 	}
 
-	function onKeyDown(event: React.KeyboardEvent) {
-		if (!open || !hits.length) return
-		if (event.key === "ArrowDown") {
-			event.preventDefault()
-			setHighlighted(i => (i + 1) % hits.length)
-		} else if (event.key === "ArrowUp") {
-			event.preventDefault()
-			setHighlighted(i => (i - 1 + hits.length) % hits.length)
-		} else if (event.key === "Escape") {
-			setOpen(false)
-		}
-	}
-
 	return (
 		<div ref={containerRef} className="relative w-full">
 			<form onSubmit={submit} className="flex w-full items-center gap-2">
@@ -187,10 +132,10 @@ export function AddSongForm({ guildId }: { guildId: string }) {
 					disabled={busy}
 					value={query}
 					onChange={event => setQuery(event.target.value)}
-					onFocus={() => hits.length && setOpen(true)}
-					onKeyDown={onKeyDown}
+					onFocus={() => search.hits.length && search.setOpen(true)}
+					onKeyDown={search.onKeyDown}
 					autoComplete="off"
-					aria-expanded={open}
+					aria-expanded={search.open}
 					aria-autocomplete="list"
 					role="combobox"
 				/>
@@ -199,7 +144,7 @@ export function AddSongForm({ guildId }: { guildId: string }) {
 				</Button>
 			</form>
 
-			{searching && !open && (
+			{search.searching && !search.open && (
 				<p className="mt-1 text-xs text-zinc-500">Searching…</p>
 			)}
 
@@ -231,46 +176,7 @@ export function AddSongForm({ guildId }: { guildId: string }) {
 				</div>
 			)}
 
-			{open && hits.length > 0 && (
-				<ul
-					role="listbox"
-					className="absolute z-50 mt-1 w-full overflow-hidden rounded-lg border border-white/10 bg-zinc-900/95 shadow-xl backdrop-blur"
-				>
-					{hits.map((hit, index) => (
-						<li key={hit.url} role="option" aria-selected={index === highlighted}>
-							<button
-								type="button"
-								className={`flex w-full min-w-0 items-center gap-3 px-3 py-2 text-left transition-colors ${
-									index === highlighted ? "bg-white/10" : "hover:bg-white/5"
-								}`}
-								onMouseEnter={() => setHighlighted(index)}
-								onClick={() => add(hit.url, hit.title)}
-								disabled={busy}
-							>
-								{hit.thumbnail && (
-									// Remote YouTube thumbnails, so not next/image
-									// eslint-disable-next-line @next/next/no-img-element
-									<img
-										src={hit.thumbnail}
-										alt=""
-										className="h-9 w-16 flex-none rounded object-cover"
-										loading="lazy"
-									/>
-								)}
-								<span className="min-w-0 flex-1 overflow-hidden">
-									<span className="block truncate text-sm text-zinc-100">
-										{hit.title}
-									</span>
-									<span className="block truncate text-xs text-zinc-500">
-										{hit.channel ? `${hit.channel} · ` : ""}
-										{formatDuration(hit.durationInSec)}
-									</span>
-								</span>
-							</button>
-						</li>
-					))}
-				</ul>
-			)}
+			<SearchResults search={search} disabled={busy} onPick={hit => add(hit.url, hit.title)} />
 		</div>
 	)
 }
