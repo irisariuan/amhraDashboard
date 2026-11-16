@@ -82,7 +82,9 @@ export function songSeconds(durationMs: number | null | undefined) {
 export function trackClock(track: MixTrack, elapsedMs: number) {
 	const length = track.playing?.durationMs ?? Number.POSITIVE_INFINITY
 	return {
-		positionMs: track.playing ? Math.min(track.playing.positionMs + elapsedMs, length) : 0,
+		positionMs: track.playing
+			? Math.min(track.playing.positionMs + elapsedMs * (track.speed ?? 1), length)
+			: 0,
 		dueInMs: track.dueInMs === null ? null : Math.max(0, track.dueInMs - elapsedMs),
 	}
 }

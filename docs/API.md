@@ -59,6 +59,12 @@ suggestions) and a Suggestions panel (`/api/suggestions/:guildId`).
   `?q=` replaces a wrong automatic match with a search.
 - **Crossfade:** the `setCrossfade` edit (`crossfadeMs` ≤ 15000, `skipFadeMs` ≤ 5000), shown
   disabled when the player reports `canCrossfade: false` (the bot is not on its Rust voice path).
+- **Speed:** the `setSpeed` edit (`{ speed, track? }`, `speed` 0 to 10 on a 0.01 step, pitch
+  kept, 0 holding the song silent; queue 1 when `track` is left out, `501` without the Rust voice
+  path). The player reports `speed` and `canSpeed`, and each queue its own `speed`. The song clock
+  runs at `speed`: position is `startFrom + (now - startTime - pausedInMs) * speed`, since the bot
+  moves `startTime` and `startFrom` to the moment the speed changed; a queue's `positionMs`
+  likewise moves `speed` times as fast as the clock.
 - **Scheduled plays:** a Scheduled tab backed by `POST /api/schedule/add`
   (`{ guildId, url, at?, queue? }`, `at` in epoch ms, `queue` the queue to cut in on, 1 when
   left out; `501` for another queue without the Rust voice path) and `POST /api/schedule/respond`

@@ -19,6 +19,7 @@ import { FormatSongEditType, SongEditType } from "@/lib/api/types"
 import { formatClock } from "@/lib/format"
 import { cn } from "@/lib/utils"
 import { FadeControls } from "./fade-controls"
+import { SpeedControls } from "./speed-controls"
 import { ScrubBar } from "./scrub-bar"
 
 /**
@@ -84,7 +85,7 @@ export function PlaybackBar({ guildId }: { guildId: string }) {
 				</div>
 				{/* transport + volume */}
 				<div className="flex items-center gap-2">
-					<div className="flex items-center gap-1 flex-1">
+					<div className="flex flex-wrap items-center gap-1 flex-1 min-w-0">
 						{data.song &&
 							(data.paused ? (
 								<Button size="icon" onClick={() => run(SongEditType.Resume)}>
@@ -124,6 +125,7 @@ export function PlaybackBar({ guildId }: { guildId: string }) {
 							<ShuffleIcon />
 						</Button>
 						<FadeControls data={data} guildId={guildId} />
+						<SpeedControls data={data} guildId={guildId} />
 					</div>
 					<div className="flex items-center gap-2 w-40">
 						<Button

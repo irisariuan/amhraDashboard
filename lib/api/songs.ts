@@ -12,6 +12,8 @@ type EditDetailMap = {
 	[SongEditType.Loop]: { loop: boolean }
 	[SongEditType.AutoSuggest]: { autoSuggest: boolean }
 	[SongEditType.SetMainVolume]: { volume: number }
+	/** 0 to 10 on a 0.01 step; queue 1 when `track` is left out */
+	[SongEditType.SetSpeed]: { speed: number; track?: string }
 	[SongEditType.AddMixTrack]: TrackSettings
 	[SongEditType.RemoveMixTrack]: { track: string }
 	[SongEditType.SetMixTrack]: TrackSettings & { track: string }
