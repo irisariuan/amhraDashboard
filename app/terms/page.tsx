@@ -24,8 +24,7 @@ export default function TermPage() {
 					<SectionTitle>2. Compliance with Laws</SectionTitle>
 					<p>
 						You agree to use the Bot in compliance with all
-						applicable local laws and regulations, as well as the
-						laws of Hong Kong. You are solely responsible for
+						applicable local laws and regulations. You are solely responsible for
 						ensuring that your use of the Bot does not violate any
 						laws or regulations. You agree to take all
 						responsibility and consequences to your actions.
