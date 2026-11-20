@@ -56,6 +56,10 @@ export interface SongReply {
 	skipFadeMs: number
 	/** Only the bot's Rust voice path mixes tracks; elsewhere fades are ignored */
 	canCrossfade: boolean
+	/** Queue 1's playback speed, 0 to 10; the song clock runs this fast. Absent on older bots */
+	speed?: number
+	/** Only the bot's Rust voice path can change speed. Absent on older bots */
+	canSpeed?: boolean
 	/** Absent on a bot that predates scheduling */
 	schedules?: ScheduledPlay[]
 	/** Only the bot's Rust voice path can mix songs over the queue. Absent on older bots */
@@ -91,6 +95,8 @@ export interface MixTrack {
 	id: string
 	/** Linear, like the player's volume: 1 is 100%. The queue's own level, under the bot's */
 	volume: number
+	/** Its playback speed, 0 to 10: `playing.positionMs` moves this fast. Absent on older bots */
+	speed?: number
 	/** Paused on its own. Absent on older bots */
 	paused?: boolean
 	/** Silence between one song ending and the next starting */
@@ -150,6 +156,7 @@ export enum SongEditType {
 	SkipSegment = "skipSegment",
 	AutoSuggest = "autoSuggest",
 	SetMainVolume = "setMainVolume",
+	SetSpeed = "setSpeed",
 	AddMixTrack = "addMixTrack",
 	RemoveMixTrack = "removeMixTrack",
 	SetMixTrack = "setMixTrack",
@@ -178,6 +185,7 @@ export const FormatSongEditType: Record<SongEditType, string> = {
 	[SongEditType.SkipSegment]: "Skipped Non-Music",
 	[SongEditType.AutoSuggest]: "Radio Toggled",
 	[SongEditType.SetMainVolume]: "Set Queue Song Mix Volume",
+	[SongEditType.SetSpeed]: "Set Speed",
 	[SongEditType.AddMixTrack]: "Added Mix Track",
 	[SongEditType.RemoveMixTrack]: "Removed Mix Track",
 	[SongEditType.SetMixTrack]: "Changed Mix Track",

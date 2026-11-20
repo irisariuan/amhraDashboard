@@ -16,7 +16,8 @@ export function usePlayer(guildId: string, refreshInterval = 2000) {
 
 /**
  * Elapsed playback seconds, derived from the song's start timestamp and
- * accumulated pause time; ticks every 100 ms while a song is loaded.
+ * accumulated pause time, at the player's speed; ticks every 100 ms while a
+ * song is loaded.
  */
 export function usePlaybackTime(data: SongReply | null): number {
 	const [now, setNow] = useState(() => Date.now())
@@ -33,5 +34,8 @@ export function usePlaybackTime(data: SongReply | null): number {
 	const { startTime, startFrom } = data.song
 	const reference = data.paused ? data.pausedTimestamp : now
 	// The clock can be up to a tick behind a song that only just started
-	return Math.max(0, (reference - startTime - data.pausedInMs + startFrom) / 1000)
+	// The bot re-anchors startTime and startFrom whenever the speed changes,
+	// so the whole span since startTime ran at the current speed
+	const speed = data.speed ?? 1
+	return Math.max(0, ((reference - startTime - data.pausedInMs) * speed + startFrom) / 1000)
 }
